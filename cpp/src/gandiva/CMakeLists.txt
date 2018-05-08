@@ -15,11 +15,22 @@
 cmake_minimum_required(VERSION 3.10)
 project(gandiva)
 
-find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG HINTS
+             /usr/local/opt/llvm)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
+
+find_library(ARROW_LIB arrow)
+message(STATUS "Found arrow : ${ARROW_LIB}")
+find_path(ARROW_INCLUDE_DIR arrow/type.h)
+message(STATUS "include dir for arrow : ${ARROW_INCLUDE_DIR}")
+include_directories(${ARROW_INCLUDE_DIR})
+
+enable_testing()
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
 
 include_directories(codegen)
 include_directories(codegen/cex)
@@ -66,3 +77,7 @@ target_link_libraries(gandiva ${llvm_libs})
 
 add_executable(replay codegen/replay.cc)
 target_link_libraries(replay gandiva)
+
+#add_executable(evaluator_test expr/evaluator_test.cc)
+#target_link_libraries(evaluator_test ${ARROW_LIB})
+#target_link_libraries(evaluator_test ${GTEST_BOTH_LIBRARIES})
