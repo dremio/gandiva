@@ -18,7 +18,7 @@
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
-#include "Types.pb.h"
+#include "arrow.h"
 
 namespace gandiva {
 
@@ -89,21 +89,21 @@ class LLVMTypes {
   }
 
   /*
-   * For a given major type, find the ir type used for the data vector slot.
+   * For a given data type, find the ir type used for the data vector slot.
    */
-  llvm::Type *DataVecType(const common::MajorType &major_type) {
-    return IRType(major_type.minor_type());
+  llvm::Type *DataVecType(const DataTypeSharedPtr &data_type) {
+    return IRType(data_type->id());
   }
 
   /*
    * For a given minor type, find the corresponding ir type.
    */
-  llvm::Type *IRType(const common::MinorType minor_type) {
-    return minor_to_native_type_map_[minor_type];
+  llvm::Type *IRType(ArrowTypeID arrow_type) {
+    return arrow_id_to_llvm_type_map_[arrow_type];
   }
 
  private:
-  std::map<common::MinorType, llvm::Type *> minor_to_native_type_map_;
+  std::map<ArrowTypeID, llvm::Type *> arrow_id_to_llvm_type_map_;
 
   llvm::LLVMContext *context_;
 };

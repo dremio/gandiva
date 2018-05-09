@@ -28,23 +28,27 @@ find_path(ARROW_INCLUDE_DIR arrow/type.h)
 message(STATUS "include dir for arrow : ${ARROW_INCLUDE_DIR}")
 include_directories(${ARROW_INCLUDE_DIR})
 
+#include(CTest)
 enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
+include_directories(.)
 include_directories(codegen)
 include_directories(codegen/cex)
 include_directories(codegen/dex)
+include_directories(codegen/expr)
+include_directories(expr)
 include_directories(precompiled)
 include_directories(${CMAKE_BINARY_DIR})
 
 set(GANDIVA_SRCS
+    codegen/llvm_types.cc
+    codegen/function_registry.cc
     codegen/cex/func_cex.cc
     codegen/engine.cc
     codegen/expression_annotator.cc
-    codegen/function_registry.cc
-    codegen/llvm_generator.cc
-    codegen/llvm_types.cc)
+    codegen/llvm_generator.cc)
 
 set(PRECOMPILED_SOURCED_FILES
     precompiled/arithmetic_ops.cc
@@ -78,6 +82,27 @@ target_link_libraries(gandiva ${llvm_libs})
 add_executable(replay codegen/replay.cc)
 target_link_libraries(replay gandiva)
 
-#add_executable(evaluator_test expr/evaluator_test.cc)
-#target_link_libraries(evaluator_test ${ARROW_LIB})
-#target_link_libraries(evaluator_test ${GTEST_BOTH_LIBRARIES})
+# Test related
+
+function(ADD_GANDIVA_UNIT_TEST REL_TEST_NAME)
+  get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
+  set(TEST_PATH "${EXECUTABLE_OUTPUT_PATH}/${TEST_NAME}")
+
+  add_executable(${TEST_NAME} ${REL_TEST_NAME})
+  target_link_libraries(${TEST_NAME} ${ARROW_LIB})
+  target_link_libraries(${TEST_NAME} ${GTEST_BOTH_LIBRARIES})
+  add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+endfunction()
+
+function(ADD_GANDIVA_INTEG_TEST REL_TEST_NAME)
+  get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
+  set(TEST_PATH "${EXECUTABLE_OUTPUT_PATH}/${TEST_NAME}")
+
+  add_executable(${TEST_NAME} ${REL_TEST_NAME})
+  target_link_libraries(${TEST_NAME} ${ARROW_LIB})
+  target_link_libraries(${TEST_NAME} gandiva)
+  add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+endfunction()
+
+ADD_GANDIVA_UNIT_TEST(codegen/function_signature_test.cc)
+#ADD_GANDIVA_INTEG_TEST(evaluator_test expr/evaluator_test.cc)

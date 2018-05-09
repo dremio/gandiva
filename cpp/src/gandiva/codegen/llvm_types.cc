@@ -20,15 +20,15 @@ namespace gandiva {
 LLVMTypes::LLVMTypes(llvm::LLVMContext *context)
     : context_(context) {
 
-  minor_to_native_type_map_ = {
-      {common::BIT, i1_type()},
-      {common::INT, i32_type()},
-      {common::BIGINT, i64_type()},
-      {common::FLOAT4, float_type()},
-      {common::FLOAT8, double_type()},
-      {common::DATE, i64_type()},
-      {common::TIME, i64_type()},
-      {common::TIMESTAMP, i64_type()},
+  arrow_id_to_llvm_type_map_= {
+      {ArrowTypeID::BOOL, i1_type()},
+      {ArrowTypeID::INT32, i32_type()},
+      {ArrowTypeID::INT64, i64_type()},
+      {ArrowTypeID::FLOAT, float_type()},
+      {ArrowTypeID::DOUBLE, double_type()},
+      {ArrowTypeID::DATE64, i64_type()},
+      {ArrowTypeID::TIME64, i64_type()},
+      {ArrowTypeID::TIMESTAMP, i64_type()},
   };
 }
 

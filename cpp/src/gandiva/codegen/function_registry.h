@@ -17,7 +17,6 @@
 #define GANDIVA_FUNCTION_REGISTRY_H
 
 #include <unordered_map>
-#include "Types.pb.h"
 #include "native_function.h"
 
 namespace gandiva {
@@ -43,6 +42,15 @@ class FunctionRegistry {
       return *s1 == *s2;
     }
   };
+
+ private:
+  static DataTypeSharedPtr time() {
+    return arrow::time64(arrow::TimeUnit::MILLI);
+  }
+
+  static DataTypeSharedPtr timestamp() {
+    return arrow::timestamp(arrow::TimeUnit::MILLI);
+  }
 
   typedef std::unordered_map<const FunctionSignature *, const NativeFunction *, KeyHash, KeyEquals> SignatureMap;
   static SignatureMap InitPCMap();

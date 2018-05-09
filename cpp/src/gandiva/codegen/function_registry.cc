@@ -17,7 +17,7 @@
 #include "function_registry.h"
 
 using namespace std;
-using namespace common;
+using namespace arrow;
 
 namespace gandiva {
 
@@ -25,66 +25,66 @@ namespace gandiva {
 
 #define BINARY_SYMMETRIC_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
-    vector<MinorType>{TYPE, TYPE}, \
-    TYPE, \
+    vector<DataTypeSharedPtr>{TYPE(), TYPE()}, \
+    TYPE(), \
     true, \
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##TYPE##_##TYPE))
 
 #define BINARY_GENERIC_SAFE_NULL_IF_NULL(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE) \
   NativeFunction(#NAME, \
-    vector<MinorType>{IN_TYPE1, IN_TYPE2}, \
-    OUT_TYPE, \
+    vector<DataTypeSharedPtr>{IN_TYPE1(), IN_TYPE2()}, \
+    OUT_TYPE(), \
     true, \
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##IN_TYPE1##_##IN_TYPE2))
 
 #define BINARY_RELATIONAL_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
-    vector<MinorType>{TYPE, TYPE}, \
-    BIT, \
+    vector<DataTypeSharedPtr>{TYPE(), TYPE()}, \
+    boolean(), \
     true, \
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##TYPE##_##TYPE))
 
 #define CAST_UNARY_SAFE_NULL_IF_NULL(NAME, IN_TYPE, OUT_TYPE) \
   NativeFunction(#NAME, \
-    vector<MinorType>{IN_TYPE}, \
-    OUT_TYPE, \
+    vector<DataTypeSharedPtr>{IN_TYPE()}, \
+    OUT_TYPE(), \
     true, \
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##IN_TYPE))
 
 #define UNARY_SAFE_NULL_NEVER_BOOL(NAME, TYPE) \
   NativeFunction(#NAME, \
-    vector<MinorType>{TYPE}, \
-    BIT, \
+    vector<DataTypeSharedPtr>{TYPE()}, \
+    boolean(), \
     true, \
     RESULT_NULL_NEVER, \
     STRINGIFY(NAME##_##TYPE))
 
 #define EXTRACT_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
-    vector<MinorType>{TYPE}, \
-    BIGINT, \
+    vector<DataTypeSharedPtr>{TYPE()}, \
+    int64(), \
     true, \
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##TYPE))
 
 #define NUMERIC_TYPES(INNER, NAME) \
-  INNER(NAME, INT), \
-  INNER(NAME, BIGINT), \
-  INNER(NAME, FLOAT4), \
-  INNER(NAME, FLOAT8)
+  INNER(NAME, int32), \
+  INNER(NAME, int64), \
+  INNER(NAME, float16), \
+  INNER(NAME, float32)
 
 #define NUMERIC_AND_BOOL_TYPES(INNER, NAME) \
   NUMERIC_TYPES(INNER, NAME), \
-  INNER(NAME, BIT)
+  INNER(NAME, boolean)
 
 #define DATE_TYPES(INNER, NAME) \
-  INNER(NAME, DATE), \
-  INNER(NAME, TIME), \
-  INNER(NAME, TIMESTAMP)
+  INNER(NAME, date64), \
+  INNER(NAME, time), \
+  INNER(NAME, timestamp)
 
 /*
  * Complete list of registered native functions.
@@ -95,8 +95,8 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, subtract),
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, multiply),
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, divide),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, BIGINT, INT, INT),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, BIGINT, BIGINT, BIGINT),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int32, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int64, int64),
     NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, equal),
     NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, not_equal),
     NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than),
@@ -105,12 +105,12 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than_or_equal_to),
 
     /* cast operations */
-    CAST_UNARY_SAFE_NULL_IF_NULL(castBIGINT, INT, BIGINT),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT4, INT, FLOAT4),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT4, BIGINT, FLOAT4),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, INT, FLOAT8),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, BIGINT, FLOAT8),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, FLOAT4, FLOAT8),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castBIGINT, int32, int64),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int32, float16),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int64, float16),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int32, float32),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int64, float32),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, float16, float32),
 
     /* nullable never operations */
     NUMERIC_AND_BOOL_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnull),

@@ -22,6 +22,7 @@
 
 namespace gandiva {
 
+using ArrowTypeID = arrow::Type::type;
 using ArraySharedPtr = std::shared_ptr<arrow::Array>;
 using ArrayBuilderSharedPtr = std::shared_ptr<arrow::ArrayBuilder>;
 using ArrayBuilderVector = std::vector<ArrayBuilderSharedPtr>;
