@@ -24,12 +24,19 @@ namespace gandiva {
 /// \brief Signature for a function : includes the base name, input param types and output types.
 class FunctionSignature {
  public:
-  FunctionSignature(std::string base_name,
-                    std::vector<DataTypeSharedPtr> param_types,
+  FunctionSignature(const std::string &base_name,
+                    const std::vector<DataTypeSharedPtr> &param_types,
                     DataTypeSharedPtr ret_type)
       : base_name_(base_name),
         param_types_(param_types),
-        ret_type_(ret_type) {}
+        ret_type_(ret_type) {
+    DCHECK(base_name.length() > 0);
+    DCHECK(param_types.size() > 0);
+    for (auto it = param_types_.begin(); it != param_types_.end(); it++) {
+      DCHECK(*it);
+    }
+    DCHECK(ret_type);
+  }
 
   bool operator == (const FunctionSignature &other) const {
     if (param_types_.size() != other.param_types_.size() ||
