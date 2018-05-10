@@ -29,22 +29,20 @@ enum ResultNullableType {
   RESULT_NULL_INTERNAL,
 };
 
-/*
- * Holder for the mapping from a function in SQL to a native function.
- */
+/// \brief Holder for the mapping from a function in an expression to a precompiled function.
 class NativeFunction {
  public:
-  const FunctionSignature *signature() const { return &signature_; }
+  const FunctionSignature &signature() const { return signature_; }
   std::string pc_name() const { return pc_name_; }
   ResultNullableType result_nullable_type() const { return result_nullable_type_; }
   bool param_null_safe() const { return param_null_safe_; }
 
  private:
-  NativeFunction(std::string base_name,
-                 std::vector<DataTypeSharedPtr> param_types,
+  NativeFunction(const std::string &base_name,
+                 const std::vector<DataTypeSharedPtr> &param_types,
                  DataTypeSharedPtr ret_type,
                  bool param_null_safe,
-                 ResultNullableType result_nullable_type,
+                 const ResultNullableType &result_nullable_type,
                  std::string pc_name)
       : signature_(base_name, param_types, ret_type),
         param_null_safe_(param_null_safe),

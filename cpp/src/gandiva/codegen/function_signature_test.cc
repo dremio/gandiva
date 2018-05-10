@@ -39,6 +39,11 @@ class TestFunctionSignature : public ::testing::Test {
   DataTypeSharedPtr local_date32_type_;
 };
 
+TEST_F(TestFunctionSignature, TestToString) {
+  EXPECT_EQ(FunctionSignature("myfunc", {arrow::int32(), arrow::float32()}, arrow::float64()).ToString(),
+    "double myfunc(int32, float)");
+}
+
 TEST_F(TestFunctionSignature, TestEqualsName) {
   EXPECT_TRUE(FunctionSignature("add", {arrow::int32()}, arrow::int32()) ==
       FunctionSignature("add", {arrow::int32()}, arrow::int32()));

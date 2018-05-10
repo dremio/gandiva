@@ -19,13 +19,16 @@
 
 #include <stdint.h>
 
-typedef bool BIT;
-typedef int32_t INT;
-typedef int64_t BIGINT;
-typedef float FLOAT4;
-typedef double FLOAT8;
-typedef int64_t DATE;
-typedef int64_t TIME;
-typedef int64_t TIMESTAMP;
+/*
+ * Use the same names as in arrow data types. Makes it easy to write pre-processor macros.
+ */
+typedef bool boolean;
+typedef int32_t int32;
+typedef int64_t int64;
+typedef float float32;
+typedef double float64;
+typedef int64_t date;
+typedef int64_t time64;
+typedef int64_t timestamp64;
 
 #endif //PRECOMPILED_TYPES_H

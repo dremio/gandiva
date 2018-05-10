@@ -74,8 +74,8 @@ namespace gandiva {
 #define NUMERIC_TYPES(INNER, NAME) \
   INNER(NAME, int32), \
   INNER(NAME, int64), \
-  INNER(NAME, float16), \
-  INNER(NAME, float32)
+  INNER(NAME, float32), \
+  INNER(NAME, float64)
 
 #define NUMERIC_AND_BOOL_TYPES(INNER, NAME) \
   NUMERIC_TYPES(INNER, NAME), \
@@ -83,8 +83,8 @@ namespace gandiva {
 
 #define DATE_TYPES(INNER, NAME) \
   INNER(NAME, date64), \
-  INNER(NAME, time), \
-  INNER(NAME, timestamp)
+  INNER(NAME, time64), \
+  INNER(NAME, timestamp64)
 
 /*
  * Complete list of registered native functions.
@@ -106,11 +106,11 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
 
     /* cast operations */
     CAST_UNARY_SAFE_NULL_IF_NULL(castBIGINT, int32, int64),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int32, float16),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int64, float16),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int32, float32),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int64, float32),
-    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, float16, float32),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int32, float32),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int64, float32),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int32, float64),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int64, float64),
+    CAST_UNARY_SAFE_NULL_IF_NULL(castFLOAT8, float32, float64),
 
     /* nullable never operations */
     NUMERIC_AND_BOOL_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnull),
@@ -137,13 +137,14 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
     const NativeFunction *entry = &pc_registry_[i];
 
     assert(LookupSignature(entry->signature()) == NULL);
-    map[entry->signature()] = entry;
+    map[&entry->signature()] = entry;
+    printf("%s -> %s\n", entry->signature().ToString().c_str(), entry->pc_name().c_str());
   }
   return map;
 };
 
-const NativeFunction *FunctionRegistry::LookupSignature(const FunctionSignature *signature) {
-  auto got = pc_registry_map_.find(signature);
+const NativeFunction *FunctionRegistry::LookupSignature(const FunctionSignature &signature) {
+  auto got = pc_registry_map_.find(&signature);
   return got == pc_registry_map_.end() ? NULL : got->second;
 }
 

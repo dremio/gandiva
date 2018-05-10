@@ -18,14 +18,14 @@
  * Expand inner macro for all numeric types.
  */
 #define NUMERIC_TYPES(INNER, NAME, OP) \
-  INNER(NAME, INT, OP) \
-  INNER(NAME, BIGINT, OP) \
-  INNER(NAME, FLOAT4, OP) \
-  INNER(NAME, FLOAT8, OP)
+  INNER(NAME, int32, OP) \
+  INNER(NAME, int64, OP) \
+  INNER(NAME, float32, OP) \
+  INNER(NAME, float64, OP)
 
 #define NUMERIC_AND_BOOL_TYPES(INNER, NAME, OP) \
   NUMERIC_TYPES(INNER, NAME, OP) \
-  INNER(NAME, BIT, OP)
+  INNER(NAME, boolean, OP)
 
 #define BINARY_GENERIC_OP(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE, OP) \
   __attribute__((always_inline)) \
@@ -47,8 +47,8 @@ NUMERIC_TYPES(BINARY_SYMMETRIC, subtract, -)
 NUMERIC_TYPES(BINARY_SYMMETRIC, multiply, *)
 NUMERIC_TYPES(BINARY_SYMMETRIC, divide, /)
 
-BINARY_GENERIC_OP(mod, BIGINT, INT, INT, %)
-BINARY_GENERIC_OP(mod, BIGINT, BIGINT, BIGINT, %)
+BINARY_GENERIC_OP(mod, int64, int32, int32, %)
+BINARY_GENERIC_OP(mod, int64, int64, int64, %)
 
 /*
  * Relational binary fns : left, right params are same, return is bool.
@@ -75,19 +75,19 @@ NUMERIC_TYPES(BINARY_RELATIONAL, greater_than_or_equal_to, >=)
     return (OUT_TYPE)in; \
   }
 
-CAST_UNARY(castBIGINT, INT, BIGINT)
-CAST_UNARY(castFLOAT4, INT, FLOAT4)
-CAST_UNARY(castFLOAT4, BIGINT, FLOAT4)
-CAST_UNARY(castFLOAT8, INT, FLOAT8)
-CAST_UNARY(castFLOAT8, BIGINT, FLOAT8)
-CAST_UNARY(castFLOAT8, FLOAT4, FLOAT8)
+CAST_UNARY(castBIGINT, int32, int64)
+CAST_UNARY(castFLOAT4, int32, float32)
+CAST_UNARY(castFLOAT4, int64, float32)
+CAST_UNARY(castFLOAT8, int32, float64)
+CAST_UNARY(castFLOAT8, int64, float64)
+CAST_UNARY(castFLOAT8, float32, float64)
 
 /*
  * simple nullable functions, result value = fn(input validity)
  */
 #define VALIDITY_OP(NAME, TYPE, OP) \
   __attribute__((always_inline)) \
-  bool NAME##_##TYPE(TYPE in, bool is_valid) { \
+  bool NAME##_##TYPE(TYPE in, boolean is_valid) { \
     return OP is_valid; \
   }
 

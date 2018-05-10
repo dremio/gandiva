@@ -42,4 +42,6 @@ include_directories(${PROTOBUF_INCLUDE_DIR})
 protobuf_generate_cpp(PROTO_SRC PROTO_HEADER ${PROTO_FILES})
 add_library(proto ${PROTO_HEADER} ${PROTO_SRC})
 
+include(CTest)
+enable_testing()
 add_subdirectory(src/gandiva)

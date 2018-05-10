@@ -17,6 +17,7 @@
 #define GANDIVA_FUNCTION_SIGNATURE_H
 
 #include "arrow.h"
+#include <sstream>
 
 namespace gandiva {
 
@@ -66,6 +67,21 @@ class FunctionSignature {
   }
 
   DataTypeSharedPtr ret_type() const { return ret_type_; }
+
+  std::string ToString() const {
+    std::stringstream params;
+    for (int i = 0; i < param_types_.size(); i++) {
+      if (i > 0) {
+        params << ", ";
+      }
+
+      params << param_types_[i]->ToString();
+    }
+
+    std::stringstream s;
+    s << ret_type_->ToString() << " " << base_name_ << "(" << params.str() << ")";
+    return s.str();
+  }
 
  private:
   /*

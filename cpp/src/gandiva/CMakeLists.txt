@@ -28,8 +28,6 @@ find_path(ARROW_INCLUDE_DIR arrow/type.h)
 message(STATUS "include dir for arrow : ${ARROW_INCLUDE_DIR}")
 include_directories(${ARROW_INCLUDE_DIR})
 
-#include(CTest)
-enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
@@ -44,11 +42,11 @@ include_directories(${CMAKE_BINARY_DIR})
 
 set(GANDIVA_SRCS
     codegen/llvm_types.cc
-    codegen/function_registry.cc
-    codegen/cex/func_cex.cc
-    codegen/engine.cc
-    codegen/expression_annotator.cc
-    codegen/llvm_generator.cc)
+    codegen/function_registry.cc)
+#    codegen/cex/func_cex.cc
+#    codegen/engine.cc
+#    codegen/expression_annotator.cc
+#    codegen/llvm_generator.cc)
 
 set(PRECOMPILED_SOURCED_FILES
     precompiled/arithmetic_ops.cc
@@ -78,31 +76,30 @@ target_link_libraries(gandiva proto ${PROTOBUF_LIBRARY})
 llvm_map_components_to_libnames(llvm_libs core mcjit native ipo bitreader target linker analysis debuginfodwarf)
 # Link against LLVM libraries
 target_link_libraries(gandiva ${llvm_libs})
+target_link_libraries(gandiva ${ARROW_LIB})
 
-add_executable(replay codegen/replay.cc)
-target_link_libraries(replay gandiva)
+#TODO
+#add_executable(replay codegen/replay.cc)
+#target_link_libraries(replay gandiva)
 
 # Test related
 
-function(ADD_GANDIVA_UNIT_TEST REL_TEST_NAME)
+function(ADD_GANDIVA_TEST LABEL REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
   set(TEST_PATH "${EXECUTABLE_OUTPUT_PATH}/${TEST_NAME}")
 
-  add_executable(${TEST_NAME} ${REL_TEST_NAME})
+  add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
+  if(${LABEL} STREQUAL "integ")
+    target_link_libraries(${TEST_NAME} gandiva)
+  endif()
   target_link_libraries(${TEST_NAME} ${ARROW_LIB})
   target_link_libraries(${TEST_NAME} ${GTEST_BOTH_LIBRARIES})
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+  set_property(TEST ${TEST_NAME} PROPERTY LABELS ${LABEL} ${TEST_NAME})
 endfunction()
 
-function(ADD_GANDIVA_INTEG_TEST REL_TEST_NAME)
-  get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
-  set(TEST_PATH "${EXECUTABLE_OUTPUT_PATH}/${TEST_NAME}")
+#args: label test-file src-files
+ADD_GANDIVA_TEST(unittest codegen/function_signature_test.cc)
+ADD_GANDIVA_TEST(unittest codegen/function_registry_test.cc codegen/function_registry.cc)
 
-  add_executable(${TEST_NAME} ${REL_TEST_NAME})
-  target_link_libraries(${TEST_NAME} ${ARROW_LIB})
-  target_link_libraries(${TEST_NAME} gandiva)
-  add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
-endfunction()
-
-ADD_GANDIVA_UNIT_TEST(codegen/function_signature_test.cc)
-#ADD_GANDIVA_INTEG_TEST(evaluator_test expr/evaluator_test.cc)
+#ADD_GANDIVA_TEST(integ evaluator_test expr/evaluator_test.cc)

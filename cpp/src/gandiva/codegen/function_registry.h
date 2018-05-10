@@ -22,11 +22,11 @@
 namespace gandiva {
 
 /*
- * Registry of pre-compiled functions (either IR or .so).
+ * Registry of pre-compiled IR functions.
  */
 class FunctionRegistry {
  public:
-  static const NativeFunction *LookupSignature(const FunctionSignature *signature);
+  static const NativeFunction *LookupSignature(const FunctionSignature &signature);
 
  private:
   struct KeyHash
@@ -44,11 +44,11 @@ class FunctionRegistry {
   };
 
  private:
-  static DataTypeSharedPtr time() {
-    return arrow::time64(arrow::TimeUnit::MILLI);
+  static DataTypeSharedPtr time64() {
+    return arrow::time64(arrow::TimeUnit::MICRO);
   }
 
-  static DataTypeSharedPtr timestamp() {
+  static DataTypeSharedPtr timestamp64() {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
   }
 

@@ -24,16 +24,16 @@
  * Expand inner macro for all date types.
  */
 #define DATE_TYPES(INNER) \
-  INNER(DATE) \
-  INNER(TIME) \
-  INNER(TIMESTAMP)
+  INNER(date) \
+  INNER(time64) \
+  INNER(timestamp64)
 
 /*
  * Extract  year.
  */
 #define EXTRACT_YEAR(TYPE) \
   __attribute__((always_inline)) \
-  BIGINT extractYear##_##TYPE(TYPE millis) { \
+  int64 extractYear##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
     gmtime_r(&tsec, &tm); \
@@ -44,7 +44,7 @@ DATE_TYPES(EXTRACT_YEAR)
 
 #define EXTRACT_MONTH(TYPE) \
   __attribute__((always_inline)) \
-  BIGINT extractMonth##_##TYPE(TYPE millis) { \
+  int64 extractMonth##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
     gmtime_r(&tsec, &tm); \
@@ -55,7 +55,7 @@ DATE_TYPES(EXTRACT_MONTH)
 
 #define EXTRACT_DAY(TYPE) \
   __attribute__((always_inline)) \
-  BIGINT extractDay##_##TYPE(TYPE millis) { \
+  int64 extractDay##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
     gmtime_r(&tsec, &tm); \
@@ -66,7 +66,7 @@ DATE_TYPES(EXTRACT_DAY)
 
 #define EXTRACT_HOUR(TYPE) \
   __attribute__((always_inline)) \
-  BIGINT extractHour##_##TYPE(TYPE millis) { \
+  int64 extractHour##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
     gmtime_r(&tsec, &tm); \
@@ -77,7 +77,7 @@ DATE_TYPES(EXTRACT_HOUR)
 
 #define EXTRACT_MINUTE(TYPE) \
   __attribute__((always_inline)) \
-  BIGINT extractMinute##_##TYPE(TYPE millis) { \
+  int64 extractMinute##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
     gmtime_r(&tsec, &tm); \
