@@ -22,6 +22,7 @@
 
 namespace gandiva {
 
+/// \brief Holder for llvm types, and mappings between arrow types and llvm types.
 class LLVMTypes {
  public:
   LLVMTypes(llvm::LLVMContext *context);

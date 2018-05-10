@@ -21,11 +21,10 @@
 
 namespace gandiva {
 
-/*
- * Registry of pre-compiled IR functions.
- */
+///\brief Registry of pre-compiled IR functions.
 class FunctionRegistry {
  public:
+  /// Lookup a pre-compiled function by its signature.
   static const NativeFunction *LookupSignature(const FunctionSignature &signature);
 
  private:
