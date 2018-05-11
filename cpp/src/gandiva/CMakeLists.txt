@@ -42,7 +42,8 @@ include_directories(${CMAKE_BINARY_DIR})
 
 set(GANDIVA_SRCS
     codegen/llvm_types.cc
-    codegen/function_registry.cc)
+    codegen/function_registry.cc
+    expr/tree_expr_builder.cc)
 #    codegen/cex/func_cex.cc
 #    codegen/engine.cc
 #    codegen/expression_annotator.cc
@@ -105,5 +106,6 @@ endfunction()
 ADD_GANDIVA_TEST(unittest codegen/function_signature_test.cc)
 ADD_GANDIVA_TEST(unittest codegen/function_registry_test.cc codegen/function_registry.cc)
 ADD_GANDIVA_TEST(unittest codegen/llvm_types_test.cc codegen/llvm_types.cc)
+ADD_GANDIVA_TEST(unittest expr/tree_expr_test.cc expr/tree_expr_builder.cc)
 
 #ADD_GANDIVA_TEST(integ evaluator_test expr/evaluator_test.cc)

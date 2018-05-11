@@ -17,13 +17,10 @@
 #define GANDIVA_EXPR_TREE_BUILDER_H
 
 #include <string>
-#include "CodeGen.pb.h"
+#include "node.h"
+#include "expression.h"
 
 namespace gandiva {
-
-class Node {
-};
-using NodeSharedPtr = std::shared_ptr<Node>;
 
 /// \brief Tree Builder for a nested expression.
 class TreeExprBuilder {

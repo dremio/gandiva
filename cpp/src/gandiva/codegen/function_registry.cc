@@ -136,7 +136,7 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
   for (int i = 0; i < num_entries; i++) {
     const NativeFunction *entry = &pc_registry_[i];
 
-    assert(LookupSignature(entry->signature()) == NULL);
+    //assert(LookupSignature(entry->signature()) == NULL);
     map[&entry->signature()] = entry;
     printf("%s -> %s\n", entry->signature().ToString().c_str(), entry->pc_name().c_str());
   }
