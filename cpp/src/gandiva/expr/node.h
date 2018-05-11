@@ -73,7 +73,7 @@ class FunctionNode : public Node {
     FunctionNode(FunctionSignature func_signature, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
       : Node(retType), func_signature_(func_signature), children_(children) { }
 
-    static FunctionNode *createFunction(const std::string &name, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
+    static NodeSharedPtr createFunction(const std::string &name, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
     {
       std::vector<DataTypeSharedPtr> paramTypes;
       for(std::vector<const NodeSharedPtr>::iterator it = children.begin(); it != children.end(); ++it) {
@@ -82,7 +82,7 @@ class FunctionNode : public Node {
       }
 
       auto func_signature = FunctionSignature(name, paramTypes, retType);
-      return new FunctionNode(func_signature, children, retType);
+      return NodeSharedPtr(new FunctionNode(func_signature, children, retType));
     }
 
     virtual ValueValidityPair *Decompose() override {
