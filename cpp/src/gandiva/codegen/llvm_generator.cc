@@ -56,7 +56,6 @@ void LLVMGenerator::Add(const ExpressionSharedPtr expr, const FieldDescriptorSha
  * Build and optimise module for projection expression.
  */
 void LLVMGenerator::Build(ExpressionVector exprs) {
-  //projection_ = std::move(projection);
   ReproSaveBuild();
 
   for (auto it = exprs.begin(); it != exprs.end(); it++) {
@@ -82,8 +81,9 @@ void LLVMGenerator::Build(ExpressionVector exprs) {
  */
 int LLVMGenerator::Execute(int64_t addrs[], int naddrs, int record_count) {
 
+  DCHECK(record_count > 0);
+  DCHECK(naddrs > 0);
   ReproSaveExecute(addrs, naddrs, record_count);
-  assert(record_count > 0 && naddrs > 0);
 
   // generate bitmap vectors, by doing an intersection.
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
@@ -279,95 +279,6 @@ void LLVMGenerator::SetPackedBitValue(llvm::Value *bitmap, llvm::Value *position
   AddFunctionCall("bitMapSetBit", types_.void_type(), std::vector<llvm::Value *> {bitmap8, position, value});
 }
 
-llvm::Value *LLVMGenerator::AddFunctionCall(std::string full_name,
-                                            llvm::Type *ret_type,
-                                            const std::vector<llvm::Value *> &args) {
-
-  // add to list of functions that need to be compiled.
-  engine_->AddFunctionToCompile(full_name);
-
-  // find the llvm function.
-  llvm::Function *fn = module()->getFunction(full_name);
-  assert(fn != NULL);
-
-  if (enable_ir_traces_ &&
-      full_name.compare("printf") &&
-      full_name.compare("printff")) {
-    // Trace for debugging
-    AddTrace("invoke native fn " + full_name);
-  }
-
-  // build a call to the llvm function.
-  if (ret_type->isVoidTy()) {
-    // void functions can't have a name for the call.
-    return ir_builder().CreateCall(fn, args);
-  } else {
-    llvm::Value *value = ir_builder().CreateCall(fn, args, full_name);
-    assert(value->getType() == ret_type);
-    return value;
-  }
-}
-
-/*
- * replace %T with the type-specific format specifier.
- * For some reason, float/double literals are getting lost when printing with the generic printf. so, use a
- * wrapper instead.
- */
-std::string LLVMGenerator::ReplaceFormatInTrace(std::string msg, llvm::Value *value, std::string *print_fn) {
-  std::size_t pos = msg.find("%T");
-  if (pos == std::string::npos) {
-    assert(0);
-    return msg;
-  }
-
-  llvm::Type *type = value->getType();
-  const char *fmt = "";
-  if (type->isIntegerTy(1) || type->isIntegerTy(32)) {
-    // bit or int
-    fmt = "%d";
-  } else if (type->isIntegerTy(64)) {
-    // bigint
-    fmt = "%lld";
-  } else if (type->isFloatTy()) {
-    // float
-    fmt = "%f";
-    *print_fn = "print_float";
-  } else if (type->isDoubleTy()) {
-    // float
-    fmt = "%lf";
-    *print_fn = "print_double";
-  } else {
-    assert(0);
-  }
-  msg.replace(pos, 2, fmt);
-  return msg;
-}
-
-void LLVMGenerator::AddTrace(const std::string &msg, llvm::Value *value) {
-  if (!enable_ir_traces_) {
-    return;
-  }
-
-  std::string dmsg = "IR_TRACE:: " + msg + "\n";
-  std::string print_fn_name = "printf";
-  if (value) {
-    dmsg = ReplaceFormatInTrace(dmsg, value, &print_fn_name);
-  }
-  trace_strings_.push_back(dmsg);
-
-  // cast this to an llvm pointer.
-  const char *str = trace_strings_.back().c_str();
-  llvm::Constant *str_int_cast = types_.i64_constant((int64_t)str);
-  llvm::Constant *str_ptr_cast = llvm::ConstantExpr::getIntToPtr(str_int_cast, types_.ptr_type(types_.i8_type()));
-
-  std::vector<llvm::Value *> args;
-  args.push_back(str_ptr_cast);
-  if (value) {
-    args.push_back(value);
-  }
-  AddFunctionCall(print_fn_name, types_.i32_type(), args);
-}
-
 /*
  * Extract the bitmap addresses, and do an intersection.
  */
@@ -430,16 +341,34 @@ LLVMGenerator::IntersectBitMaps(int64_t *dst_map, int64_t **src_maps, int nmaps,
   }
 }
 
-// Add a trace iff traces are enabled.
-#define ADD_VISITOR_IR_TRACE(msg) \
-  if (generator_->enable_ir_traces_) { \
-    generator_->AddTrace(msg); \
+llvm::Value *LLVMGenerator::AddFunctionCall(std::string full_name,
+                                            llvm::Type *ret_type,
+                                            const std::vector<llvm::Value *> &args) {
+
+  // add to list of functions that need to be compiled.
+  engine_->AddFunctionToCompile(full_name);
+
+  // find the llvm function.
+  llvm::Function *fn = module()->getFunction(full_name);
+  assert(fn != NULL);
+
+  if (enable_ir_traces_ &&
+      full_name.compare("printf") &&
+      full_name.compare("printff")) {
+    // Trace for debugging
+    AddTrace("invoke native fn " + full_name);
   }
 
-#define ADD_VISITOR_IR_TRACE2(msg, value) \
-  if (generator_->enable_ir_traces_) { \
-    generator_->AddTrace(msg, value); \
+  // build a call to the llvm function.
+  if (ret_type->isVoidTy()) {
+    // void functions can't have a name for the call.
+    return ir_builder().CreateCall(fn, args);
+  } else {
+    llvm::Value *value = ir_builder().CreateCall(fn, args, full_name);
+    assert(value->getType() == ret_type);
+    return value;
   }
+}
 
 // Visitor for generating the code for a decomposed expression.
 LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator,
@@ -454,7 +383,11 @@ LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator,
       arg_addrs_(arg_addrs),
       loop_var_(loop_var) {
 
-  ADD_VISITOR_IR_TRACE2("Iteration %T", loop_var);
+  AddTrace("Iteration %T", loop_var);
+}
+
+void LLVMGenerator::Visitor::AddTrace(const std::string &msg, llvm::Value *value) {
+  generator_->AddTrace(msg, value);
 }
 
 void LLVMGenerator::Visitor::Visit(const VectorReadValueDex &dex) {
@@ -474,7 +407,7 @@ void LLVMGenerator::Visitor::Visit(const VectorReadValueDex &dex) {
     slot_value = builder.CreateLoad(slot_offset, dex.FieldName());
   }
 
-  ADD_VISITOR_IR_TRACE2("visit data vector " + dex.FieldName() + " value %T", slot_value);
+  AddTrace("visit data vector " + dex.FieldName() + " value %T", slot_value);
   result_.reset(new LValue(slot_value));
 }
 
@@ -488,7 +421,7 @@ void LLVMGenerator::Visitor::Visit(const VectorReadValidityDex &dex) {
 
   builder.SetInsertPoint(loop_block_);
   llvm::Value *validity = generator_->GetPackedBitValue(slot_ref, loop_var_);
-  ADD_VISITOR_IR_TRACE2("visit validity vector " + dex.FieldName() + " value %T", validity);
+  AddTrace("visit validity vector " + dex.FieldName() + " value %T", validity);
   result_.reset(new LValue(validity));
 }
 
@@ -497,7 +430,7 @@ void LLVMGenerator::Visitor::Visit(const LiteralDex &dex) {
 }
 
 void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
-  ADD_VISITOR_IR_TRACE("visit NonNullableFunc base function " + dex.func_descriptor()->name());
+  AddTrace("visit NonNullableFunc base function " + dex.func_descriptor()->name());
   LLVMTypes &types = generator_->types_;
 
   // build the function params.
@@ -517,7 +450,7 @@ void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
 }
 
 void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
-  ADD_VISITOR_IR_TRACE("visit NullableNever base function " + dex.func_descriptor()->name());
+  AddTrace("visit NullableNever base function " + dex.func_descriptor()->name());
   LLVMTypes &types = generator_->types_;
 
   // build the function params, along with the validities.
@@ -553,8 +486,70 @@ llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(std::vector<DexShared
     (*it)->Accept(this);
     isValid = builder.CreateAnd(isValid, result()->data(), "validityBitAnd");
   }
-  ADD_VISITOR_IR_TRACE2("combined validity is %T", isValid);
+  AddTrace("combined validity is %T", isValid);
   return isValid;
+}
+
+/*
+ * Hooks for tracing/printfs.
+ *
+ * replace %T with the type-specific format specifier.
+ * For some reason, float/double literals are getting lost when printing with the generic printf. so, use a
+ * wrapper instead.
+ */
+std::string LLVMGenerator::ReplaceFormatInTrace(std::string msg, llvm::Value *value, std::string *print_fn) {
+  std::size_t pos = msg.find("%T");
+  if (pos == std::string::npos) {
+    assert(0);
+    return msg;
+  }
+
+  llvm::Type *type = value->getType();
+  const char *fmt = "";
+  if (type->isIntegerTy(1) || type->isIntegerTy(32)) {
+    // bit or int
+    fmt = "%d";
+  } else if (type->isIntegerTy(64)) {
+    // bigint
+    fmt = "%lld";
+  } else if (type->isFloatTy()) {
+    // float
+    fmt = "%f";
+    *print_fn = "print_float";
+  } else if (type->isDoubleTy()) {
+    // float
+    fmt = "%lf";
+    *print_fn = "print_double";
+  } else {
+    assert(0);
+  }
+  msg.replace(pos, 2, fmt);
+  return msg;
+}
+
+void LLVMGenerator::AddTrace(const std::string &msg, llvm::Value *value) {
+  if (!enable_ir_traces_) {
+    return;
+  }
+
+  std::string dmsg = "IR_TRACE:: " + msg + "\n";
+  std::string print_fn_name = "printf";
+  if (value) {
+    dmsg = ReplaceFormatInTrace(dmsg, value, &print_fn_name);
+  }
+  trace_strings_.push_back(dmsg);
+
+  // cast this to an llvm pointer.
+  const char *str = trace_strings_.back().c_str();
+  llvm::Constant *str_int_cast = types_.i64_constant((int64_t)str);
+  llvm::Constant *str_ptr_cast = llvm::ConstantExpr::getIntToPtr(str_int_cast, types_.ptr_type(types_.i8_type()));
+
+  std::vector<llvm::Value *> args;
+  args.push_back(str_ptr_cast);
+  if (value) {
+    args.push_back(value);
+  }
+  AddFunctionCall(print_fn_name, types_.i32_type(), args);
 }
 
 /*
@@ -562,8 +557,8 @@ llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(std::vector<DexShared
  */
 
 #ifdef REPRO_SAVE
-static const char *kReproFileNameExpr = "/tmp/repro_expr.pb";
-static const char *kReproFileNameVectors = "/tmp/repro_vector.pb";
+static const char *kReproFileNameExpr = "/tmp/repro_expr.fbs";
+static const char *kReproFileNameVectors = "/tmp/repro_vector.fbs";
 
 /*
  * Save expression in an on-disk file.
@@ -603,39 +598,6 @@ LLVMGenerator::ReproSaveExecute(int64_t *addrs, int naddrs, int nrecords) {
   // Ignore errors.
   std::fstream output(kReproFileNameVectors, std::ios::out | std::ios::trunc | std::ios::binary);
   dump.SerializeToOstream(&output);
-}
-
-void
-LLVMGenerator::ReproUpdateValiditySlot(int slot) {
-  slot_size_in_bits_[slot] = 1;
-}
-
-void
-LLVMGenerator::ReproUpdateSlotSize(int slot, const common::MajorType &type) {
-  int len = 0;
-  switch (type.minor_type()) {
-    case common::BIT:
-      len = 1;
-      break;
-
-    case common::INT:
-    case common::FLOAT4:
-      len = 32;
-      break;
-
-    case common::BIGINT:
-    case common::FLOAT8:
-    case common::TIME:
-    case common::TIMESTAMP:
-    case common::DATE:
-      len = 64;
-      break;
-
-    default:
-      assert(0);
-      break;
-  }
-  slot_size_in_bits_[slot] = len;
 }
 
 /*
@@ -694,8 +656,6 @@ LLVMGenerator::ReproReplay(bool optimise_ir, bool trace_ir) {
 // Add dummy functions.
 void LLVMGenerator::ReproSaveBuild() {}
 void LLVMGenerator::ReproSaveExecute(int64_t *addrs, int naddrs, int nrecords) {}
-void LLVMGenerator::ReproUpdateValiditySlot(int slot) {}
-void LLVMGenerator::ReproUpdateSlotSize(int slot, const common::MajorType &type) {}
 int LLVMGenerator::ReproReplay(bool optimise_ir, bool trace_ir) {return 0;}
 
 #endif // REPRO_SAVE

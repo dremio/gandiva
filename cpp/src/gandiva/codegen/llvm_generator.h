@@ -19,7 +19,6 @@
 #include <stdint.h>
 #include "gandiva_fwd.h"
 #include "expression.h"
-#include "CodeGen.pb.h"
 #include "dex_visitor.h"
 #include "compiled_expr.h"
 #include "engine.h"
@@ -79,6 +78,7 @@ class LLVMGenerator {
     llvm::Module *module() { return generator_->module(); }
 
     llvm::Value *BuildCombinedValidity(std::vector<DexSharedPtr> validities);
+    void AddTrace(const std::string &msg, llvm::Value *value = NULL);
 
     LLVMGenerator *generator_;
     LValueSharedPtr result_;
@@ -101,23 +101,20 @@ class LLVMGenerator {
 
   llvm::Value *GetPackedBitValue(llvm::Value *bitMap, llvm::Value *position);
   void SetPackedBitValue(llvm::Value *bitMap, llvm::Value *position, llvm::Value *value);
-
   llvm::Value *AddFunctionCall(std::string full_name, llvm::Type *ret_type, const std::vector<llvm::Value *> &args);
-
-  std::string ReplaceFormatInTrace(std::string msg, llvm::Value *value, std::string *print_fn);
-  void AddTrace(const std::string &msg, llvm::Value *value = NULL);
 
   void ComputeBitMapsForExpr(CompiledExpr *compiledExpr, int64_t addrs[], int record_count);
   void IntersectBitMaps(int64_t *dst_map, int64_t **src_maps, int nmaps, int num_records);
 
+  // tracing related
+  std::string ReplaceFormatInTrace(std::string msg, llvm::Value *value, std::string *print_fn);
+  void AddTrace(const std::string &msg, llvm::Value *value = NULL);
+
   // Repro/replay related
   void ReproSaveBuild();
   void ReproSaveExecute(int64_t *addrs, int naddrs, int nrecords);
-  void ReproUpdateValiditySlot(int slot);
-  void ReproUpdateSlotSize(int slot, const common::MajorType &type);
 
   std::unique_ptr<Engine> engine_;
-  std::unique_ptr<Projection> projection_;
   std::vector<CompiledExpr *> compiled_exprs_;
   LLVMTypes types_;
 
