@@ -29,6 +29,7 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Vectorize.h>
 #include <llvm/Transforms/Scalar/GVN.h>
+#include <iostream>
 #include <sstream>
 #include <unordered_set>
 #include "codegen_exception.h"
@@ -36,10 +37,8 @@
 
 namespace gandiva {
 
-const std::string Engine::kLibPreCompiledDir = "/tmp/";
-const std::string Engine::kLibPreCompiledNativeDir = kLibPreCompiledDir + "darwin/";
-const std::string Engine::kLibPreCompiledIRDir = kLibPreCompiledDir + "ir/";
-bool Engine::init_once_done_ = 0;
+const std::string Engine::kLibPreCompiledIRDir = "/tmp/";
+bool Engine::init_once_done_ = false;
 std::once_flag init_once_flag;
 
 /*
@@ -53,17 +52,7 @@ void Engine::InitOnce() {
   llvm::InitializeNativeTargetAsmParser();
   llvm::InitializeNativeTargetDisassembler();
 
-  InitOncePreCompiledSoLibs();
   init_once_done_ = true;
-}
-
-void Engine::InitOncePreCompiledSoLibs() {
-  std::string fileName = kLibPreCompiledNativeDir + "nativehelpers.so";
-
-  int err = llvm::sys::DynamicLibrary::LoadLibraryPermanently(fileName.c_str());
-  if (err != 0) {
-    throw CodeGenException(err, "loading precompiled native file failed");
-  }
 }
 
 Engine::Engine()
@@ -95,6 +84,7 @@ Engine::Engine()
 void Engine::LoadPreCompiledIRFiles() {
   std::string fileName = kLibPreCompiledIRDir + "irhelpers.bc";
 
+  /// Read from file into memory buffer.
   llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer_or_error = llvm::MemoryBuffer::getFile(fileName);
   if (!buffer_or_error) {
     std::stringstream ss;
@@ -103,6 +93,7 @@ void Engine::LoadPreCompiledIRFiles() {
   }
   std::unique_ptr<llvm::MemoryBuffer> buffer = move(buffer_or_error.get());
 
+  /// Parse the IR module.
   llvm::Expected<std::unique_ptr<llvm::Module>>
       module_or_error = llvm::getOwningLazyBitcodeModule(move(buffer), *context());
   if (!module_or_error) {
@@ -113,10 +104,13 @@ void Engine::LoadPreCompiledIRFiles() {
     throw CodeGenException(error_string);
   }
   std::unique_ptr<llvm::Module> ir_module = move(module_or_error.get());
+
+  /// Verify the IR module
   if (llvm::verifyModule(*ir_module.get(), &llvm::errs())) {
     throw CodeGenException("verify of IR Module failed");
   }
 
+  // Link this to the primary module.
   if (llvm::Linker::linkModules(*module_, move(ir_module))) {
     throw CodeGenException("failed to link IR Modules");
   }
@@ -135,7 +129,7 @@ Engine::FinalizeModule(bool optimise_ir, bool dump_ir) {
   if (optimise_ir) {
     std::unique_ptr<llvm::legacy::PassManager> pass_manager(new llvm::legacy::PassManager());
 
-    /* First round : get rid of all functions that don't need to be compile.
+    /* First round : get rid of all functions that don't need to be compiled.
      * This helps in reducing the overall compilation time.
      *
      * Done by marking all the unused functions as internal, and then, running
@@ -183,12 +177,12 @@ Engine::FinalizeModule(bool optimise_ir, bool dump_ir) {
     throw CodeGenException("verify of module failed after optimisation passes");
   }
 
-  // does the compilation
+  // do the compilation
   execution_engine_->finalizeObject();
   module_finalized_ = true;
 }
 
-void *Engine::IRFunctionToFunctionPointer(llvm::Function *irFunction) {
+void *Engine::CompiledFunction(llvm::Function *irFunction) {
   assert(module_finalized_);
   return execution_engine_->getPointerToFunction(irFunction);
 }
@@ -198,7 +192,7 @@ void Engine::DumpIR(std::string prefix) {
 
   llvm::raw_string_ostream stream(str);
   module_->print(stream, NULL);
-  printf("====%s===\n%s\n", prefix.c_str(), str.c_str());
+  std::cout << "====" << prefix << "===" << str << "\n";
 }
 
 } // namespace gandiva

@@ -72,7 +72,7 @@ void LLVMGenerator::Build(ExpressionVector exprs) {
   // setup the jit functions for each expression.
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
     CompiledExpr *compiled_expr = *it;
-    eval_func_t fn = reinterpret_cast<eval_func_t>(engine_->IRFunctionToFunctionPointer(compiled_expr->ir_function()));
+    eval_func_t fn = reinterpret_cast<eval_func_t>(engine_->CompiledFunction(compiled_expr->ir_function()));
     compiled_expr->set_jit_function(fn);
   }
 }

@@ -25,6 +25,7 @@
 
 namespace gandiva {
 
+/// \brief LLVM Execution engine wrapper.
 class Engine {
  public:
   Engine();
@@ -34,19 +35,23 @@ class Engine {
 
   llvm::Module *module() { return module_; }
 
+  /// Add the function to the list of IR functions that need to be compiled.
+  /// Compiling only the functions that are used by the module saves time.
   void AddFunctionToCompile(const std::string &fname) {
+    assert(!module_finalized_);
     functions_to_compile_.push_back(fname);
   }
+
+  /// Optimise and compile the module.
   void FinalizeModule(bool optimise_ir, bool dump_ir);
-  void *IRFunctionToFunctionPointer(llvm::Function *irFunction);
+
+  /// Get the compiled function corresponding to  the irfunction.
+  void *CompiledFunction(llvm::Function *irFunction);
 
  private:
-  static const std::string kLibPreCompiledDir;
-  static const std::string kLibPreCompiledNativeDir;
   static const std::string kLibPreCompiledIRDir;
 
   static void InitOnce();
-  static void InitOncePreCompiledSoLibs();
   static bool init_once_done_;
 
   llvm::ExecutionEngine &execution_engine() { return *execution_engine_.get(); }
