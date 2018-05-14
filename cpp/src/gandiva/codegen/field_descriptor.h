@@ -13,42 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GANDIVA_VECTORDESCRIPTOR_H
-#define GANDIVA_VECTORDESCRIPTOR_H
+#ifndef GANDIVA_FIELDDESCRIPTOR_H
+#define GANDIVA_FIELDDESCRIPTOR_H
 
 #include <string>
-#include "CodeGen.pb.h"
+#include "arrow.h"
 
 namespace gandiva {
 
 /*
  * Descriptor for a vector, as received from the executor.
  */
-class VectorDescriptor {
+class FieldDescriptor {
  public:
-  VectorDescriptor(const VectorExpr &vector_expr)
-      : name_(vector_expr.name()),
-        type_(&vector_expr.majortype()),
-        validity_idx_(vector_expr.validityidx()),
-        data_idx_(vector_expr.dataidx()),
-        offsets_idx_(vector_expr.offsetsidx()) {}
+  FieldDescriptor(FieldSharedPtr field, int data_idx, int validity_idx, int offsets_idx)
+      : field_(field),
+        data_idx_(data_idx),
+        validity_idx_(validity_idx),
+        offsets_idx_(offsets_idx) {}
 
-  const std::string &name() const { return name_; }
-  const common::MajorType *type() const { return type_; }
+  /* Index of validity array in the array-of-pointers argument */
   int validity_idx() const { return validity_idx_; }
+
+  /* Index of data array in the array-of-pointers argument */
   int data_idx() const { return data_idx_; }
+
+  /* Index of offsets array in the array-of-pointers argument */
   int offsets_idx() const { return offsets_idx_; }
 
+  const FieldSharedPtr field() const { return field_; }
+
+  const std::string &Name() const { return field_->name(); }
+  const DataTypeSharedPtr Type() const { return field_->type(); }
+
  private:
-  std::string name_;
-  const common::MajorType *type_;
-  int validity_idx_;
+  FieldSharedPtr field_;
   int data_idx_;
+  int validity_idx_;
   int offsets_idx_;
 };
 
-typedef std::shared_ptr<VectorDescriptor> VectorDescriptorSharedPtr;
-
 } // namespace gandiva
 
-#endif //GANDIVA_VECTORDESCRIPTOR_H
+#endif //GANDIVA_FIELDDESCRIPTOR_H

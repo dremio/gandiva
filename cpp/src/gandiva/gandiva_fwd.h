@@ -13,34 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GANDIVA_DEX_LITERALDEX_H
-#define GANDIVA_DEX_LITERALDEX_H
-
-#include "CodeGen.pb.h"
-#include "dex/dex.h"
+#ifndef GANDIVA_FWD_H
+#define GANDIVA_FWD_H
 
 namespace gandiva {
 
-/*
- * decomposed expression for a literal.
- */
-class LiteralDex : public Dex {
- public:
-  LiteralDex(const Literal *literal)
-      : literal_(literal) {}
+class Dex;
+using DexSharedPtr = std::shared_ptr<Dex>;
 
-  const Literal *literal() const {
-    return literal_;
-  }
+class DexVisitor;
 
-  virtual LValueUniquePtr accept(DexVisitor &visitor) override {
-    return visitor.visit(*this);
-  }
+class ValueValidityPair;
+using ValueValidityPairSharedPtr = std::shared_ptr<ValueValidityPair>;
 
- private:
-  const Literal *literal_;
-};
+class FieldDescriptor;
+using FieldDescriptorSharedPtr = std::shared_ptr<FieldDescriptor>;
+
+class FuncDescriptor;
+using FuncDescriptorSharedPtr = std::shared_ptr<FuncDescriptor>;
+
+class LValue;
+using LValueSharedPtr = std::shared_ptr<LValue>;
 
 } // namespace gandiva
 
-#endif //GANDIVA_DEX_LITERALDEX_H
+#endif // GANDIVA_FWD_H

@@ -17,12 +17,14 @@
 #define GANDIVA_LLVMGENERATOR_H
 
 #include <stdint.h>
+#include "gandiva_fwd.h"
 #include "CodeGen.pb.h"
-#include "dex/dex_visitor.h"
+#include "dex_visitor.h"
 #include "compiled_expr.h"
 #include "engine.h"
 #include "value_validity_pair.h"
 #include "llvm_types.h"
+#include "lvalue.h"
 
 namespace gandiva {
 
@@ -63,21 +65,22 @@ class LLVMGenerator {
             llvm::Value *arg_addrs,
             llvm::Value *loop_var);
 
-    virtual LValueUniquePtr visit(const VectorReadValidityDex &dex) override;
-    virtual LValueUniquePtr visit(const VectorReadValueDex &dex) override;
-    virtual LValueUniquePtr visit(const LiteralDex &dex) override;
-    virtual LValueUniquePtr visit(const NonNullableFuncDex &dex) override;
-    virtual LValueUniquePtr visit(const NullableNeverFuncDex &dex) override;
+    virtual void Visit(const VectorReadValidityDex &dex) override;
+    virtual void Visit(const VectorReadValueDex &dex) override;
+    virtual void Visit(const LiteralDex &dex) override;
+    virtual void Visit(const NonNullableFuncDex &dex) override;
+    virtual void Visit(const NullableNeverFuncDex &dex) override;
+
+    LValueSharedPtr result() { return result_; }
 
    private:
     llvm::IRBuilder<> &ir_builder() { return generator_->ir_builder(); }
     llvm::Module *module() { return generator_->module(); }
-    void AddIRTrace(const std::string &msg, llvm::Value *value = NULL);
 
     llvm::Value *BuildCombinedValidity(std::vector<DexSharedPtr> validities);
 
     LLVMGenerator *generator_;
-    llvm::Function *function_;
+    LValueSharedPtr result_;
     llvm::BasicBlock *entry_block_;
     llvm::BasicBlock *loop_block_;
     llvm::Value *arg_addrs_;
@@ -85,13 +88,15 @@ class LLVMGenerator {
   };
 
   void Add(const Expr *expr, const VectorExpr *output);
+
   llvm::Value *LoadVectorAtIndex(llvm::Value *arg_addrs, int idx, const std::string &name);
-  llvm::Value *GetValidityReference(llvm::Value *arg_addrs, int idx, const std::string &name);
-  llvm::Value *GetDataReference(llvm::Value *arg_addrs,
-                                int idx,
-                                const std::string &name,
-                                const common::MajorType &major_type);
-  llvm::Function *CodeGenExprValue(Dex *value_expr, const VectorExpr &output, int suffix_idx);
+  llvm::Value *GetValidityReference(llvm::Value *arg_addrs, int idx, FieldSharedPtr field);
+  llvm::Value *GetDataReference(llvm::Value *arg_addrs, int idx, FieldSharedPtr field);
+
+  /// Generate code for the value array of one expression.
+  llvm::Function *CodeGenExprValue(DexSharedPtr value_expr,
+                                   FieldDescriptorSharedPtr output,
+                                   int suffix_idx);
 
   llvm::Value *GetPackedBitValue(llvm::Value *bitMap, llvm::Value *position);
   void SetPackedBitValue(llvm::Value *bitMap, llvm::Value *position, llvm::Value *value);
@@ -116,9 +121,9 @@ class LLVMGenerator {
   LLVMTypes types_;
 
   // used in replay/debug
+  bool in_replay_;
   bool optimise_ir_;
   bool enable_ir_traces_;
-  bool in_replay_;
   std::map<int, int> slot_size_in_bits_;
   std::vector<std::string> trace_strings_;
 };

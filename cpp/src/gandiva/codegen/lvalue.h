@@ -20,9 +20,7 @@
 
 namespace gandiva {
 
-/*
- * Tracks validity/value builders in LLVM.
- */
+/// \brief Tracks validity/value builders in LLVM.
 class LValue {
  public:
   LValue(llvm::Value *data, llvm::Value *validity = NULL)
@@ -37,8 +35,6 @@ class LValue {
   llvm::Value *data_;
   llvm::Value *validity_;
 };
-
-typedef std::unique_ptr<LValue> LValueUniquePtr;
 
 } // namespace gandiva
 

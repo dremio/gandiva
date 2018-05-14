@@ -26,9 +26,9 @@ namespace gandiva {
  */
 class FuncDescriptor {
  public:
-  FuncDescriptor(std::string name,
-                 const std::vector<const common::MajorType *> &params,
-                 const common::MajorType *return_type)
+  FuncDescriptor(const std::string &name,
+                 const std::vector<DataTypeSharedPtr> &params,
+                 const DataTypeSharedPtr return_type)
       : name_(name),
         params_(params),
         return_type_(return_type)
@@ -36,17 +36,15 @@ class FuncDescriptor {
 
   const std::string &name() const { return name_;}
 
-  const std::vector<const common::MajorType *> &params() const { return params_; }
+  const std::vector<DataTypeSharedPtr> &params() const { return params_; }
 
-  const common::MajorType *return_type() const { return return_type_; }
+  const DataTypeSharedPtr return_type() const { return return_type_; }
 
  private:
   std::string name_;
-  std::vector<const common::MajorType *> params_;
-  const common::MajorType *return_type_;
+  const std::vector<DataTypeSharedPtr> params_;
+  const DataTypeSharedPtr return_type_;
 };
-
-typedef std::shared_ptr<FuncDescriptor> FuncDescriptorSharedPtr;
 
 } // namespace gandiva
 

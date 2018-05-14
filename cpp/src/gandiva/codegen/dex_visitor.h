@@ -13,28 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GANDIVA_DEX_NONNULLABLEFUNCDEX_H
-#define GANDIVA_DEX_NONNULLABLEFUNCDEX_H
+#ifndef GANDIVA_DEX_DEXVISITOR_H
+#define GANDIVA_DEX_DEXVISITOR_H
 
-#include "func_dex.h"
+#include "lvalue.h"
 
 namespace gandiva {
 
-/**
- * A function expression that only deals with non-null inputs.
- */
-class NonNullableFuncDex : public FuncDex {
- public:
-  NonNullableFuncDex(FuncDescriptorSharedPtr func_descriptor,
-                     const NativeFunction *native_function,
-                     std::vector<ValueValidityPairSharedPtr> args)
-      : FuncDex(func_descriptor, native_function, args) {}
+class VectorReadValidityDex;
+class VectorReadValueDex;
+class LiteralDex;
+class NonNullableFuncDex;
+class NullableNeverFuncDex;
 
-  virtual LValueUniquePtr accept(DexVisitor &visitor) override {
-    return visitor.visit(*this);
-  }
+/// \brief Visitor for decomposed expression.
+class DexVisitor {
+ public:
+  virtual void Visit(const VectorReadValidityDex &dex) = 0;
+  virtual void Visit(const VectorReadValueDex &dex) = 0;
+  virtual void Visit(const LiteralDex &dex) = 0;
+  virtual void Visit(const NonNullableFuncDex &dex) = 0;
+  virtual void Visit(const NullableNeverFuncDex &dex) = 0;
 };
 
 } // namespace gandiva
 
-#endif //GANDIVA_DEX_NONNULLABLEFUNCDEX_H
+#endif //GANDIVA_DEX_DEXVISITOR_H

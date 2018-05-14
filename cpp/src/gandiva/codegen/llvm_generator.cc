@@ -17,18 +17,13 @@
 #include <iostream>
 #include <vector>
 #include "codegen_exception.h"
-#include "dex/dex.h"
-#include "dex/literal_dex.h"
-#include "dex/non_nullable_func_dex.h"
-#include "dex/nullable_never_func_dex.h"
-#include "dex/vector_read_value_dex.h"
-#include "dex/vector_read_validity_dex.h"
+#include "dex.h"
 #include "expression_annotator.h"
 #include "function_registry.h"
 #include "llvm_generator.h"
 #include "lvalue.h"
 
-#define REPRO_SAVE
+//#define REPRO_SAVE
 
 namespace gandiva {
 
@@ -45,6 +40,7 @@ LLVMGenerator::~LLVMGenerator() {
   }
 }
 
+#if 0
 void LLVMGenerator::Add(const Expr *expr, const VectorExpr *output) {
   int idx = compiled_exprs_.size();
 
@@ -103,6 +99,7 @@ int LLVMGenerator::Execute(int64_t addrs[], int naddrs, int record_count) {
   }
   return 0;
 }
+#endif
 
 llvm::Value *LLVMGenerator::LoadVectorAtIndex(llvm::Value *arg_addrs,
                                               int idx,
@@ -113,30 +110,29 @@ llvm::Value *LLVMGenerator::LoadVectorAtIndex(llvm::Value *arg_addrs,
 }
 
 /*
- * Get reference to validity vector at specified index in the args list.
+ * Get reference to validity array at specified index in the args list.
  */
 llvm::Value *LLVMGenerator::GetValidityReference(llvm::Value *arg_addrs,
                                                  int idx,
-                                                 const std::string &name) {
-  ReproUpdateValiditySlot(idx);
+                                                 FieldSharedPtr field) {
 
+  const std::string &name = field->name();
   llvm::Value *load = LoadVectorAtIndex(arg_addrs, idx, name);
-  return ir_builder().CreateIntToPtr(load, types_.i64_ptr_type(), name + "_vvec");
+  return ir_builder().CreateIntToPtr(load, types_.i64_ptr_type(), name + "_varray");
 }
 
 /*
- * Get reference to data vector at specified index in the args list.
+ * Get reference to data array at specified index in the args list.
  */
 llvm::Value *LLVMGenerator::GetDataReference(llvm::Value *arg_addrs,
                                              int idx,
-                                             const std::string &name,
-                                             const common::MajorType &major_type) {
-  ReproUpdateSlotSize(idx, major_type);
+                                             FieldSharedPtr field) {
 
+  const std::string &name = field->name();
   llvm::Value *load = LoadVectorAtIndex(arg_addrs, idx, name);
-  llvm::Type *base_type = types_.DataVecType(major_type);
+  llvm::Type *base_type = types_.DataVecType(field->type());
   llvm::Type *pointer_type = types_.ptr_type(base_type);
-  return ir_builder().CreateIntToPtr(load, pointer_type, name + "_dvec");
+  return ir_builder().CreateIntToPtr(load, pointer_type, name + "_darray");
 }
 
 /*
@@ -190,8 +186,8 @@ llvm::Value *LLVMGenerator::GetDataReference(llvm::Value *arg_addrs,
  * }
  *
  */
-llvm::Function *LLVMGenerator::CodeGenExprValue(Dex *value_expr,
-                                                const VectorExpr &output,
+llvm::Function *LLVMGenerator::CodeGenExprValue(DexSharedPtr value_expr,
+                                                FieldDescriptorSharedPtr output,
                                                 int suffix_idx) {
   llvm::IRBuilder<> &builder = ir_builder();
 
@@ -223,7 +219,7 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(Dex *value_expr,
 
   // Add reference to output vector (in entry block)
   builder.SetInsertPoint(loop_entry);
-  llvm::Value *output_ref = GetDataReference(arg_addrs, output.dataidx(), output.name(), output.majortype());
+  llvm::Value *output_ref = GetDataReference(arg_addrs, output->data_idx(), output->field());
 
   // Loop body
   builder.SetInsertPoint(loop_body);
@@ -235,8 +231,9 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(Dex *value_expr,
   loop_var->addIncoming(loop_update, loop_body);
 
   // The visitor can add code to both the entry/loop blocks.
-  std::unique_ptr<Visitor> visitor(new LLVMGenerator::Visitor(this, fn, loop_entry, loop_body, arg_addrs, loop_var));
-  LValueUniquePtr output_value = value_expr->accept(*visitor.get());
+  Visitor visitor(this, fn, loop_entry, loop_body, arg_addrs, loop_var);
+  value_expr->Accept(&visitor);
+  LValueSharedPtr output_value = visitor.result();
 
   // add jump to "loop block" at the end of the "setup block".
   builder.SetInsertPoint(loop_entry);
@@ -245,13 +242,13 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(Dex *value_expr,
   // save the value in the output vector
   builder.SetInsertPoint(loop_body);
 
-  if (output.majortype().minor_type() == common::BIT) {
+  if (output->Type()->id() == arrow::Type::BOOL) {
     SetPackedBitValue(output_ref, loop_var, output_value->data());
   } else {
     llvm::Value *slot_offset = builder.CreateGEP(output_ref, loop_var);
     builder.CreateStore(output_value->data(), slot_offset);
   }
-  AddTrace("saving result " + output.name() + " value %T", output_value->data());
+  AddTrace("saving result " + output->Name() + " value %T", output_value->data());
 
   // check loop_var
   llvm::Value *loop_var_check = builder.CreateICmpSLT(loop_update, arg_nrecords, "loop_var < nrec");
@@ -435,9 +432,18 @@ LLVMGenerator::IntersectBitMaps(int64_t *dst_map, int64_t **src_maps, int nmaps,
   }
 }
 
-/*
- * Visitor for generating the code for a decompsed expression.
- */
+// Add a trace iff traces are enabled.
+#define ADD_VISITOR_IR_TRACE(msg) \
+  if (generator_->enable_ir_traces_) { \
+    generator_->AddTrace(msg); \
+  }
+
+#define ADD_VISITOR_IR_TRACE2(msg, value) \
+  if (generator_->enable_ir_traces_) { \
+    generator_->AddTrace(msg, value); \
+  }
+
+// Visitor for generating the code for a decomposed expression.
 LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator,
                                 llvm::Function *function,
                                 llvm::BasicBlock *entry_block,
@@ -445,114 +451,75 @@ LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator,
                                 llvm::Value *arg_addrs,
                                 llvm::Value *loop_var)
     : generator_(generator),
-      function_(function),
       entry_block_(entry_block),
       loop_block_(loop_block),
       arg_addrs_(arg_addrs),
       loop_var_(loop_var) {
 
-  AddIRTrace("Iteration %T", loop_var);
+  ADD_VISITOR_IR_TRACE2("Iteration %T", loop_var);
 }
 
-/*
- * If IR traces are enabled, add a trace.
- */
-inline void LLVMGenerator::Visitor::AddIRTrace(const std::string &msg, llvm::Value *value) {
-  if (generator_->enable_ir_traces_) {
-    generator_->AddTrace(msg, value);
-  }
-}
-
-LValueUniquePtr LLVMGenerator::Visitor::visit(const VectorReadValueDex &dex) {
+void LLVMGenerator::Visitor::Visit(const VectorReadValueDex &dex) {
   llvm::IRBuilder<> &builder = ir_builder();
-  llvm::BasicBlock *saved_block = builder.GetInsertBlock();
 
   builder.SetInsertPoint(entry_block_);
   llvm::Value *slot_ref = generator_->GetDataReference(arg_addrs_,
                                                        dex.DataIdx(),
-                                                       dex.FieldName(),
-                                                       *(dex.MajorType()));
+                                                       dex.Field());
 
-  builder.SetInsertPoint(saved_block);
+  builder.SetInsertPoint(loop_block_);
   llvm::Value *slot_value;
-  if (dex.MajorType()->minor_type() == common::BIT) {
+  if (dex.FieldType()->id() == arrow::Type::BOOL) {
     slot_value = generator_->GetPackedBitValue(slot_ref, loop_var_);
   } else {
     llvm::Value *slot_offset = builder.CreateGEP(slot_ref, loop_var_);
     slot_value = builder.CreateLoad(slot_offset, dex.FieldName());
   }
 
-  AddIRTrace("visit data vector " + dex.FieldName() + " value %T", slot_value);
-  return LValueUniquePtr(new LValue(slot_value));
+  ADD_VISITOR_IR_TRACE2("visit data vector " + dex.FieldName() + " value %T", slot_value);
+  result_.reset(new LValue(slot_value));
 }
 
-LValueUniquePtr LLVMGenerator::Visitor::visit(const VectorReadValidityDex &dex) {
+void LLVMGenerator::Visitor::Visit(const VectorReadValidityDex &dex) {
   llvm::IRBuilder<> &builder = ir_builder();
-  llvm::BasicBlock *saved_block = builder.GetInsertBlock();
 
   builder.SetInsertPoint(entry_block_);
   llvm::Value *slot_ref = generator_->GetValidityReference(arg_addrs_,
                                                            dex.ValidityIdx(),
-                                                           dex.FieldName());
+                                                           dex.Field());
 
-  builder.SetInsertPoint(saved_block);
+  builder.SetInsertPoint(loop_block_);
   llvm::Value *validity = generator_->GetPackedBitValue(slot_ref, loop_var_);
-  return LValueUniquePtr(new LValue(validity));
+  ADD_VISITOR_IR_TRACE2("visit validity vector " + dex.FieldName() + " value %T", validity);
+  result_.reset(new LValue(validity));
 }
 
-LValueUniquePtr LLVMGenerator::Visitor::visit(const LiteralDex &dex) {
-  const Literal *literal = dex.literal();
-  LLVMTypes &types = generator_->types_;
-
-  llvm::Value *value = NULL;
-  switch (literal->type()) {
-    case Literal_Type_INT:
-      value = types.i32_constant(literal->intliteral());
-      AddIRTrace("visit int literal %T", value);
-      break;
-
-    case Literal_Type_BIGINT:
-      value = types.i64_constant(literal->bigintliteral());
-      AddIRTrace("visit bigint literal %T", value);
-      break;
-
-    case Literal_Type_FLOAT:
-      value = types.float_constant(literal->floatliteral());
-      AddIRTrace("visit float literal %T", value);
-      break;
-
-    case Literal_Type_DOUBLE:
-      value = types.double_constant(literal->doubleliteral());
-      AddIRTrace("visit double literal %T", value);
-      break;
-
-    default:
-      assert(0);
-  }
-  return LValueUniquePtr(new LValue(value));
+void LLVMGenerator::Visitor::Visit(const LiteralDex &dex) {
+  // TODO
 }
 
-LValueUniquePtr LLVMGenerator::Visitor::visit(const NonNullableFuncDex &dex) {
-  AddIRTrace("visit NonNullableFunc base function " + dex.func_descriptor()->name());
+void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
+  ADD_VISITOR_IR_TRACE("visit NonNullableFunc base function " + dex.func_descriptor()->name());
   LLVMTypes &types = generator_->types_;
 
   // build the function params.
   std::vector<llvm::Value *> args;
   for (auto it = dex.args().begin(); it != dex.args().end(); it++) {
     // add value
-    Dex *value_expr = (*it)->value_expr();
-    LValueUniquePtr lvalue = value_expr->accept(*this);
-    args.push_back(lvalue->data());
+    DexSharedPtr value_expr = (*it)->value_expr();
+
+    value_expr->Accept(this);
+    args.push_back(result()->data());
   }
 
   const NativeFunction *native_function = dex.native_function();
-  llvm::Type *ret_type = types.IRType(native_function->signature()->ret_type());
+  llvm::Type *ret_type = types.IRType(native_function->signature().ret_type()->id());
   llvm::Value *value = generator_->AddFunctionCall(native_function->pc_name(), ret_type, args);
-  return LValueUniquePtr(new LValue(value));
+  result_.reset(new LValue(value));
 }
 
-LValueUniquePtr LLVMGenerator::Visitor::visit(const NullableNeverFuncDex &dex) {
-  AddIRTrace("visit NullableNever base function " + dex.func_descriptor()->name());
+void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
+  ADD_VISITOR_IR_TRACE("visit NullableNever base function " + dex.func_descriptor()->name());
   LLVMTypes &types = generator_->types_;
 
   // build the function params, along with the validities.
@@ -561,9 +528,9 @@ LValueUniquePtr LLVMGenerator::Visitor::visit(const NullableNeverFuncDex &dex) {
     ValueValidityPairSharedPtr pair = *it;
 
     // build value.
-    Dex *value_expr = pair->value_expr();
-    LValueUniquePtr lvalue = value_expr->accept(*this);
-    args.push_back(lvalue.get()->data());
+    DexSharedPtr value_expr = pair->value_expr();
+    value_expr->Accept(this);
+    args.push_back(result()->data());
 
     // build validity.
     llvm::Value *validity_expr = BuildCombinedValidity(pair->validity_exprs());
@@ -571,9 +538,9 @@ LValueUniquePtr LLVMGenerator::Visitor::visit(const NullableNeverFuncDex &dex) {
   }
 
   const NativeFunction *native_function = dex.native_function();
-  llvm::Type *ret_type = types.IRType(native_function->signature()->ret_type());
+  llvm::Type *ret_type = types.IRType(native_function->signature().ret_type()->id());
   llvm::Value *value = generator_->AddFunctionCall(native_function->pc_name(), ret_type, args);
-  return LValueUniquePtr(new LValue(value));
+  result_.reset(new LValue(value));
 }
 
 /*
@@ -585,10 +552,10 @@ llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(std::vector<DexShared
 
   llvm::Value *isValid = types.true_constant();
   for (auto it = validities.begin(); it != validities.end(); it++) {
-    LValueUniquePtr current = (*it)->accept(*this);
-    isValid = builder.CreateAnd(isValid, current->data(), "validityBitAnd");
+    (*it)->Accept(this);
+    isValid = builder.CreateAnd(isValid, result()->data(), "validityBitAnd");
   }
-  AddIRTrace("combined validity is %T", isValid);
+  ADD_VISITOR_IR_TRACE2("combined validity is %T", isValid);
   return isValid;
 }
 

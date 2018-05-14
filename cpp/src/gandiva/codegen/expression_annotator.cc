@@ -23,7 +23,7 @@
 #include "dex/vector_read_value_dex.h"
 #include "dex/non_nullable_func_dex.h"
 #include "func_descriptor.h"
-#include "vector_descriptor.h"
+#include "field_descriptor.h"
 
 namespace gandiva {
 
