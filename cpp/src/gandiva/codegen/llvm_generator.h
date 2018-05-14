@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include "gandiva_fwd.h"
+#include "expression.h"
 #include "CodeGen.pb.h"
 #include "dex_visitor.h"
 #include "compiled_expr.h"
@@ -34,9 +35,9 @@ class LLVMGenerator {
   ~LLVMGenerator();
 
   /*
-   * Build an IR module for the expressions described in projection.
+   * Build from expression tree, represented by an element of the vector
    */
-  void Build(std::unique_ptr<Projection> projection);
+  void Build(ExpressionVector exprs);
 
   /*
    * Execute the built expression against the provided arguments.
@@ -87,7 +88,7 @@ class LLVMGenerator {
     llvm::Value *loop_var_;
   };
 
-  void Add(const Expr *expr, const VectorExpr *output);
+  void Add(const ExpressionSharedPtr expr, const FieldDescriptorSharedPtr output);
 
   llvm::Value *LoadVectorAtIndex(llvm::Value *arg_addrs, int idx, const std::string &name);
   llvm::Value *GetValidityReference(llvm::Value *arg_addrs, int idx, FieldSharedPtr field);

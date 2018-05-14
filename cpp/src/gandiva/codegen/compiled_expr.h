@@ -28,7 +28,7 @@ typedef int (*eval_func_t)(int64_t *addrs, int record_count);
 class CompiledExpr {
  public:
   CompiledExpr(ValueValidityPairSharedPtr value_validity,
-               const VectorExpr *output,
+               const FieldDescriptorSharedPtr output,
                llvm::Function *ir_function)
       : value_validity_(value_validity),
         output_(output),
@@ -37,7 +37,7 @@ class CompiledExpr {
 
   ValueValidityPairSharedPtr value_validity() { return value_validity_; }
 
-  const VectorExpr *output() { return output_; }
+  const FieldDescriptorSharedPtr output() { return output_; }
 
   llvm::Function *ir_function() { return ir_function_; }
 
@@ -47,7 +47,7 @@ class CompiledExpr {
 
  private:
   ValueValidityPairSharedPtr value_validity_;
-  const VectorExpr *output_;
+  const FieldDescriptorSharedPtr output_;
   llvm::Function *ir_function_;
   eval_func_t jit_function_;
 };

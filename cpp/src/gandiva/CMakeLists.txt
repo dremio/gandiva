@@ -44,6 +44,7 @@ set(GANDIVA_SRCS
     codegen/llvm_types.cc
     codegen/function_registry.cc
     codegen/engine.cc
+    expr/evaluator.cc
     codegen/llvm_generator.cc
     expr/tree_expr_builder.cc
     expr/node.cc)

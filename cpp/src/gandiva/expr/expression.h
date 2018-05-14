@@ -27,6 +27,8 @@ class Expression {
 
     NodeSharedPtr node() { return node_; }
 
+    FieldSharedPtr field() { return field_; }
+
     virtual ValueValidityPair *Decompose() {
       // return whatever node does
       return node_->Decompose();

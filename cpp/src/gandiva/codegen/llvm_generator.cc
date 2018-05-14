@@ -18,7 +18,6 @@
 #include <vector>
 #include "codegen_exception.h"
 #include "dex.h"
-#include "expression_annotator.h"
 #include "function_registry.h"
 #include "llvm_generator.h"
 #include "lvalue.h"
@@ -40,15 +39,14 @@ LLVMGenerator::~LLVMGenerator() {
   }
 }
 
-#if 0
-void LLVMGenerator::Add(const Expr *expr, const VectorExpr *output) {
+void LLVMGenerator::Add(const ExpressionSharedPtr expr, const FieldDescriptorSharedPtr output) {
   int idx = compiled_exprs_.size();
 
   // decompose the expression to separate out value and validities.
-  ValueValidityPairSharedPtr value_validity = ValueValidityPairSharedPtr(ExpressionAnnotator::Decompose(expr));
+  ValueValidityPairSharedPtr value_validity = ValueValidityPairSharedPtr(expr->Decompose());
 
   // Generate the IR function for the decomposed expression.
-  llvm::Function *ir_function = CodeGenExprValue(value_validity->value_expr(), *output, idx);
+  llvm::Function *ir_function = CodeGenExprValue(value_validity->value_expr(), output, idx);
 
   CompiledExpr *compiled_expr = new CompiledExpr(value_validity, output, ir_function);
   compiled_exprs_.push_back(compiled_expr);
@@ -57,14 +55,15 @@ void LLVMGenerator::Add(const Expr *expr, const VectorExpr *output) {
 /*
  * Build and optimise module for projection expression.
  */
-void LLVMGenerator::Build(std::unique_ptr<Projection> projection) {
-  projection_ = std::move(projection);
+void LLVMGenerator::Build(ExpressionVector exprs) {
+  //projection_ = std::move(projection);
   ReproSaveBuild();
 
-  Projection *projection_ptr = projection_.get();
-  for (int i = 0; i < projection_ptr->exprs_size(); i++) {
-    const ColumnExpr &column_expr = projection_ptr->exprs(i);
-    Add(&column_expr.expr(), &column_expr.output());
+  for (auto it = exprs.begin(); it != exprs.end(); it++) {
+    ExpressionSharedPtr expr = *it;
+    // TODO: Need to replace with the correct indices
+    // Should the index be compiled_exprs_.size()?
+    Add(expr, FieldDescriptorSharedPtr(new FieldDescriptor(expr->field(), 0, 0, 0)));
   }
 
   // optimise, compile and finalize the module
@@ -99,7 +98,6 @@ int LLVMGenerator::Execute(int64_t addrs[], int naddrs, int record_count) {
   }
   return 0;
 }
-#endif
 
 llvm::Value *LLVMGenerator::LoadVectorAtIndex(llvm::Value *arg_addrs,
                                               int idx,
@@ -384,7 +382,7 @@ void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr, int64_t a
     src_bitmaps[i] = (int64_t *) addrs[value_dex->ValidityIdx()];
   }
 
-  int out_idx = compiled_expr->output()->validityidx();
+  int out_idx = compiled_expr->output()->validity_idx();
   int64_t *dst_bitmap = (int64_t *) addrs[out_idx];
 
   IntersectBitMaps(dst_bitmap, src_bitmaps, num_bitmaps, record_count);

@@ -18,6 +18,7 @@
 
 #include "arrow.h"
 #include "expression.h"
+#include "llvm_generator.h"
 
 namespace gandiva {
 
@@ -27,6 +28,10 @@ namespace gandiva {
 /// Once the evaluator is built, it can be used to evaluate many row batches.
 class Evaluator {
  public:
+  /// Constructor
+  Evaluator(LLVMGenerator *llvm)
+    : llvm_gen_(std::unique_ptr<LLVMGenerator>(llvm)) {}
+
   /// Evaluate the specified record batch, and fill the output vectors.
   void Evaluate(RecordBatchSharedPtr batch,
                 std::vector<std::unique_ptr<arrow::ArrayBuilder>> &builders);
@@ -34,6 +39,9 @@ class Evaluator {
   /// Build an evlautor for the given schema to evaluate the vector of
   static std::shared_ptr<Evaluator> Make(SchemaSharedPtr schema,
                                          ExpressionVector exprs);
+
+ private:
+   const std::unique_ptr<LLVMGenerator> llvm_gen_;
 };
 
 } // namespace gandiva
