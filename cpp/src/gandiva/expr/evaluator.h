@@ -32,8 +32,8 @@ class Evaluator {
                 std::vector<std::unique_ptr<arrow::ArrayBuilder>> &builders);
 
   /// Build an evlautor for the given schema to evaluate the vector of
-  static std::shared_ptr<Evaluator>Make(SchemaSharedPtr schema,
-                                        ExpressionVector exprs);
+  static std::shared_ptr<Evaluator> Make(SchemaSharedPtr schema,
+                                         ExpressionVector exprs);
 };
 
 } // namespace gandiva

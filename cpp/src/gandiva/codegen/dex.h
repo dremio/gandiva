@@ -152,11 +152,11 @@ class NullableNeverFuncDex : public FuncDex {
 // decomposed expression for a literal.
 class LiteralDex : public Dex {
  public:
-  LiteralDex(const Literal *literal)
-      : literal_(literal) {}
+  LiteralDex(const DataTypeSharedPtr type)
+      : type_(type) {}
 
-  const Literal *literal() const {
-    return literal_;
+  const DataTypeSharedPtr type() const {
+    return type_;
   }
 
   virtual void Accept(DexVisitor *visitor) override {
@@ -164,7 +164,7 @@ class LiteralDex : public Dex {
   }
 
  private:
-  const Literal *literal_;
+  const DataTypeSharedPtr type_;
 };
 
 

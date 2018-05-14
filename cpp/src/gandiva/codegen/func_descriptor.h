@@ -17,7 +17,7 @@
 #define GANDIVA_FUNCDESCRIPTOR_H
 
 #include <vector>
-#include "CodeGen.pb.h"
+#include "arrow.h"
 
 namespace gandiva {
 
@@ -36,13 +36,13 @@ class FuncDescriptor {
 
   const std::string &name() const { return name_;}
 
-  const std::vector<DataTypeSharedPtr> &params() const { return params_; }
+  std::vector<DataTypeSharedPtr> &params() { return params_; }
 
   const DataTypeSharedPtr return_type() const { return return_type_; }
 
  private:
   std::string name_;
-  const std::vector<DataTypeSharedPtr> params_;
+  std::vector<DataTypeSharedPtr> params_;
   const DataTypeSharedPtr return_type_;
 };
 

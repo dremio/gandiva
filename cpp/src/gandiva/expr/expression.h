@@ -22,22 +22,12 @@ namespace gandiva {
 
 class Expression {
   public:
-    virtual ValueValidityPair *Decompose() = 0;
-};
-
-/*
- * Node to represent no-op expression. Used as a wrapper
- * to form the tree-root when the expression to be evaluated 
- * is of the form a+b 
- */
-class NoOpExpression : public Expression {
-  public:
-    NoOpExpression(const NodeSharedPtr node, const FieldSharedPtr field)
+    Expression(const NodeSharedPtr node, const FieldSharedPtr field)
       : node_(node), field_(field) {}
 
     NodeSharedPtr node() { return node_; }
 
-    virtual ValueValidityPair *Decompose() override {
+    virtual ValueValidityPair *Decompose() {
       // return whatever node does
       return node_->Decompose();
     }
@@ -46,9 +36,6 @@ class NoOpExpression : public Expression {
     const NodeSharedPtr node_;
     const FieldSharedPtr field_;
 };
-
-// TODO: define classes for AndExpression, IfThenElseExpression, CaseExpression and
-// ElementOfExpression for later
 
 using ExpressionSharedPtr = std::shared_ptr<Expression>;
 using ExpressionVector = std::vector<ExpressionSharedPtr>;

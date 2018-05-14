@@ -17,16 +17,11 @@
 #define GANDIVA_EXPR_NODE_H
 
 #include "arrow.h"
-#include "function_signature.h"
-//#include "value_validity_pair.h"
+#include "func_descriptor.h"
+#include "dex.h"
+#include "value_validity_pair.h"
 
 namespace gandiva {
-
-// Dummy class
-// TODO: Remove this and add back the include
-class ValueValidityPair {
-};
-
 /*
  * Represents a node in the expression tree. Validity and value are
  * in a joined state.
@@ -58,7 +53,7 @@ class LiteralNode : public Node {
       : Node(field->type()), name_(field->name()) {}
 
     virtual ValueValidityPair *Decompose() override {
-      return NULL;
+      return new ValueValidityPair(DexSharedPtr(new LiteralDex(type_)));
     }
 
   private:
@@ -70,10 +65,10 @@ class LiteralNode : public Node {
  */
 class FunctionNode : public Node {
   public:
-    FunctionNode(FunctionSignature func_signature, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
-      : Node(retType), func_signature_(func_signature), children_(children) { }
+    FunctionNode(FuncDescriptorSharedPtr desc, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
+      : Node(retType), desc_(desc), children_(children) { }
 
-    static NodeSharedPtr createFunction(const std::string &name, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
+    static NodeSharedPtr CreateFunction(const std::string &name, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
     {
       std::vector<DataTypeSharedPtr> paramTypes;
       for(std::vector<const NodeSharedPtr>::iterator it = children.begin(); it != children.end(); ++it) {
@@ -81,18 +76,16 @@ class FunctionNode : public Node {
         paramTypes.push_back(arg);
       }
 
-      auto func_signature = FunctionSignature(name, paramTypes, retType);
-      return NodeSharedPtr(new FunctionNode(func_signature, children, retType));
+      auto func_desc = FuncDescriptorSharedPtr(new FuncDescriptor(name, paramTypes, retType));
+      return NodeSharedPtr(new FunctionNode(func_desc, children, retType));
     }
 
-    virtual ValueValidityPair *Decompose() override {
-      return NULL;
-    }
+    virtual ValueValidityPair *Decompose() override;
 
-    FunctionSignature func_signature() { return func_signature_; }
+    FuncDescriptorSharedPtr func_descriptor() { return desc_; }
 
   private:
-    FunctionSignature func_signature_;
+    FuncDescriptorSharedPtr desc_;
     const std::vector<NodeSharedPtr> children_;
 };
 

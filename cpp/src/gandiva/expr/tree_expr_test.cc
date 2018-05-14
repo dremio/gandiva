@@ -15,9 +15,17 @@
  */
 
 #include <gtest/gtest.h>
+#include "gandiva_fwd.h"
+#include "dex.h"
 #include "tree_expr_builder.h"
+#include "function_signature.h"
+#include "function_registry.h"
 
 using namespace arrow;
+
+namespace llvm {
+int DisableABIBreakingChecks;
+} // namespace llvm
 
 namespace gandiva {
 
@@ -43,6 +51,12 @@ TEST_F(TestExprTree, TestLiteral) {
 
   auto n1 = TreeExprBuilder::MakeField(b0_);
   EXPECT_EQ(n1->getReturnType(), boolean());
+
+  auto pair = n1->Decompose();
+  auto value = pair->value_expr();
+  auto lit = std::dynamic_pointer_cast<LiteralDex>(value);
+
+  EXPECT_EQ(lit->type(), boolean());
 }
 
 TEST_F(TestExprTree, TestBinary) {
@@ -52,18 +66,38 @@ TEST_F(TestExprTree, TestBinary) {
   auto n = TreeExprBuilder::MakeBinaryFunction("add", left, right, int32());
   auto add = std::dynamic_pointer_cast<FunctionNode>(n);
 
+  auto func_desc = add->func_descriptor();
+  FunctionSignature sign(func_desc->name(), func_desc->params(), func_desc->return_type());
+
   EXPECT_EQ(add->getReturnType(), int32());
-  EXPECT_TRUE(add->func_signature() == FunctionSignature("add", {int32(), int32()}, int32()));
+  EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
+
+  auto pair = n->Decompose();
+  auto value = pair->value_expr();
+  auto null_if_null = std::dynamic_pointer_cast<NonNullableFuncDex>(value);
+
+  FunctionSignature signature("add", {int32(), int32()}, int32());
+  const NativeFunction *fn = FunctionRegistry::LookupSignature(signature);
+  EXPECT_EQ(null_if_null->native_function(), fn);
 }
 
 TEST_F(TestExprTree, TestUnary) {
   auto arg = TreeExprBuilder::MakeField(i0_);
-  auto n = TreeExprBuilder::MakeUnaryFunction("isPositive", arg, boolean());
+  auto n = TreeExprBuilder::MakeUnaryFunction("isnumeric", arg, boolean());
 
   auto unaryFn = std::dynamic_pointer_cast<FunctionNode>(n);
-
+  auto func_desc = unaryFn->func_descriptor();
+  FunctionSignature sign(func_desc->name(), func_desc->params(), func_desc->return_type());
   EXPECT_EQ(unaryFn->getReturnType(), boolean());
-  EXPECT_TRUE(unaryFn->func_signature() == FunctionSignature("isPositive", {int32()}, boolean()));
+  EXPECT_TRUE(sign == FunctionSignature("isnumeric", {int32()}, boolean()));
+
+  auto pair = n->Decompose();
+  auto value = pair->value_expr();
+  auto never_null = std::dynamic_pointer_cast<NullableNeverFuncDex>(value);
+
+  FunctionSignature signature("isnumeric", {int32()}, boolean());
+  const NativeFunction *fn = FunctionRegistry::LookupSignature(signature);
+  EXPECT_EQ(never_null->native_function(), fn);
 }
 
 TEST_F(TestExprTree, TestExpression) {
@@ -72,14 +106,21 @@ TEST_F(TestExprTree, TestExpression) {
 
   auto n = TreeExprBuilder::MakeBinaryFunction("add", left, right, int32());
   auto e = TreeExprBuilder::MakeExpression(n, field("r", int32()));
-
-  auto exp = std::dynamic_pointer_cast<NoOpExpression>(e);
-
-  auto root_node = exp->node();
+  auto root_node = e->node();
   EXPECT_EQ(root_node->getReturnType(), int32());
 
   auto add_node = std::dynamic_pointer_cast<FunctionNode>(root_node);
-  EXPECT_TRUE(add_node->func_signature() == FunctionSignature("add", {int32(), int32()}, int32()));
+  auto func_desc = add_node->func_descriptor();
+  FunctionSignature sign(func_desc->name(), func_desc->params(), func_desc->return_type());
+  EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
+
+  auto pair = e->Decompose();
+  auto value = pair->value_expr();
+  auto null_if_null = std::dynamic_pointer_cast<NonNullableFuncDex>(value);
+
+  FunctionSignature signature("add", {int32(), int32()}, int32());
+  const NativeFunction *fn = FunctionRegistry::LookupSignature(signature);
+  EXPECT_EQ(null_if_null->native_function(), fn);
 }
 
 int main(int argc, char **argv)

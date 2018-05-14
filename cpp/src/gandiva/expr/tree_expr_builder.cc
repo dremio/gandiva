@@ -26,18 +26,18 @@ NodeSharedPtr TreeExprBuilder::MakeBinaryFunction(std::string function,
                                                   NodeSharedPtr left,
                                                   NodeSharedPtr right,
                                                   DataTypeSharedPtr result) {
-  return FunctionNode::createFunction(function, {left, right}, result);
+  return FunctionNode::CreateFunction(function, {left, right}, result);
 }
 
 NodeSharedPtr TreeExprBuilder::MakeUnaryFunction(std::string function,
                                                  NodeSharedPtr param,
                                                  DataTypeSharedPtr result) {
-  return FunctionNode::createFunction(function, {param}, result);
+  return FunctionNode::CreateFunction(function, {param}, result);
 }
 
 ExpressionSharedPtr TreeExprBuilder::MakeExpression(NodeSharedPtr root_node,
                                                     FieldSharedPtr result_field) {
-  return ExpressionSharedPtr(new NoOpExpression(root_node, result_field));
+  return ExpressionSharedPtr(new Expression(root_node, result_field));
 }
 
 } // namespace gandiva
