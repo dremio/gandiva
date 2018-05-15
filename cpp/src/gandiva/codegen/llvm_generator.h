@@ -17,6 +17,7 @@
 #define GANDIVA_LLVMGENERATOR_H
 
 #include <stdint.h>
+#include <gtest/gtest_prod.h>
 #include "gandiva_fwd.h"
 #include "expression.h"
 #include "dex_visitor.h"
@@ -49,6 +50,8 @@ class LLVMGenerator {
   static int ReproReplay(bool optimise_ir, bool trace_ir);
 
  private:
+  FRIEND_TEST(TestLLVMGenerator, TestIntersectBitMaps);
+
   llvm::Module *module() { return engine_->module(); }
   llvm::LLVMContext &context() { return *(engine_->context()); }
   llvm::IRBuilder<> &ir_builder() { return engine_->ir_builder(); }
@@ -104,7 +107,7 @@ class LLVMGenerator {
   llvm::Value *AddFunctionCall(std::string full_name, llvm::Type *ret_type, const std::vector<llvm::Value *> &args);
 
   void ComputeBitMapsForExpr(CompiledExpr *compiledExpr, int64_t addrs[], int record_count);
-  void IntersectBitMaps(int64_t *dst_map, int64_t **src_maps, int nmaps, int num_records);
+  static void IntersectBitMaps(uint64_t *dst_map, uint64_t **src_maps, int nmaps, int num_records);
 
   // tracing related
   std::string ReplaceFormatInTrace(std::string msg, llvm::Value *value, std::string *print_fn);

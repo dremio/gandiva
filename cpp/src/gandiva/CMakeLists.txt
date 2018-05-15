@@ -41,11 +41,11 @@ include_directories(precompiled)
 include_directories(${CMAKE_BINARY_DIR})
 
 set(GANDIVA_SRCS
-    codegen/llvm_types.cc
-    codegen/function_registry.cc
     codegen/engine.cc
-    expr/evaluator.cc
+    codegen/function_registry.cc
     codegen/llvm_generator.cc
+    codegen/llvm_types.cc
+    expr/evaluator.cc
     expr/tree_expr_builder.cc
     expr/node.cc)
 #    codegen/cex/func_cex.cc
@@ -105,11 +105,12 @@ function(ADD_GANDIVA_TEST LABEL REL_TEST_NAME)
 endfunction()
 
 #args: label test-file src-files
+ADD_GANDIVA_TEST(unittest codegen/dex_llvm_test.cc)
+ADD_GANDIVA_TEST(unittest codegen/engine_llvm_test.cc codegen/engine.cc codegen/llvm_types.cc)
 ADD_GANDIVA_TEST(unittest codegen/function_signature_test.cc)
 ADD_GANDIVA_TEST(unittest codegen/function_registry_test.cc codegen/function_registry.cc)
 ADD_GANDIVA_TEST(unittest codegen/llvm_types_test.cc codegen/llvm_types.cc)
-ADD_GANDIVA_TEST(unittest codegen/dex_llvm_test.cc)
-ADD_GANDIVA_TEST(unittest codegen/engine_llvm_test.cc codegen/engine.cc codegen/llvm_types.cc)
+ADD_GANDIVA_TEST(unittest codegen/llvm_generator_test.cc codegen/llvm_generator.cc codegen/engine.cc codegen/llvm_types.cc)
 ADD_GANDIVA_TEST(unittest expr/tree_expr_test.cc expr/tree_expr_builder.cc expr/node.cc codegen/function_registry.cc)
 
 #ADD_GANDIVA_TEST(integ evaluator_test expr/evaluator_test.cc)
