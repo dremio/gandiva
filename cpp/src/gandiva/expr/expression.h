@@ -39,9 +39,6 @@ class Expression {
     const FieldSharedPtr field_;
 };
 
-using ExpressionSharedPtr = std::shared_ptr<Expression>;
-using ExpressionVector = std::vector<ExpressionSharedPtr>;
-
 } // namespace gandiva
 
 #endif // GANDIVA_EXPR_EXPRESSION_H

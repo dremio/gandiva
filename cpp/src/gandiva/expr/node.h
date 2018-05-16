@@ -42,8 +42,6 @@ class Node {
     DataTypeSharedPtr type_;
 };
 
-using NodeSharedPtr = std::shared_ptr<Node>;
-
 /*
  * Used to represent constants of various datatypes
  */

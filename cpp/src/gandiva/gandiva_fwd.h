@@ -35,6 +35,13 @@ using FuncDescriptorSharedPtr = std::shared_ptr<FuncDescriptor>;
 class LValue;
 using LValueSharedPtr = std::shared_ptr<LValue>;
 
+class Expression;
+using ExpressionSharedPtr = std::shared_ptr<Expression>;
+using ExpressionVector = std::vector<ExpressionSharedPtr>;
+
+class Node;
+using NodeSharedPtr = std::shared_ptr<Node>;
+
 } // namespace gandiva
 
 #endif // GANDIVA_FWD_H
