@@ -72,7 +72,6 @@ add_custom_command(
 add_custom_target(precompile-to-ir ALL DEPENDS ${PRECOMPILED_OUTPUT})
 
 add_library(gandiva SHARED ${GANDIVA_SRCS})
-target_link_libraries(gandiva proto ${PROTOBUF_LIBRARY})
 
 # Find the libraries that correspond to the LLVM components
 llvm_map_components_to_libnames(llvm_libs core mcjit native ipo bitreader target linker analysis debuginfodwarf)

@@ -27,20 +27,10 @@ IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 ENDIF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 
 # Select flags.
-SET(CMAKE_CXX_FLAGS "-Wall")
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-SET(CMAKE_CXX_FLAGS_RELEASE "-O2")
-SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-
-# Build protobufs
-include(FindProtobuf)
-set(PROTO_FILES
-    ../protobuf/Types.proto
-    ../protobuf/CodeGen.proto)
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIR})
-protobuf_generate_cpp(PROTO_SRC PROTO_HEADER ${PROTO_FILES})
-add_library(proto ${PROTO_HEADER} ${PROTO_SRC})
+set(COMMON_FLAGS "-Wall -Werror ")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${COMMON_FLAGS} -O2 -g")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2")
+SET(CMAKE_CXX_FLAGS_DEBUG "${COMMON_FLAGS} -O0 -g")
 
 include(CTest)
 enable_testing()
