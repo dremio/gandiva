@@ -49,7 +49,6 @@ class EvalBatch {
   uint8_t **buffers_;
   int num_buffers_;
 };
-using EvalBatchSharedPtr = std::shared_ptr<EvalBatch>;
 
 /// \brief annotate the arrow fields in an expression, and use that
 /// to convert the incoming arrow-format row batch to an EvalBatch.

@@ -20,7 +20,7 @@
 
 namespace gandiva {
 
-typedef int (*eval_func_t)(int64_t *addrs, int record_count);
+typedef int (*eval_func_t)(uint8_t **addrs, int record_count);
 
 /*
  * Tracks the compiled state for one expression.

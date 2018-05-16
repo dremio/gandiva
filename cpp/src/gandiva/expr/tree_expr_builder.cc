@@ -19,7 +19,7 @@
 namespace gandiva {
 
 NodeSharedPtr TreeExprBuilder::MakeField(FieldSharedPtr field) {
-  return NodeSharedPtr(new LiteralNode(field));
+  return NodeSharedPtr(new FieldNode(field));
 }
 
 NodeSharedPtr TreeExprBuilder::MakeBinaryFunction(std::string function,

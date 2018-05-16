@@ -42,6 +42,11 @@ using ExpressionVector = std::vector<ExpressionSharedPtr>;
 class Node;
 using NodeSharedPtr = std::shared_ptr<Node>;
 
+class Annotator;
+
+class EvalBatch;
+using EvalBatchSharedPtr = std::shared_ptr<EvalBatch>;
+
 } // namespace gandiva
 
 #endif // GANDIVA_FWD_H

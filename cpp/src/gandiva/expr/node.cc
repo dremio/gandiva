@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <assert.h>
+#include "annotator.h"
 #include "node.h"
 #include "dex.h"
 #include "function_registry.h"
@@ -22,17 +22,25 @@
 
 namespace gandiva {
 
-ValueValidityPair *FunctionNode::Decompose() {
+ValueValidityPair *FieldNode::Decompose(Annotator *annotator) {
+  FieldDescriptorSharedPtr desc = annotator->CheckAndAddInputFieldDescriptor(field_);
+
+  DexSharedPtr validity_dex = std::make_shared<VectorReadValidityDex>(desc);
+  DexSharedPtr value_dex = std::make_shared<VectorReadValueDex>(desc);
+  return new ValueValidityPair(validity_dex, value_dex);
+}
+
+ValueValidityPair *FunctionNode::Decompose(Annotator *annotator) {
   FunctionSignature signature(desc_->name(),
                               desc_->params(),
                               desc_->return_type());
   const NativeFunction *native_function = FunctionRegistry::LookupSignature(signature);
-  assert(native_function);
+  DCHECK(native_function);
 
   // decompose the children.
   std::vector<ValueValidityPairSharedPtr> args;
   for (auto it = children_.begin(); it != children_.end(); ++it) {
-    ValueValidityPairSharedPtr child = ValueValidityPairSharedPtr((*it)->Decompose());
+    ValueValidityPairSharedPtr child = ValueValidityPairSharedPtr((*it)->Decompose(annotator));
     args.push_back(child);
   }
 
@@ -55,7 +63,7 @@ ValueValidityPair *FunctionNode::Decompose() {
     return new ValueValidityPair(DexSharedPtr(new NullableNeverFuncDex(desc_, native_function, args)));
   } else {
     // TODO
-    assert(0);
+    DCHECK(0);
   }
 }
 

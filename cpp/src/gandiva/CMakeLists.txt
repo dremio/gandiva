@@ -105,8 +105,8 @@ ADD_GANDIVA_TEST(unittest codegen/engine_llvm_test.cc codegen/engine.cc codegen/
 ADD_GANDIVA_TEST(unittest codegen/function_signature_test.cc)
 ADD_GANDIVA_TEST(unittest codegen/function_registry_test.cc codegen/function_registry.cc)
 ADD_GANDIVA_TEST(unittest codegen/llvm_types_test.cc codegen/llvm_types.cc)
-ADD_GANDIVA_TEST(unittest codegen/llvm_generator_test.cc codegen/llvm_generator.cc codegen/engine.cc codegen/llvm_types.cc)
+ADD_GANDIVA_TEST(unittest codegen/llvm_generator_test.cc codegen/llvm_generator.cc codegen/engine.cc codegen/llvm_types.cc expr/annotator.cc)
 ADD_GANDIVA_TEST(unittest expr/annotator_test.cc expr/annotator.cc)
-ADD_GANDIVA_TEST(unittest expr/tree_expr_test.cc expr/tree_expr_builder.cc expr/node.cc codegen/function_registry.cc)
+ADD_GANDIVA_TEST(unittest expr/tree_expr_test.cc expr/tree_expr_builder.cc expr/node.cc expr/annotator.cc codegen/function_registry.cc)
 
 #ADD_GANDIVA_TEST(integ evaluator_test expr/evaluator_test.cc)

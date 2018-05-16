@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 #include "gandiva_fwd.h"
+#include "annotator.h"
 #include "dex.h"
 #include "tree_expr_builder.h"
 #include "function_signature.h"
@@ -45,21 +46,24 @@ class TestExprTree : public ::testing::Test {
     FieldSharedPtr b0_; // bool
 };
 
-TEST_F(TestExprTree, TestLiteral) {
+TEST_F(TestExprTree, TestField) {
+  Annotator annotator;
+
   auto n0 = TreeExprBuilder::MakeField(i0_);
   EXPECT_EQ(n0->getReturnType(), int32());
 
   auto n1 = TreeExprBuilder::MakeField(b0_);
   EXPECT_EQ(n1->getReturnType(), boolean());
 
-  auto pair = n1->Decompose();
+  auto pair = n1->Decompose(&annotator);
   auto value = pair->value_expr();
-  auto lit = std::dynamic_pointer_cast<LiteralDex>(value);
-
-  EXPECT_EQ(lit->type(), boolean());
+  auto value_dex = std::dynamic_pointer_cast<VectorReadValueDex>(value);
+  EXPECT_EQ(value_dex->FieldType(), boolean());
 }
 
 TEST_F(TestExprTree, TestBinary) {
+  Annotator annotator;
+
   auto left = TreeExprBuilder::MakeField(i0_);
   auto right = TreeExprBuilder::MakeField(i1_);
 
@@ -72,7 +76,7 @@ TEST_F(TestExprTree, TestBinary) {
   EXPECT_EQ(add->getReturnType(), int32());
   EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
 
-  auto pair = n->Decompose();
+  auto pair = n->Decompose(&annotator);
   auto value = pair->value_expr();
   auto null_if_null = std::dynamic_pointer_cast<NonNullableFuncDex>(value);
 
@@ -82,6 +86,8 @@ TEST_F(TestExprTree, TestBinary) {
 }
 
 TEST_F(TestExprTree, TestUnary) {
+  Annotator annotator;
+
   auto arg = TreeExprBuilder::MakeField(i0_);
   auto n = TreeExprBuilder::MakeUnaryFunction("isnumeric", arg, boolean());
 
@@ -91,7 +97,7 @@ TEST_F(TestExprTree, TestUnary) {
   EXPECT_EQ(unaryFn->getReturnType(), boolean());
   EXPECT_TRUE(sign == FunctionSignature("isnumeric", {int32()}, boolean()));
 
-  auto pair = n->Decompose();
+  auto pair = n->Decompose(&annotator);
   auto value = pair->value_expr();
   auto never_null = std::dynamic_pointer_cast<NullableNeverFuncDex>(value);
 
@@ -101,6 +107,7 @@ TEST_F(TestExprTree, TestUnary) {
 }
 
 TEST_F(TestExprTree, TestExpression) {
+  Annotator annotator;
   auto left = TreeExprBuilder::MakeField(i0_);
   auto right = TreeExprBuilder::MakeField(i1_);
 
@@ -114,7 +121,7 @@ TEST_F(TestExprTree, TestExpression) {
   FunctionSignature sign(func_desc->name(), func_desc->params(), func_desc->return_type());
   EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
 
-  auto pair = e->Decompose();
+  auto pair = e->Decompose(&annotator);
   auto value = pair->value_expr();
   auto null_if_null = std::dynamic_pointer_cast<NonNullableFuncDex>(value);
 

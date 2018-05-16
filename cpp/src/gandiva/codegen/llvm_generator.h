@@ -26,23 +26,21 @@
 #include "value_validity_pair.h"
 #include "llvm_types.h"
 #include "lvalue.h"
+#include "annotator.h"
 
 namespace gandiva {
 
+/// Builds an LLVM mode and generates code for the specified set of expressions.
 class LLVMGenerator {
  public:
   LLVMGenerator();
   ~LLVMGenerator();
 
-  /*
-   * Build from expression tree, represented by an element of the vector
-   */
+  /// \brief Build from expression tree, represented by an element of the vector
   void Build(ExpressionVector exprs);
 
-  /*
-   * Execute the built expression against the provided arguments.
-   */
-  int Execute(int64_t addrs[], int num_addrs, int record_count);
+  /// \brief Execute the built expression against the provided arguments.
+  int Execute(RecordBatchSharedPtr record_batch, arrow::ArrayVector outputs);
 
  private:
   FRIEND_TEST(TestLLVMGenerator, TestIntersectBitMaps);
@@ -101,7 +99,7 @@ class LLVMGenerator {
   void SetPackedBitValue(llvm::Value *bitMap, llvm::Value *position, llvm::Value *value);
   llvm::Value *AddFunctionCall(std::string full_name, llvm::Type *ret_type, const std::vector<llvm::Value *> &args);
 
-  void ComputeBitMapsForExpr(CompiledExpr *compiledExpr, int64_t addrs[], int record_count);
+  void ComputeBitMapsForExpr(CompiledExpr *compiledExpr, uint8_t **buffers, int record_count);
   static void IntersectBitMaps(uint64_t *dst_map, uint64_t **src_maps, int nmaps, int num_records);
 
   // tracing related
@@ -111,6 +109,7 @@ class LLVMGenerator {
   std::unique_ptr<Engine> engine_;
   std::vector<CompiledExpr *> compiled_exprs_;
   LLVMTypes types_;
+  Annotator annotator_;
 
   // used in replay/debug
   bool in_replay_;

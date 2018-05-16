@@ -41,7 +41,7 @@ void LLVMGenerator::Add(const ExpressionSharedPtr expr, const FieldDescriptorSha
   int idx = compiled_exprs_.size();
 
   // decompose the expression to separate out value and validities.
-  ValueValidityPairSharedPtr value_validity = ValueValidityPairSharedPtr(expr->Decompose());
+  ValueValidityPairSharedPtr value_validity = ValueValidityPairSharedPtr(expr->Decompose(&annotator_));
 
   // Generate the IR function for the decomposed expression.
   llvm::Function *ir_function = CodeGenExprValue(value_validity->value_expr(), output, idx);
@@ -57,9 +57,9 @@ void LLVMGenerator::Build(ExpressionVector exprs) {
 
   for (auto it = exprs.begin(); it != exprs.end(); it++) {
     ExpressionSharedPtr expr = *it;
-    // TODO: Need to replace with the correct indices
-    // Should the index be compiled_exprs_.size()?
-    Add(expr, FieldDescriptorSharedPtr(new FieldDescriptor(expr->field(), 0, 0, 0)));
+
+    auto output = annotator_.AddOutputFieldDescriptor(expr->field());
+    Add(expr, output);
   }
 
   // optimise, compile and finalize the module
@@ -76,10 +76,11 @@ void LLVMGenerator::Build(ExpressionVector exprs) {
 /*
  * Execute the compiled module against the provided vectors.
  */
-int LLVMGenerator::Execute(int64_t addrs[], int naddrs, int record_count) {
+int LLVMGenerator::Execute(RecordBatchSharedPtr record_batch, arrow::ArrayVector outputs) {
+  DCHECK(record_batch->num_rows() > 0);
 
-  DCHECK(record_count > 0);
-  DCHECK(naddrs > 0);
+  auto eval_batch = annotator_.PrepareEvalBatch(record_batch, outputs);
+  DCHECK(eval_batch->num_buffers() > 0);
 
   // generate bitmap vectors, by doing an intersection.
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
@@ -87,10 +88,10 @@ int LLVMGenerator::Execute(int64_t addrs[], int naddrs, int record_count) {
 
     // generate data/offset vectors.
     eval_func_t jit_function = compiled_expr->jit_function();
-    jit_function(addrs, record_count);
+    jit_function(eval_batch->buffers(), record_batch->num_rows());
 
     // generate validity vectors.
-    ComputeBitMapsForExpr(compiled_expr, addrs, record_count);
+    ComputeBitMapsForExpr(compiled_expr, eval_batch->buffers(), record_batch->num_rows());
   }
   return 0;
 }
@@ -278,7 +279,7 @@ void LLVMGenerator::SetPackedBitValue(llvm::Value *bitmap, llvm::Value *position
 /*
  * Extract the bitmap addresses, and do an intersection.
  */
-void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr, int64_t addrs[], int record_count) {
+void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr, uint8_t **addrs, int record_count) {
   auto validities = compiled_expr->value_validity()->validity_exprs();
 
   int num_bitmaps = validities.size();

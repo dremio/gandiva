@@ -17,6 +17,7 @@
 #define GANDIVA_EXPR_NODE_H
 
 #include "arrow.h"
+#include "gandiva_fwd.h"
 #include "func_descriptor.h"
 #include "dex.h"
 #include "value_validity_pair.h"
@@ -36,26 +37,24 @@ class Node {
     /*
      * Called during code generation to separate out validity and value.
      */
-    virtual ValueValidityPair *Decompose() = 0;
+    virtual ValueValidityPair *Decompose(Annotator *annotator) = 0;
 
   protected:
     DataTypeSharedPtr type_;
 };
 
 /*
- * Used to represent constants of various datatypes
+ * Used to represent an arrow field.
  */
-class LiteralNode : public Node {
+class FieldNode : public Node {
   public:
-    LiteralNode(const FieldSharedPtr field)
-      : Node(field->type()), name_(field->name()) {}
+    FieldNode(const FieldSharedPtr field)
+      : Node(field->type()), field_(field) {}
 
-    virtual ValueValidityPair *Decompose() override {
-      return new ValueValidityPair(DexSharedPtr(new LiteralDex(type_)));
-    }
+    virtual ValueValidityPair *Decompose(Annotator *annotator) override;
 
   private:
-    const std::string name_;
+    FieldSharedPtr field_;
 };
 
 /*
@@ -78,7 +77,7 @@ class FunctionNode : public Node {
       return NodeSharedPtr(new FunctionNode(func_desc, children, retType));
     }
 
-    virtual ValueValidityPair *Decompose() override;
+    virtual ValueValidityPair *Decompose(Annotator *annotator) override;
 
     FuncDescriptorSharedPtr func_descriptor() { return desc_; }
 

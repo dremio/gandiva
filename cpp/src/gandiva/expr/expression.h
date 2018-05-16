@@ -16,6 +16,7 @@
 #ifndef GANDIVA_EXPR_EXPRESSION_H
 #define GANDIVA_EXPR_EXPRESSION_H
 
+#include "gandiva_fwd.h"
 #include "node.h"
 
 namespace gandiva {
@@ -29,9 +30,9 @@ class Expression {
 
     FieldSharedPtr field() { return field_; }
 
-    virtual ValueValidityPair *Decompose() {
+    virtual ValueValidityPair *Decompose(Annotator *annotator) {
       // return whatever node does
-      return node_->Decompose();
+      return node_->Decompose(annotator);
     }
 
   private:
