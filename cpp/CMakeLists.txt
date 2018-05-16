@@ -35,3 +35,24 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${COMMON_FLAGS} -O0 -g")
 include(CTest)
 enable_testing()
 add_subdirectory(src/gandiva)
+
+if (UNIX)
+  file(GLOB_RECURSE LINT_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
+    )
+  message("lint on files ${LINT_FILES}")
+
+  find_program(CPPLINT_BIN NAMES cpplint cpplint.py HINTS ${BUILD_SUPPORT_DIR})
+  message(STATUS "Found cpplint executable at ${CPPLINT_BIN}")
+
+  # Full lint
+  # Balancing act: cpplint.py takes a non-trivial time to launch,
+  # so process 12 files per invocation, while still ensuring parallelism
+  add_custom_target(lint echo ${LINT_FILES} | xargs -n12 -P8
+  ${CPPLINT_BIN}
+  --verbose=2
+  --linelength=90
+  --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references,-build/include_order
+  )
+endif (UNIX)
