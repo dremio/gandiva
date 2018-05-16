@@ -33,8 +33,7 @@ class Evaluator {
     : llvm_gen_(std::unique_ptr<LLVMGenerator>(llvm)) {}
 
   /// Evaluate the specified record batch, and fill the output vectors.
-  void Evaluate(RecordBatchSharedPtr batch,
-                std::vector<std::unique_ptr<arrow::ArrayBuilder>> &builders);
+  void Evaluate(RecordBatchSharedPtr batch, arrow::ArrayVector outputs);
 
   /// Build an evlautor for the given schema to evaluate the vector of
   static std::shared_ptr<Evaluator> Make(SchemaSharedPtr schema,

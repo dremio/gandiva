@@ -109,4 +109,4 @@ ADD_GANDIVA_TEST(unittest codegen/llvm_generator_test.cc codegen/llvm_generator.
 ADD_GANDIVA_TEST(unittest expr/annotator_test.cc expr/annotator.cc)
 ADD_GANDIVA_TEST(unittest expr/tree_expr_test.cc expr/tree_expr_builder.cc expr/node.cc expr/annotator.cc codegen/function_registry.cc)
 
-#ADD_GANDIVA_TEST(integ evaluator_test expr/evaluator_test.cc)
+ADD_GANDIVA_TEST(integ expr/evaluator_test.cc)

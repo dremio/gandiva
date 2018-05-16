@@ -32,6 +32,26 @@ class TestEvaluator : public ::testing::Test {
   arrow::MemoryPool* pool_;
 };
 
+#if 0
+// Added to compare Array buffers on our own
+static bool Compare(ArraySharedPtr src, ArraySharedPtr dst) {
+  if (src->length() != dst->length()) {
+    std::cout << "Lengths differ\n";
+    return false;
+  }
+
+  auto length = src->length();
+  for(auto i = 0; i < length; i++) {
+    if (src->IsValid(i) != dst->IsValid(i)) {
+      std::cout << "Validity bits differ at " << i << "\n";
+      return false;
+    }
+  }
+
+  return true;
+}
+#endif
+
 /*
  * Helper function to create an arrow-array of type ARROWTYPE
  * from primitive vectors of data & validity.
@@ -52,8 +72,8 @@ TEST_F(TestEvaluator, TestSumSub) {
   auto field1 = field("f2", int32());
   auto in_schema = schema({field0, field1});
 
-  auto field_sum = field("sum", int32());
-  auto field_sub = field("sub", int32());
+  auto field_sum = field("add", int32());
+  auto field_sub = field("subtract", int32());
   auto out_schema = schema({field_sum, field_sub});
 
   /* sample data */
@@ -86,25 +106,30 @@ TEST_F(TestEvaluator, TestSumSub) {
   Status ret = MakeBuilder(pool_, int32(), &sum_array_builder);
   assert(ret.ok());
 
-  std::unique_ptr<ArrayBuilder> sub_array_builder;
-  ret = MakeBuilder(pool_, int32(), &sub_array_builder);
-  assert(ret.ok());
+  // make arrow::ArrayVector for the output
+  arrow::ArrayVector output;
+  ArraySharedPtr add_out, sub_out;
+  MakeArrowArrayInt32({0, 0, 0, 0}, 
+                      {false, false, false, false}, 
+                      &add_out);
+  MakeArrowArrayInt32({0, 0, 0, 0}, 
+                      {false, false, false, false}, 
+                      &sub_out);
 
-  std::vector<std::unique_ptr<ArrayBuilder>> builders(2);
-  builders[0] = std::move(sum_array_builder);
-  builders[1] = std::move(sub_array_builder);
+  output.push_back(add_out);
+  output.push_back(sub_out);
 
   /*
    * Build expression
    */
   auto node0 = TreeExprBuilder::MakeField(field0);
   auto node1 = TreeExprBuilder::MakeField(field1);
-  auto func_sum = TreeExprBuilder::MakeBinaryFunction("sum", node0, node1,
+  auto func_sum = TreeExprBuilder::MakeBinaryFunction("add", node0, node1,
                                                       int32() /*outType*/);
   auto sum_expr = TreeExprBuilder::MakeExpression(func_sum /*expression root */,
                                                   field_sum /*output field*/);
 
-  auto func_sub = TreeExprBuilder::MakeBinaryFunction("sub", node0, node1,
+  auto func_sub = TreeExprBuilder::MakeBinaryFunction("subtract", node0, node1,
                                                       int32() /*outType*/);
   auto sub_expr = TreeExprBuilder::MakeExpression(func_sub, field_sub);
 
@@ -113,20 +138,15 @@ TEST_F(TestEvaluator, TestSumSub) {
    * Evaluate expression
    */
   auto evaluator = Evaluator::Make(in_schema, {sum_expr, sub_expr});
-  evaluator->Evaluate(in_batch, builders);
+  evaluator->Evaluate(in_batch, output);
 
   /*
    * Validate results
    */
-  ArraySharedPtr arrow_sum;
-  ret = sum_array_builder->Finish(&arrow_sum);
-  assert(ret.ok());
-  EXPECT_TRUE(arrow_sum->Equals(arrow_exp_sum));
-
-  ArraySharedPtr arrow_sub;
-  ret = sub_array_builder->Finish(&arrow_sub);
-  assert(ret.ok());
-  EXPECT_TRUE(arrow_sub->Equals(arrow_exp_sub));
+  // TODO: Need to figure out why this fails without the Slice
+  // This also succeeds with RangeEquals(output.at(0), 0, 3, 0)
+  EXPECT_TRUE(arrow_exp_sum->Equals(output.at(0)->Slice(0, 4)));
+  EXPECT_TRUE(arrow_exp_sub->Equals(output.at(1)->Slice(0, 4)));
 }
 
 } // namespace gandiva

@@ -28,7 +28,8 @@ std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema, ExpressionVec
   return std::shared_ptr<Evaluator>(new Evaluator(llvm_gen));
 }
 
-void Evaluator::Evaluate(RecordBatchSharedPtr batch, std::vector<std::unique_ptr<arrow::ArrayBuilder>> &builders) {
+void Evaluator::Evaluate(RecordBatchSharedPtr batch, arrow::ArrayVector outputs) {
+  llvm_gen_->Execute(batch, outputs);
 }
 
 } // namespace gandiva
