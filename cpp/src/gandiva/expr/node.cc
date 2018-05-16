@@ -22,15 +22,15 @@
 
 namespace gandiva {
 
-ValueValidityPair *FieldNode::Decompose(Annotator *annotator) {
+ValueValidityPairSharedPtr FieldNode::Decompose(Annotator *annotator) {
   FieldDescriptorSharedPtr desc = annotator->CheckAndAddInputFieldDescriptor(field_);
 
   DexSharedPtr validity_dex = std::make_shared<VectorReadValidityDex>(desc);
   DexSharedPtr value_dex = std::make_shared<VectorReadValueDex>(desc);
-  return new ValueValidityPair(validity_dex, value_dex);
+  return std::make_shared<ValueValidityPair>(validity_dex, value_dex);
 }
 
-ValueValidityPair *FunctionNode::Decompose(Annotator *annotator) {
+ValueValidityPairSharedPtr FunctionNode::Decompose(Annotator *annotator) {
   FunctionSignature signature(desc_->name(),
                               desc_->params(),
                               desc_->return_type());
@@ -40,7 +40,7 @@ ValueValidityPair *FunctionNode::Decompose(Annotator *annotator) {
   // decompose the children.
   std::vector<ValueValidityPairSharedPtr> args;
   for (auto it = children_.begin(); it != children_.end(); ++it) {
-    ValueValidityPairSharedPtr child = ValueValidityPairSharedPtr((*it)->Decompose(annotator));
+    ValueValidityPairSharedPtr child = (*it)->Decompose(annotator);
     args.push_back(child);
   }
 
@@ -56,15 +56,31 @@ ValueValidityPair *FunctionNode::Decompose(Annotator *annotator) {
                              child->validity_exprs().begin(),
                              child->validity_exprs().end());
     }
-    return new ValueValidityPair(merged_validity,
-                                 DexSharedPtr(new NonNullableFuncDex(desc_, native_function, args)));
+
+    auto value_dex = std::make_shared<NonNullableFuncDex>(desc_, native_function, args);
+    return std::make_shared<ValueValidityPair>(merged_validity, value_dex);
   } else if (native_function->result_nullable_type() == RESULT_NULL_NEVER) {
-      // These functions always output valid results.
-    return new ValueValidityPair(DexSharedPtr(new NullableNeverFuncDex(desc_, native_function, args)));
+      // These functions always output valid results. So, no validity dex.
+    auto value_dex = std::make_shared<NullableNeverFuncDex>(desc_, native_function, args);
+    return std::make_shared<ValueValidityPair>(value_dex);
   } else {
     // TODO
     DCHECK(0);
   }
+}
+
+NodeSharedPtr FunctionNode::CreateFunction(const std::string &name,
+                                           const std::vector<NodeSharedPtr> children,
+                                           DataTypeSharedPtr retType)
+{
+  std::vector<DataTypeSharedPtr> paramTypes;
+  for (auto it = children.begin(); it != children.end(); ++it) {
+    auto arg = (*it)->getReturnType();
+    paramTypes.push_back(arg);
+  }
+
+  auto func_desc = FuncDescriptorSharedPtr(new FuncDescriptor(name, paramTypes, retType));
+  return NodeSharedPtr(new FunctionNode(func_desc, children, retType));
 }
 
 } // namespace gandiva

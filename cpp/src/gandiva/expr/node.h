@@ -37,7 +37,7 @@ class Node {
     /*
      * Called during code generation to separate out validity and value.
      */
-    virtual ValueValidityPair *Decompose(Annotator *annotator) = 0;
+    virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) = 0;
 
   protected:
     DataTypeSharedPtr type_;
@@ -51,7 +51,7 @@ class FieldNode : public Node {
     FieldNode(const FieldSharedPtr field)
       : Node(field->type()), field_(field) {}
 
-    virtual ValueValidityPair *Decompose(Annotator *annotator) override;
+    virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) override;
 
   private:
     FieldSharedPtr field_;
@@ -65,21 +65,11 @@ class FunctionNode : public Node {
     FunctionNode(FuncDescriptorSharedPtr desc, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
       : Node(retType), desc_(desc), children_(children) { }
 
-    static NodeSharedPtr CreateFunction(const std::string &name, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType)
-    {
-      std::vector<DataTypeSharedPtr> paramTypes;
-      for(std::vector<const NodeSharedPtr>::iterator it = children.begin(); it != children.end(); ++it) {
-        auto arg = (*it)->getReturnType();
-        paramTypes.push_back(arg);
-      }
-
-      auto func_desc = FuncDescriptorSharedPtr(new FuncDescriptor(name, paramTypes, retType));
-      return NodeSharedPtr(new FunctionNode(func_desc, children, retType));
-    }
-
-    virtual ValueValidityPair *Decompose(Annotator *annotator) override;
+    virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) override;
 
     FuncDescriptorSharedPtr func_descriptor() { return desc_; }
+
+    static NodeSharedPtr CreateFunction(const std::string &name, const std::vector<NodeSharedPtr> children, DataTypeSharedPtr retType);
 
   private:
     FuncDescriptorSharedPtr desc_;
