@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 #include "llvm_generator.h"
+#include "function_registry.h"
 #include "codegen_exception.h"
 
 namespace gandiva {
@@ -23,28 +24,68 @@ namespace gandiva {
 typedef int64_t (*add_vector_func_t)(int64_t *elements, int nelements);
 
 class TestLLVMGenerator : public ::testing::Test {
+ protected:
+  FunctionRegistry registry_;
 };
 
-#if 0
 TEST_F(TestLLVMGenerator, TestAdd) {
   // Setup LLVM generator to do an arithmetic add of two vectors
   LLVMGenerator generator;
+  Annotator annotator;
 
-  FieldSharedPtr field0 = std::make_shared<Field>("f0", arrow::int32());
-  FieldDescriptorSharedPtr desc0 = std::make_shared<FieldDescriptor>(field0, 1, 0);
-  VectorReadValidityDex validity_dex0 = std::make_shared<VectorReadValidityDex>(desc0);
-  VectorReadValueDex value_dex0 = std::make_shared<VectorReadValueDex>(desc0);
+  auto field0 = std::make_shared<arrow::Field>("f0", arrow::int32());
+  auto desc0 = annotator.CheckAndAddInputFieldDescriptor(field0);
+  auto validity_dex0 = std::make_shared<VectorReadValidityDex>(desc0);
+  auto value_dex0 = std::make_shared<VectorReadValueDex>(desc0);
+  auto pair0 = std::make_shared<ValueValidityPair>(validity_dex0, value_dex0);
 
-  FieldSharedPtr field1 = std::make_shared<Field>("f1", arrow::int32());
-  FieldDescriptorSharedPtr desc1 = std::make_shared<FieldDescriptor>(field1, 3, 2);
-  VectorReadValidityDex validity_dex1 = std::make_shared<VectorReadValidityDex>(desc1);
-  VectorReadValueDex value_dex1 = std::make_shared<VectorReadValueDex>(desc1);
+  auto field1 = std::make_shared<arrow::Field>("f1", arrow::int32());
+  auto desc1 = annotator.CheckAndAddInputFieldDescriptor(field1);
+  auto validity_dex1 = std::make_shared<VectorReadValidityDex>(desc1);
+  auto value_dex1 = std::make_shared<VectorReadValueDex>(desc1);
+  auto pair1 = std::make_shared<ValueValidityPair>(validity_dex1, value_dex1);
 
-  FuncDescriptor func = std::make_shared("add", {arrow::int32(), arrow::int32()}, arrow::int32());
-  NativeFunction *native_function =
-  NonNullableFuncDex func_dex = std::make_shared<>(func, native_func, args);
+  std::vector<DataTypeSharedPtr> params{arrow::int32(), arrow::int32()};
+  auto func_desc = std::make_shared<FuncDescriptor>("add", params, arrow::int32());
+  FunctionSignature signature(func_desc->name(), func_desc->params(), func_desc->return_type());
+  const NativeFunction *native_func = FunctionRegistry::LookupSignature(signature);
+
+  std::vector<ValueValidityPairSharedPtr> pairs{pair0, pair1};
+  auto func_dex = std::make_shared<NonNullableFuncDex>(func_desc, native_func, pairs);
+
+  auto field_sum = std::make_shared<arrow::Field>("out", arrow::int32());
+  auto desc_sum = annotator.CheckAndAddInputFieldDescriptor(field_sum);
+
+  llvm::Function *ir_func = generator.CodeGenExprValue(func_dex, desc_sum, 0);
+
+  generator.engine_->AddFunctionToCompile("eval_0");
+  generator.engine_->FinalizeModule(false, true);
+
+  eval_func_t eval_func = (eval_func_t)generator.engine_->CompiledFunction(ir_func);
+
+  int num_records = 4;
+  uint32_t a0[] = {1, 2, 3, 4};
+  uint32_t a1[] = {5, 6, 7, 8};
+  uint64_t in_bitmap = 0xffffffffffffffffull;
+
+  uint32_t out[] = {0, 0, 0, 0};
+  uint64_t out_bitmap = 0;
+
+  uint8_t *addrs[] = {
+    (uint8_t *)a0,
+    (uint8_t *)&in_bitmap,
+    (uint8_t *)a1,
+    (uint8_t *)&in_bitmap,
+    (uint8_t *)out,
+    (uint8_t *)&out_bitmap,
+  };
+  eval_func(addrs, num_records);
+
+  uint32_t expected[] = { 6, 8, 10, 12 };
+  for (int i = 0; i  < num_records; i++) {
+    EXPECT_EQ(expected[i], out[i]);
+  }
 }
-#endif
 
 TEST_F(TestLLVMGenerator, TestIntersectBitMaps) {
   uint64_t src_bitmaps[] = { 0xffbcabdcdfcab345ll,

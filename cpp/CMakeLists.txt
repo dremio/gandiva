@@ -27,21 +27,32 @@ IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 ENDIF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 
 # Select flags.
-SET(CMAKE_CXX_FLAGS "-Wall")
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-SET(CMAKE_CXX_FLAGS_RELEASE "-O2")
-SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-
-# Build protobufs
-include(FindProtobuf)
-set(PROTO_FILES
-    ../protobuf/Types.proto
-    ../protobuf/CodeGen.proto)
-find_package(Protobuf REQUIRED)
-include_directories(${PROTOBUF_INCLUDE_DIR})
-protobuf_generate_cpp(PROTO_SRC PROTO_HEADER ${PROTO_FILES})
-add_library(proto ${PROTO_HEADER} ${PROTO_SRC})
+set(COMMON_FLAGS "-Wall -Werror ")
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${COMMON_FLAGS} -O2 -g")
+SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O2")
+SET(CMAKE_CXX_FLAGS_DEBUG "${COMMON_FLAGS} -O0 -g")
 
 include(CTest)
 enable_testing()
 add_subdirectory(src/gandiva)
+
+if (UNIX)
+  file(GLOB_RECURSE LINT_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
+    )
+  message("lint on files ${LINT_FILES}")
+
+  find_program(CPPLINT_BIN NAMES cpplint cpplint.py HINTS ${BUILD_SUPPORT_DIR})
+  message(STATUS "Found cpplint executable at ${CPPLINT_BIN}")
+
+  # Full lint
+  # Balancing act: cpplint.py takes a non-trivial time to launch,
+  # so process 12 files per invocation, while still ensuring parallelism
+  add_custom_target(lint echo ${LINT_FILES} | xargs -n12 -P8
+  ${CPPLINT_BIN}
+  --verbose=2
+  --linelength=90
+  --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references,-build/include_order
+  )
+endif (UNIX)

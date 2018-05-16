@@ -43,6 +43,7 @@ class LLVMGenerator {
   int Execute(RecordBatchSharedPtr record_batch, arrow::ArrayVector outputs);
 
  private:
+  FRIEND_TEST(TestLLVMGenerator, TestAdd);
   FRIEND_TEST(TestLLVMGenerator, TestIntersectBitMaps);
 
   llvm::Module *module() { return engine_->module(); }

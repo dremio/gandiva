@@ -30,7 +30,7 @@ class Expression {
 
     FieldSharedPtr field() { return field_; }
 
-    virtual ValueValidityPair *Decompose(Annotator *annotator) {
+    virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) {
       // return whatever node does
       return node_->Decompose(annotator);
     }
