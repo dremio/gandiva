@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 #include "arrow/memory_pool.h"
+#include "arrow/test-util.h"
 #include "evaluator.h"
 #include "tree_expr_builder.h"
 
@@ -34,14 +35,15 @@ class TestEvaluator : public ::testing::Test {
 /*
  * Helper function to create an arrow-array of type ARROWTYPE
  * from primitive vectors of data & validity.
+ *
+ * arrow/test-util.h has good utility classes for this purpose.
+ * Using those
  */
-template<typename ARROWTYPE, typename CTYPE>
-static ArraySharedPtr MakeArrowArray(std::vector<CTYPE> values,
-                                      std::vector<bool> validity) {
-  return NULL;
+static void MakeArrowArrayInt32(std::vector<int32_t> values,
+                                std::vector<bool> validity,
+                                ArraySharedPtr *out) {
+  ArrayFromVector<Int32Type, int32_t>(validity, values, out);
 }
-
-#define MakeArrowArrayInt32 MakeArrowArray<Int32Type, int32_t>
 
 
 TEST_F(TestEvaluator, TestSumSub) {
@@ -55,21 +57,26 @@ TEST_F(TestEvaluator, TestSumSub) {
   auto out_schema = schema({field_sum, field_sub});
 
   /* sample data */
-  auto arrow_v0 = MakeArrowArrayInt32({ 1, 2, 3, 4},
-                                      { true, true, true, false });
-  auto arrow_v1 = MakeArrowArrayInt32({ 11, 13, 15, 17},
-                                      { true, true, false, true });
+  ArraySharedPtr arrow_v0, arrow_v1, arrow_exp_sum, arrow_exp_sub;
+  MakeArrowArrayInt32({ 1, 2, 3, 4},
+                      { true, true, true, false },
+                      &arrow_v0);
+  MakeArrowArrayInt32({ 11, 13, 15, 17},
+                      { true, true, false, true },
+                      &arrow_v1);
 
   /* prepare input record batch */
   ArrayVector array_vector = {arrow_v0, arrow_v1};
   auto in_batch = RecordBatch::Make(in_schema, 4, array_vector);
 
   /* expected output */
-  auto arrow_exp_sum = MakeArrowArrayInt32({ 12, 15, 0, 0},
-                                           { true, true, false, false });
+  MakeArrowArrayInt32({ 12, 15, 0, 0},
+                      { true, true, false, false },
+                      &arrow_exp_sum);
 
-  auto arrow_exp_sub = MakeArrowArrayInt32({ -10, -11, 0, 0},
-                                           { true, true, false, false });
+  MakeArrowArrayInt32({ -10, -11, 0, 0},
+                      { true, true, false, false },
+                      &arrow_exp_sub);
 
   /*
    * output builders
