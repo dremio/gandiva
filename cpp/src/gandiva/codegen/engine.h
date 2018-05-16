@@ -21,6 +21,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace gandiva {
@@ -61,7 +62,8 @@ class Engine {
   std::unique_ptr<llvm::LLVMContext> context_;
   std::unique_ptr<llvm::ExecutionEngine> execution_engine_;
   std::unique_ptr<llvm::IRBuilder<>> ir_builder_;
-  llvm::Module *module_; // This is owned by the execution_engine_, so doesn't need to be explicitly deleted.
+  llvm::Module *module_; // This is owned by the execution_engine_, so doesn't need to be
+                         // explicitly deleted.
 
   std::vector<std::string> functions_to_compile_;
 
@@ -69,6 +71,6 @@ class Engine {
   std::string llvm_error_;
 };
 
-} // namespace gandiva 
+} // namespace gandiva
 
 #endif // GANDIVA_ENGINE_H

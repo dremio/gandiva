@@ -16,9 +16,11 @@
 #ifndef GANDIVA_EXPR_EVALUATOR_H
 #define GANDIVA_EXPR_EVALUATOR_H
 
-#include "arrow.h"
-#include "expression.h"
-#include "llvm_generator.h"
+#include <memory>
+#include <vector>
+#include "common/arrow.h"
+#include "expr/expression.h"
+#include "codegen/llvm_generator.h"
 
 namespace gandiva {
 
@@ -29,7 +31,7 @@ namespace gandiva {
 class Evaluator {
  public:
   /// Constructor
-  Evaluator(LLVMGenerator *llvm)
+  explicit Evaluator(LLVMGenerator *llvm)
     : llvm_gen_(std::unique_ptr<LLVMGenerator>(llvm)) {}
 
   /// Evaluate the specified record batch, and fill the output vectors.
@@ -40,7 +42,7 @@ class Evaluator {
                                          ExpressionVector exprs);
 
  private:
-   const std::unique_ptr<LLVMGenerator> llvm_gen_;
+  const std::unique_ptr<LLVMGenerator> llvm_gen_;
 };
 
 } // namespace gandiva

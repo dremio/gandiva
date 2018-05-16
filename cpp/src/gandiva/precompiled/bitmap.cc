@@ -23,8 +23,7 @@
 #define POS_TO_BIT_INDEX(p) (p % 8)
 
 __attribute__((always_inline))
-bool bitMapGetBit(const unsigned char *bmap, int position)
-{
+bool bitMapGetBit(const unsigned char *bmap, int position) {
   int byteIdx = POS_TO_BYTE_INDEX(position);
   int bitIdx = POS_TO_BIT_INDEX(position);
   return ((bmap[byteIdx] & (1 << bitIdx)) > 0);

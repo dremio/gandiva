@@ -16,6 +16,9 @@
 #ifndef GANDIVA_FWD_H
 #define GANDIVA_FWD_H
 
+#include <memory>
+#include <vector>
+
 namespace gandiva {
 
 class Dex;

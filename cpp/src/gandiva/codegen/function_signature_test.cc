@@ -15,7 +15,8 @@
  */
 
 #include <gtest/gtest.h>
-#include "function_signature.h"
+#include <memory>
+#include "codegen/function_signature.h"
 
 namespace gandiva {
 
@@ -40,47 +41,53 @@ class TestFunctionSignature : public ::testing::Test {
 };
 
 TEST_F(TestFunctionSignature, TestToString) {
-  EXPECT_EQ(FunctionSignature("myfunc", {arrow::int32(), arrow::float32()}, arrow::float64()).ToString(),
+  EXPECT_EQ(FunctionSignature("myfunc",
+                              {arrow::int32(), arrow::float32()},
+                              arrow::float64()).ToString(),
     "double myfunc(int32, float)");
 }
 
 TEST_F(TestFunctionSignature, TestEqualsName) {
-  EXPECT_TRUE(FunctionSignature("add", {arrow::int32()}, arrow::int32()) ==
-      FunctionSignature("add", {arrow::int32()}, arrow::int32()));
+  EXPECT_EQ(FunctionSignature("add", {arrow::int32()}, arrow::int32()),
+            FunctionSignature("add", {arrow::int32()}, arrow::int32()));
 
-  EXPECT_TRUE(FunctionSignature("add", {arrow::int32()}, arrow::int64()) ==
-      FunctionSignature("add", {local_i32_type_}, local_i64_type_));
+  EXPECT_EQ(FunctionSignature("add", {arrow::int32()}, arrow::int64()),
+            FunctionSignature("add", {local_i32_type_}, local_i64_type_));
 
   EXPECT_FALSE(FunctionSignature("add", {arrow::int32()}, arrow::int32()) ==
-      FunctionSignature("sub", {arrow::int32()}, arrow::int32()));
+               FunctionSignature("sub", {arrow::int32()}, arrow::int32()));
 }
 
 
 TEST_F(TestFunctionSignature, TestEqualsParamCount) {
-  EXPECT_FALSE(FunctionSignature("add", {arrow::int32(), arrow::int32()}, arrow::int32()) ==
-      FunctionSignature("add", {arrow::int32()}, arrow::int32()));
+  EXPECT_FALSE(FunctionSignature("add", {arrow::int32(), arrow::int32()},
+                                 arrow::int32()) ==
+               FunctionSignature("add", {arrow::int32()}, arrow::int32()));
 }
 
 TEST_F(TestFunctionSignature, TestEqualsParamValue) {
   EXPECT_FALSE(FunctionSignature("add", {arrow::int32()}, arrow::int32()) ==
-      FunctionSignature("add", {arrow::int64()}, arrow::int32()));
+               FunctionSignature("add", {arrow::int64()}, arrow::int32()));
 
   EXPECT_FALSE(FunctionSignature("add", {arrow::int32()}, arrow::int32()) ==
-      FunctionSignature("add", {arrow::float32(), arrow::float32()}, arrow::int32()));
+               FunctionSignature("add", {arrow::float32(), arrow::float32()},
+                                 arrow::int32()));
 
-  EXPECT_FALSE(FunctionSignature("add", {arrow::int32(), arrow::int64()}, arrow::int32()) ==
-      FunctionSignature("add", {arrow::int64(), arrow::int32()}, arrow::int32()));
+  EXPECT_FALSE(FunctionSignature("add", {arrow::int32(), arrow::int64()},
+                                 arrow::int32()) ==
+               FunctionSignature("add", {arrow::int64(), arrow::int32()},
+                                 arrow::int32()));
 
-  EXPECT_TRUE(FunctionSignature("extract_month", {arrow::date32()}, arrow::int64()) ==
-      FunctionSignature("extract_month", {local_date32_type_}, local_i64_type_));
+  EXPECT_EQ(FunctionSignature("extract_month", {arrow::date32()}, arrow::int64()),
+            FunctionSignature("extract_month", {local_date32_type_}, local_i64_type_));
 
   EXPECT_FALSE(FunctionSignature("extract_month", {arrow::date32()}, arrow::int64()) ==
-      FunctionSignature("extract_month", {arrow::date64()}, arrow::date32()));
+               FunctionSignature("extract_month", {arrow::date64()}, arrow::date32()));
 }
 
 TEST_F(TestFunctionSignature, TestEqualsReturn) {
   EXPECT_FALSE(FunctionSignature("add", {arrow::int32()}, arrow::int64()) ==
-      FunctionSignature("add", {arrow::int32()}, arrow::int32()));
+               FunctionSignature("add", {arrow::int32()}, arrow::int32()));
 }
 
 TEST_F(TestFunctionSignature, TestHash) {
@@ -89,8 +96,7 @@ TEST_F(TestFunctionSignature, TestHash) {
   EXPECT_EQ(f1.Hash(), f2.Hash());
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

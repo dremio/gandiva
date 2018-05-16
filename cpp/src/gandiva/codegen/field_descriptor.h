@@ -17,7 +17,7 @@
 #define GANDIVA_FIELDDESCRIPTOR_H
 
 #include <string>
-#include "arrow.h"
+#include "common/arrow.h"
 
 namespace gandiva {
 
@@ -28,7 +28,10 @@ class FieldDescriptor {
  public:
   static const int kInvalidIdx = -1;
 
-  FieldDescriptor(FieldSharedPtr field, int data_idx, int validity_idx = kInvalidIdx, int offsets_idx = kInvalidIdx)
+  FieldDescriptor(FieldSharedPtr field,
+                  int data_idx,
+                  int validity_idx = kInvalidIdx,
+                  int offsets_idx = kInvalidIdx)
       : field_(field),
         data_idx_(data_idx),
         validity_idx_(validity_idx),

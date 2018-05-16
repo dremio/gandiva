@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+#include <vector>
+#include <utility>
 #include <gtest/gtest.h>
 #include "arrow/memory_pool.h"
 #include "arrow/test-util.h"
-#include "evaluator.h"
-#include "tree_expr_builder.h"
+#include "expr/evaluator.h"
+#include "expr/tree_expr_builder.h"
 
 using namespace arrow;
 
@@ -41,7 +43,7 @@ static bool Compare(ArraySharedPtr src, ArraySharedPtr dst) {
   }
 
   auto length = src->length();
-  for(auto i = 0; i < length; i++) {
+  for (auto i = 0; i < length; i++) {
     if (src->IsValid(i) != dst->IsValid(i)) {
       std::cout << "Validity bits differ at " << i << "\n";
       return false;
@@ -109,12 +111,8 @@ TEST_F(TestEvaluator, TestSumSub) {
   // make arrow::ArrayVector for the output
   arrow::ArrayVector output;
   ArraySharedPtr add_out, sub_out;
-  MakeArrowArrayInt32({0, 0, 0, 0}, 
-                      {false, false, false, false}, 
-                      &add_out);
-  MakeArrowArrayInt32({0, 0, 0, 0}, 
-                      {false, false, false, false}, 
-                      &sub_out);
+  MakeArrowArrayInt32({0, 0, 0, 0}, {false, false, false, false}, &add_out);
+  MakeArrowArrayInt32({0, 0, 0, 0}, {false, false, false, false}, &sub_out);
 
   output.push_back(add_out);
   output.push_back(sub_out);

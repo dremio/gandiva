@@ -16,13 +16,16 @@
 #ifndef GANDIVA_FUNCTION_SIGNATURE_H
 #define GANDIVA_FUNCTION_SIGNATURE_H
 
-#include "arrow.h"
+#include <string>
 #include <sstream>
+#include <vector>
+#include "common/arrow.h"
 
 namespace gandiva {
 
 ///
-/// \brief Signature for a function : includes the base name, input param types and output types.
+/// \brief Signature for a function : includes the base name, input param types and
+/// output types.
 class FunctionSignature {
  public:
   FunctionSignature(const std::string &base_name,
@@ -31,8 +34,8 @@ class FunctionSignature {
       : base_name_(base_name),
         param_types_(param_types),
         ret_type_(ret_type) {
-    DCHECK(base_name.length() > 0);
-    DCHECK(param_types.size() > 0);
+    DCHECK_GT(base_name.length(), 0);
+    DCHECK_GT(param_types.size(), 0);
     for (auto it = param_types_.begin(); it != param_types_.end(); it++) {
       DCHECK(*it);
     }
@@ -85,8 +88,8 @@ class FunctionSignature {
 
  private:
   /*
-   * TODO : for some of the types, this shouldn't match type specific data. eg. for decimals,
-   * this shouldn't match precision/scale.
+   * TODO : for some of the types, this shouldn't match type specific data. eg. for
+   * decimals, this shouldn't match precision/scale.
    */
   bool DataTypeEquals(const DataTypeSharedPtr left, const DataTypeSharedPtr right) const {
     return left->Equals(right);

@@ -16,17 +16,20 @@
 #ifndef GANDIVA_LLVMGENERATOR_H
 #define GANDIVA_LLVMGENERATOR_H
 
+#include <memory>
+#include <string>
+#include <vector>
 #include <stdint.h>
 #include <gtest/gtest_prod.h>
-#include "gandiva_fwd.h"
-#include "expression.h"
-#include "dex_visitor.h"
-#include "compiled_expr.h"
-#include "engine.h"
-#include "value_validity_pair.h"
-#include "llvm_types.h"
-#include "lvalue.h"
-#include "annotator.h"
+#include "common/gandiva_fwd.h"
+#include "codegen/dex_visitor.h"
+#include "codegen/compiled_expr.h"
+#include "codegen/engine.h"
+#include "codegen/value_validity_pair.h"
+#include "codegen/llvm_types.h"
+#include "codegen/lvalue.h"
+#include "expr/annotator.h"
+#include "expr/expression.h"
 
 namespace gandiva {
 
@@ -62,11 +65,11 @@ class LLVMGenerator {
             llvm::Value *arg_addrs,
             llvm::Value *loop_var);
 
-    virtual void Visit(const VectorReadValidityDex &dex) override;
-    virtual void Visit(const VectorReadValueDex &dex) override;
-    virtual void Visit(const LiteralDex &dex) override;
-    virtual void Visit(const NonNullableFuncDex &dex) override;
-    virtual void Visit(const NullableNeverFuncDex &dex) override;
+    void Visit(const VectorReadValidityDex &dex) override;
+    void Visit(const VectorReadValueDex &dex) override;
+    void Visit(const LiteralDex &dex) override;
+    void Visit(const NonNullableFuncDex &dex) override;
+    void Visit(const NullableNeverFuncDex &dex) override;
 
     LValueSharedPtr result() { return result_; }
 
@@ -87,9 +90,15 @@ class LLVMGenerator {
 
   void Add(const ExpressionSharedPtr expr, const FieldDescriptorSharedPtr output);
 
-  llvm::Value *LoadVectorAtIndex(llvm::Value *arg_addrs, int idx, const std::string &name);
-  llvm::Value *GetValidityReference(llvm::Value *arg_addrs, int idx, FieldSharedPtr field);
-  llvm::Value *GetDataReference(llvm::Value *arg_addrs, int idx, FieldSharedPtr field);
+  llvm::Value *LoadVectorAtIndex(llvm::Value *arg_addrs,
+                                 int idx,
+                                 const std::string &name);
+  llvm::Value *GetValidityReference(llvm::Value *arg_addrs,
+                                    int idx,
+                                    FieldSharedPtr field);
+  llvm::Value *GetDataReference(llvm::Value *arg_addrs,
+                                int idx,
+                                FieldSharedPtr field);
 
   /// Generate code for the value array of one expression.
   llvm::Function *CodeGenExprValue(DexSharedPtr value_expr,
@@ -98,13 +107,23 @@ class LLVMGenerator {
 
   llvm::Value *GetPackedBitValue(llvm::Value *bitMap, llvm::Value *position);
   void SetPackedBitValue(llvm::Value *bitMap, llvm::Value *position, llvm::Value *value);
-  llvm::Value *AddFunctionCall(std::string full_name, llvm::Type *ret_type, const std::vector<llvm::Value *> &args);
+  llvm::Value *AddFunctionCall(std::string full_name,
+                               llvm::Type *ret_type,
+                               const std::vector<llvm::Value *> &args);
 
-  void ComputeBitMapsForExpr(CompiledExpr *compiledExpr, uint8_t **buffers, int record_count);
-  static void IntersectBitMaps(uint64_t *dst_map, uint64_t **src_maps, int nmaps, int num_records);
+  void ComputeBitMapsForExpr(CompiledExpr *compiledExpr,
+                             uint8_t **buffers,
+                             int record_count);
+
+  static void IntersectBitMaps(uint64_t *dst_map,
+                               uint64_t **src_maps,
+                               int nmaps,
+                               int num_records);
 
   // tracing related
-  std::string ReplaceFormatInTrace(std::string msg, llvm::Value *value, std::string *print_fn);
+  std::string ReplaceFormatInTrace(std::string msg,
+                                   llvm::Value *value,
+                                   std::string *print_fn);
   void AddTrace(const std::string &msg, llvm::Value *value = NULL);
 
   std::unique_ptr<Engine> engine_;

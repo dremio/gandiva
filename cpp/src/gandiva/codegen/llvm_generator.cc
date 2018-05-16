@@ -15,12 +15,13 @@
  */
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <vector>
-#include "codegen_exception.h"
-#include "dex.h"
-#include "function_registry.h"
-#include "llvm_generator.h"
-#include "lvalue.h"
+#include "codegen/codegen_exception.h"
+#include "codegen/dex.h"
+#include "codegen/function_registry.h"
+#include "codegen/llvm_generator.h"
+#include "codegen/lvalue.h"
 
 namespace gandiva {
 
@@ -37,14 +38,17 @@ LLVMGenerator::~LLVMGenerator() {
   }
 }
 
-void LLVMGenerator::Add(const ExpressionSharedPtr expr, const FieldDescriptorSharedPtr output) {
+void LLVMGenerator::Add(const ExpressionSharedPtr expr,
+                        const FieldDescriptorSharedPtr output) {
   int idx = compiled_exprs_.size();
 
   // decompose the expression to separate out value and validities.
-  ValueValidityPairSharedPtr value_validity = ValueValidityPairSharedPtr(expr->Decompose(&annotator_));
+  ValueValidityPairSharedPtr value_validity = expr->Decompose(&annotator_);
 
   // Generate the IR function for the decomposed expression.
-  llvm::Function *ir_function = CodeGenExprValue(value_validity->value_expr(), output, idx);
+  llvm::Function *ir_function = CodeGenExprValue(value_validity->value_expr(),
+                                                 output,
+                                                 idx);
 
   CompiledExpr *compiled_expr = new CompiledExpr(value_validity, output, ir_function);
   compiled_exprs_.push_back(compiled_expr);
@@ -54,7 +58,6 @@ void LLVMGenerator::Add(const ExpressionSharedPtr expr, const FieldDescriptorSha
  * Build and optimise module for projection expression.
  */
 void LLVMGenerator::Build(ExpressionVector exprs) {
-
   for (auto it = exprs.begin(); it != exprs.end(); it++) {
     ExpressionSharedPtr expr = *it;
 
@@ -68,7 +71,8 @@ void LLVMGenerator::Build(ExpressionVector exprs) {
   // setup the jit functions for each expression.
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
     CompiledExpr *compiled_expr = *it;
-    eval_func_t fn = reinterpret_cast<eval_func_t>(engine_->CompiledFunction(compiled_expr->ir_function()));
+    llvm::Function *ir_func = compiled_expr->ir_function();
+    eval_func_t fn = reinterpret_cast<eval_func_t>(engine_->CompiledFunction(ir_func));
     compiled_expr->set_jit_function(fn);
   }
 }
@@ -76,11 +80,12 @@ void LLVMGenerator::Build(ExpressionVector exprs) {
 /*
  * Execute the compiled module against the provided vectors.
  */
-int LLVMGenerator::Execute(RecordBatchSharedPtr record_batch, arrow::ArrayVector outputs) {
-  DCHECK(record_batch->num_rows() > 0);
+int LLVMGenerator::Execute(RecordBatchSharedPtr record_batch,
+                           arrow::ArrayVector outputs) {
+  DCHECK_GT(record_batch->num_rows(), 0);
 
   auto eval_batch = annotator_.PrepareEvalBatch(record_batch, outputs);
-  DCHECK(eval_batch->num_buffers() > 0);
+  DCHECK_GT(eval_batch->num_buffers(), 0);
 
   // generate bitmap vectors, by doing an intersection.
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
@@ -100,7 +105,9 @@ llvm::Value *LLVMGenerator::LoadVectorAtIndex(llvm::Value *arg_addrs,
                                               int idx,
                                               const std::string &name) {
   llvm::IRBuilder<> &builder = ir_builder();
-  llvm::Value *offset = builder.CreateGEP(arg_addrs, types_.i32_constant(idx), name + "_mem_addr");
+  llvm::Value *offset = builder.CreateGEP(arg_addrs,
+                                          types_.i32_constant(idx),
+                                          name + "_mem_addr");
   return builder.CreateLoad(offset, name + "_mem");
 }
 
@@ -110,7 +117,6 @@ llvm::Value *LLVMGenerator::LoadVectorAtIndex(llvm::Value *arg_addrs,
 llvm::Value *LLVMGenerator::GetValidityReference(llvm::Value *arg_addrs,
                                                  int idx,
                                                  FieldSharedPtr field) {
-
   const std::string &name = field->name();
   llvm::Value *load = LoadVectorAtIndex(arg_addrs, idx, name);
   return ir_builder().CreateIntToPtr(load, types_.i64_ptr_type(), name + "_varray");
@@ -122,7 +128,6 @@ llvm::Value *LLVMGenerator::GetValidityReference(llvm::Value *arg_addrs,
 llvm::Value *LLVMGenerator::GetDataReference(llvm::Value *arg_addrs,
                                              int idx,
                                              FieldSharedPtr field) {
-
   const std::string &name = field->name();
   llvm::Value *load = LoadVectorAtIndex(arg_addrs, idx, name);
   llvm::Type *base_type = types_.DataVecType(field->type());
@@ -191,12 +196,17 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(DexSharedPtr value_expr,
   std::vector<llvm::Type *> arguments;
   arguments.push_back(types_.i64_ptr_type());
   arguments.push_back(types_.i32_type());
-  llvm::FunctionType *prototype = llvm::FunctionType::get(types_.i32_type(), arguments, false /*isVarArg*/);
+  llvm::FunctionType *prototype = llvm::FunctionType::get(types_.i32_type(),
+                                                          arguments,
+                                                          false /*isVarArg*/);
 
   // Create fn
   std::string func_name = "expr_" + std::to_string(suffix_idx);
   engine_->AddFunctionToCompile(func_name);
-  llvm::Function *fn = llvm::Function::Create(prototype, llvm::GlobalValue::ExternalLinkage, func_name, module());
+  llvm::Function *fn = llvm::Function::Create(prototype,
+                                              llvm::GlobalValue::ExternalLinkage,
+                                              func_name,
+                                              module());
   assert(fn != NULL);
 
   // Name the arguments
@@ -214,7 +224,9 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(DexSharedPtr value_expr,
 
   // Add reference to output vector (in entry block)
   builder.SetInsertPoint(loop_entry);
-  llvm::Value *output_ref = GetDataReference(arg_addrs, output->data_idx(), output->field());
+  llvm::Value *output_ref = GetDataReference(arg_addrs,
+                                             output->data_idx(),
+                                             output->field());
 
   // Loop body
   builder.SetInsertPoint(loop_body);
@@ -222,7 +234,9 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(DexSharedPtr value_expr,
   // define loop_var : start with 0, +1 after each iter
   llvm::PHINode *loop_var = builder.CreatePHI(types_.i32_type(), 2, "loop_var");
   loop_var->addIncoming(types_.i32_constant(0), loop_entry);
-  llvm::Value *loop_update = builder.CreateAdd(loop_var, types_.i32_constant(1), "loop_var+1");
+  llvm::Value *loop_update = builder.CreateAdd(loop_var,
+                                               types_.i32_constant(1),
+                                               "loop_var+1");
   loop_var->addIncoming(loop_update, loop_body);
 
   // The visitor can add code to both the entry/loop blocks.
@@ -246,7 +260,9 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(DexSharedPtr value_expr,
   AddTrace("saving result " + output->Name() + " value %T", output_value->data());
 
   // check loop_var
-  llvm::Value *loop_var_check = builder.CreateICmpSLT(loop_update, arg_nrecords, "loop_var < nrec");
+  llvm::Value *loop_var_check = builder.CreateICmpSLT(loop_update,
+                                                      arg_nrecords,
+                                                      "loop_var < nrec");
   builder.CreateCondBr(loop_var_check, loop_body, loop_exit);
 
   // Loop exit
@@ -258,35 +274,45 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(DexSharedPtr value_expr,
 /*
  * Return value of a bit in bitMap.
  */
-llvm::Value *LLVMGenerator::GetPackedBitValue(llvm::Value *bitmap, llvm::Value *position) {
+llvm::Value *LLVMGenerator::GetPackedBitValue(llvm::Value *bitmap,
+                                              llvm::Value *position) {
   AddTrace("fetch bit at position %T", position);
 
-  llvm::Value *bitmap8 = ir_builder().CreateBitCast(bitmap, types_.ptr_type(types_.i8_type()), "bitMapCast");
-  return AddFunctionCall("bitMapGetBit", types_.i1_type(), std::vector<llvm::Value *> {bitmap8, position});
+  llvm::Value *bitmap8 = ir_builder().CreateBitCast(bitmap,
+                                                    types_.ptr_type(types_.i8_type()),
+                                                    "bitMapCast");
+  return AddFunctionCall("bitMapGetBit", types_.i1_type(), {bitmap8, position});
 }
 
 /*
  * Set the value of a bit in bitMap.
  */
-void LLVMGenerator::SetPackedBitValue(llvm::Value *bitmap, llvm::Value *position, llvm::Value *value) {
+void LLVMGenerator::SetPackedBitValue(llvm::Value *bitmap,
+                                      llvm::Value *position,
+                                      llvm::Value *value) {
   AddTrace("set bit at position %T", position);
   AddTrace("  to value %T ", value);
 
-  llvm::Value *bitmap8 = ir_builder().CreateBitCast(bitmap, types_.ptr_type(types_.i8_type()), "bitMapCast");
-  AddFunctionCall("bitMapSetBit", types_.void_type(), std::vector<llvm::Value *> {bitmap8, position, value});
+  llvm::Value *bitmap8 = ir_builder().CreateBitCast(bitmap,
+                                                    types_.ptr_type(types_.i8_type()),
+                                                    "bitMapCast");
+  AddFunctionCall("bitMapSetBit", types_.void_type(), {bitmap8, position, value});
 }
 
 /*
  * Extract the bitmap addresses, and do an intersection.
  */
-void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr, uint8_t **addrs, int record_count) {
+void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr,
+                                          uint8_t **addrs,
+                                          int record_count) {
   auto validities = compiled_expr->value_validity()->validity_exprs();
 
   int num_bitmaps = validities.size();
   uint64_t *src_bitmaps[num_bitmaps];
   for (int i = 0; i < num_bitmaps; i++) {
     Dex *validity_dex = validities.at(i).get();
-    VectorReadValidityDex *value_dex = dynamic_cast<VectorReadValidityDex *>(validity_dex);
+    VectorReadValidityDex *value_dex =
+        dynamic_cast<VectorReadValidityDex *>(validity_dex);
     src_bitmaps[i] = (uint64_t *) addrs[value_dex->ValidityIdx()];
   }
 
@@ -300,7 +326,9 @@ void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr, uint8_t *
  * Compute the intersection of multiple bitmaps.
  */
 void
-LLVMGenerator::IntersectBitMaps(uint64_t *dst_map, uint64_t **src_maps, int nmaps, int num_records) {
+LLVMGenerator::IntersectBitMaps(uint64_t *dst_map, uint64_t **src_maps,
+                                int nmaps,
+                                int num_records) {
   int num_bytes = (num_records + 63) / 8; // aligned to 8-byte.
   int num_words = num_bytes / 8;
 
@@ -341,8 +369,7 @@ LLVMGenerator::IntersectBitMaps(uint64_t *dst_map, uint64_t **src_maps, int nmap
 llvm::Value *LLVMGenerator::AddFunctionCall(std::string full_name,
                                             llvm::Type *ret_type,
                                             const std::vector<llvm::Value *> &args) {
-
-  // add to list of functions that need to be compiled.
+  // add to list of functions that need to be compiled
   engine_->AddFunctionToCompile(full_name);
 
   // find the llvm function.
@@ -442,7 +469,9 @@ void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
 
   const NativeFunction *native_function = dex.native_function();
   llvm::Type *ret_type = types.IRType(native_function->signature().ret_type()->id());
-  llvm::Value *value = generator_->AddFunctionCall(native_function->pc_name(), ret_type, args);
+  llvm::Value *value = generator_->AddFunctionCall(native_function->pc_name(),
+                                                   ret_type,
+                                                   args);
   result_.reset(new LValue(value));
 }
 
@@ -467,14 +496,18 @@ void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
 
   const NativeFunction *native_function = dex.native_function();
   llvm::Type *ret_type = types.IRType(native_function->signature().ret_type()->id());
-  llvm::Value *value = generator_->AddFunctionCall(native_function->pc_name(), ret_type, args);
+  llvm::Value *value = generator_->AddFunctionCall(native_function->pc_name(),
+                                                   ret_type,
+                                                   args);
   result_.reset(new LValue(value));
 }
 
 /*
  * Bitwise-AND of a vector of bits to get the combined validity.
  */
-llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(std::vector<DexSharedPtr> validities) {
+llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(
+    std::vector<DexSharedPtr> validities) {
+
   llvm::IRBuilder<> &builder = ir_builder();
   LLVMTypes &types = generator_->types_;
 
@@ -491,10 +524,12 @@ llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(std::vector<DexShared
  * Hooks for tracing/printfs.
  *
  * replace %T with the type-specific format specifier.
- * For some reason, float/double literals are getting lost when printing with the generic printf. so, use a
- * wrapper instead.
+ * For some reason, float/double literals are getting lost when printing with the generic
+ * printf. so, use a wrapper instead.
  */
-std::string LLVMGenerator::ReplaceFormatInTrace(std::string msg, llvm::Value *value, std::string *print_fn) {
+std::string LLVMGenerator::ReplaceFormatInTrace(std::string msg,
+                                                llvm::Value *value,
+                                                std::string *print_fn) {
   std::size_t pos = msg.find("%T");
   if (pos == std::string::npos) {
     assert(0);
@@ -539,7 +574,9 @@ void LLVMGenerator::AddTrace(const std::string &msg, llvm::Value *value) {
   // cast this to an llvm pointer.
   const char *str = trace_strings_.back().c_str();
   llvm::Constant *str_int_cast = types_.i64_constant((int64_t)str);
-  llvm::Constant *str_ptr_cast = llvm::ConstantExpr::getIntToPtr(str_int_cast, types_.ptr_type(types_.i8_type()));
+  llvm::Constant *str_ptr_cast = llvm::ConstantExpr::getIntToPtr(
+                                   str_int_cast,
+                                   types_.ptr_type(types_.i8_type()));
 
   std::vector<llvm::Value *> args;
   args.push_back(str_ptr_cast);

@@ -23,7 +23,7 @@ namespace gandiva {
 /// \brief Tracks validity/value builders in LLVM.
 class LValue {
  public:
-  LValue(llvm::Value *data, llvm::Value *validity = NULL)
+  explicit LValue(llvm::Value *data, llvm::Value *validity = NULL)
       : data_(data),
         validity_(validity)
   {}

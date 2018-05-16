@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-#include "annotator.h"
-#include "node.h"
-#include "dex.h"
-#include "function_registry.h"
-#include "function_signature.h"
+#include <memory>
+#include <string>
+#include <vector>
+#include "codegen/dex.h"
+#include "codegen/function_registry.h"
+#include "codegen/function_signature.h"
+#include "expr/annotator.h"
+#include "expr/node.h"
 
 namespace gandiva {
 
@@ -50,7 +53,8 @@ ValueValidityPairSharedPtr FunctionNode::Decompose(Annotator *annotator) {
     std::vector<DexSharedPtr> merged_validity;
 
     for (auto it = args.begin(); it != args.end(); ++it) {
-      // Merge the validity_expressions of the children to build a combined validity expression.
+      // Merge the validity_expressions of the children to build a combined validity
+      // expression.
       ValueValidityPairSharedPtr child = *it;
       merged_validity.insert(merged_validity.end(),
                              child->validity_exprs().begin(),
@@ -71,8 +75,7 @@ ValueValidityPairSharedPtr FunctionNode::Decompose(Annotator *annotator) {
 
 NodeSharedPtr FunctionNode::CreateFunction(const std::string &name,
                                            const std::vector<NodeSharedPtr> children,
-                                           DataTypeSharedPtr retType)
-{
+                                           DataTypeSharedPtr retType) {
   std::vector<DataTypeSharedPtr> paramTypes;
   for (auto it = children.begin(); it != children.end(); ++it) {
     auto arg = (*it)->getReturnType();

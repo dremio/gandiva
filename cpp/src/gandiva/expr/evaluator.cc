@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-#include "evaluator.h"
+#include <memory>
+#include <vector>
+#include "expr/evaluator.h"
 
 namespace gandiva {
 
-std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema, ExpressionVector exprs) {
+std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema,
+                                           ExpressionVector exprs) {
   LLVMGenerator *llvm_gen = new LLVMGenerator();
 
   // TODO: What is the schema used for?

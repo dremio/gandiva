@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+#include <memory>
+#include <vector>
 #include <gtest/gtest.h>
-#include "llvm_generator.h"
-#include "function_registry.h"
-#include "codegen_exception.h"
+#include "codegen/llvm_generator.h"
+#include "codegen/function_registry.h"
+#include "codegen/codegen_exception.h"
 
 namespace gandiva {
 
@@ -47,7 +49,9 @@ TEST_F(TestLLVMGenerator, TestAdd) {
 
   std::vector<DataTypeSharedPtr> params{arrow::int32(), arrow::int32()};
   auto func_desc = std::make_shared<FuncDescriptor>("add", params, arrow::int32());
-  FunctionSignature signature(func_desc->name(), func_desc->params(), func_desc->return_type());
+  FunctionSignature signature(func_desc->name(),
+                              func_desc->params(),
+                              func_desc->return_type());
   const NativeFunction *native_func = FunctionRegistry::LookupSignature(signature);
 
   std::vector<ValueValidityPairSharedPtr> pairs{pair0, pair1};
@@ -115,11 +119,11 @@ TEST_F(TestLLVMGenerator, TestIntersectBitMaps) {
   EXPECT_EQ(dst_bitmap, src_bitmaps[0] & src_bitmaps[1] & src_bitmaps[2]);
 
   LLVMGenerator::IntersectBitMaps(&dst_bitmap, src_bitmap_ptrs, 4, nrecords);
-  EXPECT_EQ(dst_bitmap, src_bitmaps[0] & src_bitmaps[1] & src_bitmaps[2] & src_bitmaps[3]);
+  EXPECT_EQ(dst_bitmap,
+            src_bitmaps[0] & src_bitmaps[1] & src_bitmaps[2] & src_bitmaps[3]);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

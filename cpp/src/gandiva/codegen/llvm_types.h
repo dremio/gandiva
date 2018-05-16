@@ -18,14 +18,15 @@
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
-#include "arrow.h"
+#include <map>
+#include "common/arrow.h"
 
 namespace gandiva {
 
 /// \brief Holder for llvm types, and mappings between arrow types and llvm types.
 class LLVMTypes {
  public:
-  LLVMTypes(llvm::LLVMContext *context);
+  explicit LLVMTypes(llvm::LLVMContext *context);
 
   llvm::Type *i1_type() {
     return llvm::Type::getInt1Ty(*context_);

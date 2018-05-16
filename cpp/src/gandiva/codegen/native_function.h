@@ -16,7 +16,10 @@
 #ifndef GANDIVA_NATIVE_FUNCTION_H
 #define GANDIVA_NATIVE_FUNCTION_H
 
-#include "function_signature.h"
+#include <memory>
+#include <string>
+#include <vector>
+#include "codegen/function_signature.h"
 
 namespace gandiva {
 
@@ -29,7 +32,8 @@ enum ResultNullableType {
   RESULT_NULL_INTERNAL,
 };
 
-/// \brief Holder for the mapping from a function in an expression to a precompiled function.
+/// \brief Holder for the mapping from a function in an expression to a
+/// precompiled function.
 class NativeFunction {
  public:
   const FunctionSignature &signature() const { return signature_; }

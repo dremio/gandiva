@@ -15,7 +15,7 @@
  */
 
 #include <gtest/gtest.h>
-#include "llvm_types.h"
+#include "codegen/llvm_types.h"
 
 namespace gandiva {
 
@@ -48,8 +48,10 @@ TEST_F(TestLLVMTypes, TestFound) {
   EXPECT_EQ(types_->DataVecType(arrow::float32()), types_->float_type());
   EXPECT_EQ(types_->DataVecType(arrow::float64()), types_->double_type());
   EXPECT_EQ(types_->DataVecType(arrow::date64()), types_->i64_type());
-  EXPECT_EQ(types_->DataVecType(arrow::time64(arrow::TimeUnit::MICRO)), types_->i64_type());
-  EXPECT_EQ(types_->DataVecType(arrow::timestamp(arrow::TimeUnit::MILLI)), types_->i64_type());
+  EXPECT_EQ(types_->DataVecType(arrow::time64(arrow::TimeUnit::MICRO)),
+            types_->i64_type());
+  EXPECT_EQ(types_->DataVecType(arrow::timestamp(arrow::TimeUnit::MILLI)),
+            types_->i64_type());
 }
 
 TEST_F(TestLLVMTypes, TestNotFound) {
@@ -57,8 +59,7 @@ TEST_F(TestLLVMTypes, TestNotFound) {
   EXPECT_EQ(types_->DataVecType(arrow::null()), nullptr);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

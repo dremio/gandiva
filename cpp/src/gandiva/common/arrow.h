@@ -16,6 +16,8 @@
 #ifndef GANDIVA_EXPR_ARROW_H
 #define GANDIVA_EXPR_ARROW_H
 
+#include <memory>
+#include <vector>
 #include <arrow/builder.h>
 #include <arrow/record_batch.h>
 #include <arrow/type.h>

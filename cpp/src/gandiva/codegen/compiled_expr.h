@@ -16,7 +16,7 @@
 #ifndef GANDIVA_COMPILED_EXPR_H
 #define GANDIVA_COMPILED_EXPR_H
 
-#include "value_validity_pair.h"
+#include "codegen/value_validity_pair.h"
 
 namespace gandiva {
 

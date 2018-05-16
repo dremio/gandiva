@@ -53,9 +53,7 @@ set(GANDIVA_SRCS
 set(PRECOMPILED_SOURCED_FILES
     precompiled/arithmetic_ops.cc
     precompiled/bitmap.cc
-    precompiled/nativehelpers.cc
-    precompiled/time.cc
-    precompiled/types.h)
+    precompiled/time.cc)
 
 SET(PRECOMPILED_SRC precompiled/irhelpers.cc)
 #TODO : fix this

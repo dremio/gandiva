@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+#include <memory>
 #include <gtest/gtest.h>
 #include <arrow/memory_pool.h>
-#include "annotator.h"
-#include "field_descriptor.h"
+#include "expr/annotator.h"
+#include "codegen/field_descriptor.h"
 
 using namespace arrow;
 

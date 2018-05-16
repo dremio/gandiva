@@ -17,7 +17,7 @@
 #define GANDIVA_VALUEVALIDITYPAIR_H
 
 #include <vector>
-#include "gandiva_fwd.h"
+#include "common/gandiva_fwd.h"
 
 namespace gandiva {
 
@@ -35,7 +35,7 @@ class ValueValidityPair {
     validity_exprs_.push_back(validity_expr);
   }
 
-  ValueValidityPair(DexSharedPtr value_expr)
+  explicit ValueValidityPair(DexSharedPtr value_expr)
       : value_expr_(value_expr) {}
 
   const std::vector<DexSharedPtr> &validity_exprs() { return validity_exprs_; }

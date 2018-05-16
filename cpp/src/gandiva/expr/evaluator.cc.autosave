@@ -14,9 +14,26 @@
  * limitations under the License.
  */
 
-/*
- * All files that need to be pre-compiled to assembly should be sourced into this file.
- */
-extern "C" {
+#include <memory>
+#include <vector>
+#include "expr/evaluator.h"
 
-} // extern "C"
+namespace gandiva {
+
+std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema,
+                                           ExpressionVector exprs) {
+  
+  LLVMGenerator *llvm_gen = new LLVMGenerator();
+
+  // TODO: What is the schema used for?
+  // Gandiva shouldn't be doing schema checks right
+  llvm_gen->Build(exprs);
+
+  return std::shared_ptr<Evaluator>(new Evaluator(llvm_gen));
+}
+
+void Evaluator::Evaluate(RecordBatchSharedPtr batch, arrow::ArrayVector outputs) {
+  llvm_gen_->Execute(batch, outputs);
+}
+
+} // namespace gandiva

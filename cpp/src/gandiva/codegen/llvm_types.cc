@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "llvm_types.h"
+#include "codegen/llvm_types.h"
 
 namespace gandiva {
 
 LLVMTypes::LLVMTypes(llvm::LLVMContext *context)
     : context_(context) {
 
-  arrow_id_to_llvm_type_map_= {
+  arrow_id_to_llvm_type_map_ = {
       {ArrowTypeID::BOOL, i1_type()},
       {ArrowTypeID::INT32, i32_type()},
       {ArrowTypeID::INT64, i64_type()},

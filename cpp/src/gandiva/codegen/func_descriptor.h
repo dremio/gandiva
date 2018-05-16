@@ -16,8 +16,9 @@
 #ifndef GANDIVA_FUNCDESCRIPTOR_H
 #define GANDIVA_FUNCDESCRIPTOR_H
 
+#include <string>
 #include <vector>
-#include "arrow.h"
+#include "common/arrow.h"
 
 namespace gandiva {
 

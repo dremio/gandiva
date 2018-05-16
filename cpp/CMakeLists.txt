@@ -41,7 +41,6 @@ if (UNIX)
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
     )
-  message("lint on files ${LINT_FILES}")
 
   find_program(CPPLINT_BIN NAMES cpplint cpplint.py HINTS ${BUILD_SUPPORT_DIR})
   message(STATUS "Found cpplint executable at ${CPPLINT_BIN}")

@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 #include <map>
 #include <typeinfo>
-#include "dex.h"
+#include "codegen/dex.h"
 
 namespace gandiva {
 
@@ -35,7 +35,6 @@ class TestDex : public ::testing::Test {
 };
 
 TEST_F(TestDex, TestVisitor) {
-
   class TestVisitor : public DexVisitor {
    public:
     TestVisitor(std::map<const std::type_info *, std::string> *map,
@@ -43,23 +42,23 @@ TEST_F(TestDex, TestVisitor) {
       : map_(map),
         result_(result) {}
 
-    virtual void Visit(const VectorReadValidityDex &dex) override {
+    void Visit(const VectorReadValidityDex &dex) override {
       *result_ = (*map_)[&typeid(dex)];
     }
 
-    virtual void Visit(const VectorReadValueDex &dex) override {
+    void Visit(const VectorReadValueDex &dex) override {
       *result_ = (*map_)[&typeid(dex)];
     }
 
-    virtual void Visit(const LiteralDex &dex) override {
+    void Visit(const LiteralDex &dex) override {
       *result_ = (*map_)[&typeid(dex)];
     }
 
-    virtual void Visit(const NonNullableFuncDex &dex) override {
+    void Visit(const NonNullableFuncDex &dex) override {
       *result_ = (*map_)[&typeid(dex)];
     }
 
-    virtual void Visit(const NullableNeverFuncDex &dex) override {
+    void Visit(const NullableNeverFuncDex &dex) override {
       *result_ = (*map_)[&typeid(dex)];
     }
 
@@ -82,7 +81,8 @@ TEST_F(TestDex, TestVisitor) {
   EXPECT_EQ(desc, name_map_[&typeid(VectorReadValueDex)]);
 
   std::vector<DataTypeSharedPtr> params{arrow::int32()};
-  FuncDescriptorSharedPtr my_func = std::make_shared<FuncDescriptor>("abc", params, arrow::boolean());
+  FuncDescriptorSharedPtr my_func =
+      std::make_shared<FuncDescriptor>("abc", params, arrow::boolean());
 
   NonNullableFuncDex non_nullable_func(my_func, NULL, {NULL});
   non_nullable_func.Accept(&visitor);
@@ -93,8 +93,7 @@ TEST_F(TestDex, TestVisitor) {
   EXPECT_EQ(desc, name_map_[&typeid(NullableNeverFuncDex)]);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

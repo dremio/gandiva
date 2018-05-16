@@ -16,7 +16,7 @@
 #ifndef GANDIVA_DEX_DEXVISITOR_H
 #define GANDIVA_DEX_DEXVISITOR_H
 
-#include "lvalue.h"
+#include "codegen/lvalue.h"
 
 namespace gandiva {
 

@@ -31,9 +31,11 @@
 #include <llvm/Transforms/Scalar/GVN.h>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <unordered_set>
-#include "codegen_exception.h"
-#include "engine.h"
+#include <utility>
+#include "codegen/codegen_exception.h"
+#include "codegen/engine.h"
 
 namespace gandiva {
 
@@ -85,10 +87,12 @@ void Engine::LoadPreCompiledIRFiles() {
   std::string fileName = kLibPreCompiledIRDir + "irhelpers.bc";
 
   /// Read from file into memory buffer.
-  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer_or_error = llvm::MemoryBuffer::getFile(fileName);
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer_or_error =
+      llvm::MemoryBuffer::getFile(fileName);
   if (!buffer_or_error) {
     std::stringstream ss;
-    ss << "Could not load module from IR " << fileName << ": " << buffer_or_error.getError().message();
+    ss << "Could not load module from IR " << fileName << ": " <<
+          buffer_or_error.getError().message();
     throw CodeGenException(ss.str());
   }
   std::unique_ptr<llvm::MemoryBuffer> buffer = move(buffer_or_error.get());
@@ -127,7 +131,8 @@ Engine::FinalizeModule(bool optimise_ir, bool dump_ir) {
 
   // Setup an optimiser pipeline
   if (optimise_ir) {
-    std::unique_ptr<llvm::legacy::PassManager> pass_manager(new llvm::legacy::PassManager());
+    std::unique_ptr<llvm::legacy::PassManager>
+        pass_manager(new llvm::legacy::PassManager());
 
     /* First round : get rid of all functions that don't need to be compiled.
      * This helps in reducing the overall compilation time.

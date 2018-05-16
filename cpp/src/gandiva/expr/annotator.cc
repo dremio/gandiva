@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-#include "annotator.h"
-#include "field_descriptor.h"
+#include <memory>
+#include <string>
+#include "expr/annotator.h"
+#include "codegen/field_descriptor.h"
 
 namespace gandiva {
 
-FieldDescriptorSharedPtr Annotator::CheckAndAddInputFieldDescriptor(FieldSharedPtr field) {
+FieldDescriptorSharedPtr Annotator::CheckAndAddInputFieldDescriptor(
+    FieldSharedPtr field) {
+
   // If the field is already in the map, return the entry.
   auto found = in_name_to_desc_.find(field->name());
   if (found != in_name_to_desc_.end()) {
@@ -47,7 +51,9 @@ FieldDescriptorSharedPtr Annotator::MakeDesc(FieldSharedPtr field) {
 }
 
 void
-Annotator::PrepareBuffersForField(FieldDescriptorSharedPtr desc, ArraySharedPtr array, EvalBatchSharedPtr eval_batch) {
+Annotator::PrepareBuffersForField(FieldDescriptorSharedPtr desc,
+                                  ArraySharedPtr array,
+                                  EvalBatchSharedPtr eval_batch) {
   // TODO:
   // - validity is optional
   // - may have offsets also
@@ -59,7 +65,8 @@ Annotator::PrepareBuffersForField(FieldDescriptorSharedPtr desc, ArraySharedPtr 
   eval_batch->SetBufferAtIdx(desc->data_idx(), data_buf);
 }
 
-EvalBatchSharedPtr Annotator::PrepareEvalBatch(RecordBatchSharedPtr record_batch, arrow::ArrayVector out_arrays) {
+EvalBatchSharedPtr Annotator::PrepareEvalBatch(RecordBatchSharedPtr record_batch,
+                                               arrow::ArrayVector out_arrays) {
   EvalBatchSharedPtr eval_batch = std::make_shared<EvalBatch>(buffer_count_);
 
   // Fill in the entries for the input fields.

@@ -17,9 +17,11 @@
 #define GANDIVA_EXPR_ANNOTATOR_H
 
 #include <list>
+#include <string>
+#include <vector>
 #include <unordered_map>
-#include "arrow.h"
-#include "gandiva_fwd.h"
+#include "common/arrow.h"
+#include "common/gandiva_fwd.h"
 
 namespace gandiva {
 
@@ -27,7 +29,7 @@ namespace gandiva {
 /// expression evaluation.
 class EvalBatch {
  public:
-  EvalBatch(int num_buffers)
+  explicit EvalBatch(int num_buffers)
     : num_buffers_(num_buffers) {
     buffers_ = new uint8_t *[num_buffers];
   }
@@ -54,35 +56,36 @@ class EvalBatch {
 /// to convert the incoming arrow-format row batch to an EvalBatch.
 class Annotator {
  public:
-   Annotator()
-     : buffer_count_(0) {}
+  Annotator()
+    : buffer_count_(0) {}
 
-   ~Annotator() {
-     in_name_to_desc_.clear();
-     out_descs_.clear();
-   }
+  ~Annotator() {
+    in_name_to_desc_.clear();
+    out_descs_.clear();
+  }
 
-   /// Add an annotated field descriptor for a field in the input schema.
-   /// If the field already exists, returns that instead of creating again.
-   FieldDescriptorSharedPtr CheckAndAddInputFieldDescriptor(FieldSharedPtr field);
+  /// Add an annotated field descriptor for a field in the input schema.
+  /// If the field already exists, returns that instead of creating again.
+  FieldDescriptorSharedPtr CheckAndAddInputFieldDescriptor(FieldSharedPtr field);
 
-   /// Add an annotated field descriptor for an output field.
-   FieldDescriptorSharedPtr AddOutputFieldDescriptor(FieldSharedPtr field);
+  /// Add an annotated field descriptor for an output field.
+  FieldDescriptorSharedPtr AddOutputFieldDescriptor(FieldSharedPtr field);
 
-   /*
-    * Prepare an eval batch for the incoming record batch.
-    */
-   EvalBatchSharedPtr PrepareEvalBatch(RecordBatchSharedPtr batch, arrow::ArrayVector out_arrays);
+  /*
+   * Prepare an eval batch for the incoming record batch.
+   */
+  EvalBatchSharedPtr PrepareEvalBatch(RecordBatchSharedPtr batch,
+                                      arrow::ArrayVector out_arrays);
 
  private:
-   FieldDescriptorSharedPtr MakeDesc(FieldSharedPtr field);
-   void PrepareBuffersForField(FieldDescriptorSharedPtr desc,
-                               ArraySharedPtr array,
-                               EvalBatchSharedPtr eval_batch);
-   int buffer_count_;
+  FieldDescriptorSharedPtr MakeDesc(FieldSharedPtr field);
+  void PrepareBuffersForField(FieldDescriptorSharedPtr desc,
+                              ArraySharedPtr array,
+                              EvalBatchSharedPtr eval_batch);
+  int buffer_count_;
 
-   std::unordered_map<std::string, FieldDescriptorSharedPtr> in_name_to_desc_;
-   std::vector<FieldDescriptorSharedPtr> out_descs_;
+  std::unordered_map<std::string, FieldDescriptorSharedPtr> in_name_to_desc_;
+  std::vector<FieldDescriptorSharedPtr> out_descs_;
 };
 
 } // namespace gandiva

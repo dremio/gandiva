@@ -16,13 +16,14 @@
 #ifndef GANDIVA_DEX_DEX_H
 #define GANDIVA_DEX_DEX_H
 
+#include <string>
 #include <vector>
-#include "gandiva_fwd.h"
-#include "dex_visitor.h"
-#include "field_descriptor.h"
-#include "func_descriptor.h"
-#include "native_function.h"
-#include "value_validity_pair.h"
+#include "common/gandiva_fwd.h"
+#include "codegen/dex_visitor.h"
+#include "codegen/field_descriptor.h"
+#include "codegen/func_descriptor.h"
+#include "codegen/native_function.h"
+#include "codegen/value_validity_pair.h"
 
 namespace gandiva {
 
@@ -36,7 +37,7 @@ class Dex {
 // validity component of a ValueVector
 class VectorReadValidityDex : public Dex {
  public:
-  VectorReadValidityDex(FieldDescriptorSharedPtr field_desc)
+  explicit VectorReadValidityDex(FieldDescriptorSharedPtr field_desc)
       : field_desc_(field_desc) {}
 
   int ValidityIdx() const {
@@ -55,7 +56,7 @@ class VectorReadValidityDex : public Dex {
     return field_desc_->field();
   }
 
-  virtual void Accept(DexVisitor *visitor) override {
+  void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
   }
 
@@ -66,7 +67,7 @@ class VectorReadValidityDex : public Dex {
 // value component of a ValueVector
 class VectorReadValueDex : public Dex {
  public:
-  VectorReadValueDex(FieldDescriptorSharedPtr field_desc)
+  explicit VectorReadValueDex(FieldDescriptorSharedPtr field_desc)
   : field_desc_(field_desc) {}
 
   int DataIdx() const {
@@ -89,7 +90,7 @@ class VectorReadValueDex : public Dex {
     return field_desc_->field();
   }
 
-  virtual void Accept(DexVisitor *visitor) override {
+  void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
   }
 
@@ -128,10 +129,9 @@ class NonNullableFuncDex : public FuncDex {
                      const std::vector<ValueValidityPairSharedPtr> &args)
       : FuncDex(func_descriptor, native_function, args) {}
 
-  virtual void Accept(DexVisitor *visitor) override {
+  void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
   }
-
 };
 
 // A function expression that deals with nullable inputs, but generates non-null
@@ -143,23 +143,22 @@ class NullableNeverFuncDex : public FuncDex {
                        const std::vector<ValueValidityPairSharedPtr> &args)
       : FuncDex(func_descriptor, native_function, args) {}
 
-  virtual void Accept(DexVisitor *visitor) override {
+  void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
   }
-
 };
 
 // decomposed expression for a literal.
 class LiteralDex : public Dex {
  public:
-  LiteralDex(const DataTypeSharedPtr type)
+  explicit LiteralDex(const DataTypeSharedPtr type)
       : type_(type) {}
 
   const DataTypeSharedPtr type() const {
     return type_;
   }
 
-  virtual void Accept(DexVisitor *visitor) override {
+  void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
   }
 

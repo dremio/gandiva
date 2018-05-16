@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#include "function_registry.h"
+#include <vector>
+#include "codegen/function_registry.h"
 
 using namespace std;
 using namespace arrow;
@@ -141,9 +142,10 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
     printf("%s -> %s\n", entry->signature().ToString().c_str(), entry->pc_name().c_str());
   }
   return map;
-};
+}
 
-const NativeFunction *FunctionRegistry::LookupSignature(const FunctionSignature &signature) {
+const NativeFunction *FunctionRegistry::LookupSignature(
+    const FunctionSignature &signature) {
   auto got = pc_registry_map_.find(&signature);
   return got == pc_registry_map_.end() ? NULL : got->second;
 }

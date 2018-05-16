@@ -17,8 +17,8 @@
 #define GANDIVA_EXPR_TREE_BUILDER_H
 
 #include <string>
-#include "node.h"
-#include "expression.h"
+#include "expr/node.h"
+#include "expr/expression.h"
 
 namespace gandiva {
 

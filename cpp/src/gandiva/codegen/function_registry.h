@@ -17,7 +17,7 @@
 #define GANDIVA_FUNCTION_REGISTRY_H
 
 #include <unordered_map>
-#include "native_function.h"
+#include "codegen/native_function.h"
 
 namespace gandiva {
 
@@ -28,15 +28,13 @@ class FunctionRegistry {
   static const NativeFunction *LookupSignature(const FunctionSignature &signature);
 
  private:
-  struct KeyHash
-  {
+  struct KeyHash {
     std::size_t operator()(const FunctionSignature *k) const {
       return k->Hash();
     }
   };
 
-  struct KeyEquals
-  {
+  struct KeyEquals {
     bool operator() (const FunctionSignature *s1, const FunctionSignature *s2) const {
       return *s1 == *s2;
     }
@@ -51,7 +49,9 @@ class FunctionRegistry {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
   }
 
-  typedef std::unordered_map<const FunctionSignature *, const NativeFunction *, KeyHash, KeyEquals> SignatureMap;
+  typedef std::unordered_map<const FunctionSignature *,
+                             const NativeFunction *,
+                             KeyHash, KeyEquals> SignatureMap;
   static SignatureMap InitPCMap();
 
   static NativeFunction pc_registry_[];

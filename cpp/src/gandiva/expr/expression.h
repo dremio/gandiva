@@ -16,28 +16,28 @@
 #ifndef GANDIVA_EXPR_EXPRESSION_H
 #define GANDIVA_EXPR_EXPRESSION_H
 
-#include "gandiva_fwd.h"
-#include "node.h"
+#include "common/gandiva_fwd.h"
+#include "expr/node.h"
 
 namespace gandiva {
 
 class Expression {
-  public:
-    Expression(const NodeSharedPtr node, const FieldSharedPtr field)
-      : node_(node), field_(field) {}
+ public:
+  Expression(const NodeSharedPtr node, const FieldSharedPtr field)
+    : node_(node), field_(field) {}
 
-    NodeSharedPtr node() { return node_; }
+  NodeSharedPtr node() { return node_; }
 
-    FieldSharedPtr field() { return field_; }
+  FieldSharedPtr field() { return field_; }
 
-    virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) {
-      // return whatever node does
-      return node_->Decompose(annotator);
-    }
+  virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) {
+    // return whatever node does
+    return node_->Decompose(annotator);
+  }
 
-  private:
-    const NodeSharedPtr node_;
-    const FieldSharedPtr field_;
+ private:
+  const NodeSharedPtr node_;
+  const FieldSharedPtr field_;
 };
 
 } // namespace gandiva

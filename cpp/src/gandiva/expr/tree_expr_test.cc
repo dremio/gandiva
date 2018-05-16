@@ -15,12 +15,12 @@
  */
 
 #include <gtest/gtest.h>
-#include "gandiva_fwd.h"
-#include "annotator.h"
-#include "dex.h"
-#include "tree_expr_builder.h"
-#include "function_signature.h"
-#include "function_registry.h"
+#include "codegen/dex.h"
+#include "codegen/function_signature.h"
+#include "codegen/function_registry.h"
+#include "common/gandiva_fwd.h"
+#include "expr/annotator.h"
+#include "expr/tree_expr_builder.h"
 
 using namespace arrow;
 
@@ -31,19 +31,19 @@ int DisableABIBreakingChecks;
 namespace gandiva {
 
 class TestExprTree : public ::testing::Test {
-  public:
-    void SetUp() {
-      i0_ = field("i0", int32());
-      i1_ = field("i1", int32());
+ public:
+  void SetUp() {
+    i0_ = field("i0", int32());
+    i1_ = field("i1", int32());
 
-      b0_ = field("b0", boolean());
-    }
+    b0_ = field("b0", boolean());
+  }
 
-  protected:
-    FieldSharedPtr i0_; // int32
-    FieldSharedPtr i1_; // int32
+ protected:
+  FieldSharedPtr i0_; // int32
+  FieldSharedPtr i1_; // int32
 
-    FieldSharedPtr b0_; // bool
+  FieldSharedPtr b0_; // bool
 };
 
 TEST_F(TestExprTree, TestField) {
@@ -71,7 +71,9 @@ TEST_F(TestExprTree, TestBinary) {
   auto add = std::dynamic_pointer_cast<FunctionNode>(n);
 
   auto func_desc = add->func_descriptor();
-  FunctionSignature sign(func_desc->name(), func_desc->params(), func_desc->return_type());
+  FunctionSignature sign(func_desc->name(),
+                         func_desc->params(),
+                         func_desc->return_type());
 
   EXPECT_EQ(add->getReturnType(), int32());
   EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
@@ -93,7 +95,9 @@ TEST_F(TestExprTree, TestUnary) {
 
   auto unaryFn = std::dynamic_pointer_cast<FunctionNode>(n);
   auto func_desc = unaryFn->func_descriptor();
-  FunctionSignature sign(func_desc->name(), func_desc->params(), func_desc->return_type());
+  FunctionSignature sign(func_desc->name(),
+                         func_desc->params(),
+                         func_desc->return_type());
   EXPECT_EQ(unaryFn->getReturnType(), boolean());
   EXPECT_TRUE(sign == FunctionSignature("isnumeric", {int32()}, boolean()));
 
@@ -118,7 +122,9 @@ TEST_F(TestExprTree, TestExpression) {
 
   auto add_node = std::dynamic_pointer_cast<FunctionNode>(root_node);
   auto func_desc = add_node->func_descriptor();
-  FunctionSignature sign(func_desc->name(), func_desc->params(), func_desc->return_type());
+  FunctionSignature sign(func_desc->name(),
+                         func_desc->params(),
+                         func_desc->return_type());
   EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
 
   auto pair = e->Decompose(&annotator);
@@ -130,8 +136,7 @@ TEST_F(TestExprTree, TestExpression) {
   EXPECT_EQ(null_if_null->native_function(), fn);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

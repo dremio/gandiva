@@ -23,7 +23,6 @@ namespace gandiva {
 
 /*
  * Exceptions from LLVMGenerator.
- * TODO : is it better to have error code instead ?
  */
 class CodeGenException : public std::exception {
  public:
@@ -31,7 +30,7 @@ class CodeGenException : public std::exception {
     : error_(error),
       error_msg_(msg) {}
 
-  CodeGenException(const std::string &msg)
+  explicit CodeGenException(const std::string &msg)
     : error_(1),
       error_msg_(msg) {}
 
