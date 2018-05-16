@@ -22,8 +22,6 @@
 #include "llvm_generator.h"
 #include "lvalue.h"
 
-//#define REPRO_SAVE
-
 namespace gandiva {
 
 LLVMGenerator::LLVMGenerator()
@@ -56,7 +54,6 @@ void LLVMGenerator::Add(const ExpressionSharedPtr expr, const FieldDescriptorSha
  * Build and optimise module for projection expression.
  */
 void LLVMGenerator::Build(ExpressionVector exprs) {
-  ReproSaveBuild();
 
   for (auto it = exprs.begin(); it != exprs.end(); it++) {
     ExpressionSharedPtr expr = *it;
@@ -83,7 +80,6 @@ int LLVMGenerator::Execute(int64_t addrs[], int naddrs, int record_count) {
 
   DCHECK(record_count > 0);
   DCHECK(naddrs > 0);
-  ReproSaveExecute(addrs, naddrs, record_count);
 
   // generate bitmap vectors, by doing an intersection.
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
@@ -551,113 +547,5 @@ void LLVMGenerator::AddTrace(const std::string &msg, llvm::Value *value) {
   }
   AddFunctionCall(print_fn_name, types_.i32_type(), args);
 }
-
-/*
- * Hooks to repro and debug.
- */
-
-#ifdef REPRO_SAVE
-static const char *kReproFileNameExpr = "/tmp/repro_expr.fbs";
-static const char *kReproFileNameVectors = "/tmp/repro_vector.fbs";
-
-/*
- * Save expression in an on-disk file.
- */
-void
-LLVMGenerator::ReproSaveBuild() {
-  if (in_replay_) {
-    return;
-  }
-
-  // Ignore errors.
-  std::fstream output(kReproFileNameExpr, std::ios::out | std::ios::trunc | std::ios::binary);
-  projection_.get()->SerializeToOstream(&output);
-}
-
-/*
- * Save vectors in an on-disk file.
- */
-void
-LLVMGenerator::ReproSaveExecute(int64_t *addrs, int naddrs, int nrecords) {
-  if (in_replay_) {
-    return;
-  }
-
-  VectorDump dump;
-  dump.set_nrecords(nrecords);
-  for (int i = 0; i < naddrs; ++i) {
-    if (slot_size_in_bits_[i] == 0) {
-      // don't know size, assume validity.
-      slot_size_in_bits_[i] = 1;
-    }
-    int sz_in_bits = nrecords * slot_size_in_bits_[i];
-    int sz_in_bytes = (sz_in_bits + 63) / 8;
-    dump.add_binarydata((char *) addrs[i], sz_in_bytes);
-  }
-
-  // Ignore errors.
-  std::fstream output(kReproFileNameVectors, std::ios::out | std::ios::trunc | std::ios::binary);
-  dump.SerializeToOstream(&output);
-}
-
-/*
- * Read expression and vectors from disk, and replay.
- */
-int
-LLVMGenerator::ReproReplay(bool optimise_ir, bool trace_ir) {
-  LLVMGenerator *llvm_generator = NULL;
-  try {
-    std::unique_ptr<Projection> projection(new Projection());
-    llvm_generator = new LLVMGenerator();
-    llvm_generator->in_replay_ = true;
-    llvm_generator->optimise_ir_ = optimise_ir;
-    llvm_generator->enable_ir_traces_ = trace_ir;
-
-    // read projection from disk
-    std::fstream input_expr(kReproFileNameExpr, std::ios::in | std::ios::binary);
-    if (!projection.get()->ParseFromIstream(&input_expr)) {
-      fprintf(stderr, "failed to parse expression from input file %s\n", kReproFileNameExpr);
-      return 1;
-    }
-    llvm_generator->Build(std::move(projection));
-
-    // read vectors from disk
-    VectorDump dump;
-    std::fstream input_vectors(kReproFileNameVectors, std::ios::in | std::ios::binary);
-    if (!dump.ParseFromIstream(&input_vectors)) {
-      fprintf(stderr, "failed to parse vectors from input file %s\n", kReproFileNameVectors);
-      return 1;
-    }
-
-    int nvectors = dump.binarydata_size();
-    int64_t addrs[nvectors];
-    for (int i = 0; i < nvectors; ++i) {
-      int len = dump.binarydata(i).length();
-      char *buf = new char[len];
-      memcpy(buf, dump.binarydata(i).data(), len);
-
-      addrs[i] = (int64_t) buf;
-    }
-
-    // replay the batch
-    llvm_generator->Execute(addrs, nvectors, dump.nrecords());
-    for (int i = 0; i < nvectors; ++i) {
-      delete (char *) addrs[i];
-    }
-  } catch (CodeGenException e) {
-    fprintf(stderr, "Repro with LLVMGenerator failed %d msg %s\n", e.error(), e.error_msg().c_str());
-    return 1;
-  }
-  delete llvm_generator;
-  return 0;
-}
-#else // !REPRO_SAVE
-
-// Add dummy functions.
-void LLVMGenerator::ReproSaveBuild() {}
-void LLVMGenerator::ReproSaveExecute(int64_t *addrs, int naddrs, int nrecords) {}
-int LLVMGenerator::ReproReplay(bool optimise_ir, bool trace_ir) {return 0;}
-
-#endif // REPRO_SAVE
 
 } // namespace gandiva

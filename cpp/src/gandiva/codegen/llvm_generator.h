@@ -44,11 +44,6 @@ class LLVMGenerator {
    */
   int Execute(int64_t addrs[], int num_addrs, int record_count);
 
-  /*
-   * Debug only : replay the last evaluated expression & batch.
-   */
-  static int ReproReplay(bool optimise_ir, bool trace_ir);
-
  private:
   FRIEND_TEST(TestLLVMGenerator, TestIntersectBitMaps);
 
@@ -113,10 +108,6 @@ class LLVMGenerator {
   std::string ReplaceFormatInTrace(std::string msg, llvm::Value *value, std::string *print_fn);
   void AddTrace(const std::string &msg, llvm::Value *value = NULL);
 
-  // Repro/replay related
-  void ReproSaveBuild();
-  void ReproSaveExecute(int64_t *addrs, int naddrs, int nrecords);
-
   std::unique_ptr<Engine> engine_;
   std::vector<CompiledExpr *> compiled_exprs_;
   LLVMTypes types_;
@@ -125,7 +116,6 @@ class LLVMGenerator {
   bool in_replay_;
   bool optimise_ir_;
   bool enable_ir_traces_;
-  std::map<int, int> slot_size_in_bits_;
   std::vector<std::string> trace_strings_;
 };
 

@@ -80,10 +80,6 @@ llvm_map_components_to_libnames(llvm_libs core mcjit native ipo bitreader target
 target_link_libraries(gandiva ${llvm_libs})
 target_link_libraries(gandiva ${ARROW_LIB})
 
-#TODO
-#add_executable(replay codegen/replay.cc)
-#target_link_libraries(replay gandiva)
-
 # Test related
 
 function(ADD_GANDIVA_TEST LABEL REL_TEST_NAME)
