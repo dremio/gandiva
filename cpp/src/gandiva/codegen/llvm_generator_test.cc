@@ -89,7 +89,7 @@ TEST_F(TestLLVMGenerator, TestAdd) {
   llvm::Function *ir_func = generator.CodeGenExprValue(func_dex, desc_sum, 0);
 
   generator.engine_->AddFunctionToCompile("eval_0");
-  generator.engine_->FinalizeModule(false, true);
+  generator.engine_->FinalizeModule(true, false);
 
   eval_func_t eval_func = (eval_func_t)generator.engine_->CompiledFunction(ir_func);
 

@@ -17,6 +17,7 @@
 #define GANDIVA_EXPR_EVALUATOR_H
 
 #include <memory>
+#include <utility>
 #include <vector>
 #include "common/arrow.h"
 #include "expr/expression.h"
@@ -30,19 +31,24 @@ namespace gandiva {
 /// Once the evaluator is built, it can be used to evaluate many row batches.
 class Evaluator {
  public:
-  /// Constructor
-  explicit Evaluator(LLVMGenerator *llvm)
-    : llvm_gen_(std::unique_ptr<LLVMGenerator>(llvm)) {}
+  /// Build an evaluator for the given schema to evaluate the vector of expressions.
+  static std::shared_ptr<Evaluator> Make(SchemaSharedPtr schema,
+                                         const ExpressionVector &exprs);
 
   /// Evaluate the specified record batch, and fill the output vectors.
-  void Evaluate(RecordBatchSharedPtr batch, arrow::ArrayVector outputs);
-
-  /// Build an evlautor for the given schema to evaluate the vector of
-  static std::shared_ptr<Evaluator> Make(SchemaSharedPtr schema,
-                                         ExpressionVector exprs);
+  void Evaluate(RecordBatchSharedPtr batch, const arrow::ArrayVector &outputs);
 
  private:
-  const std::unique_ptr<LLVMGenerator> llvm_gen_;
+  Evaluator(std::unique_ptr<LLVMGenerator> llvm_generator,
+            SchemaSharedPtr schema,
+            const std::vector<FieldSharedPtr> &outputs)
+    : llvm_generator_(std::move(llvm_generator)),
+      schema_(schema),
+      outputs_(outputs) {}
+
+  const std::unique_ptr<LLVMGenerator> llvm_generator_;
+  const SchemaSharedPtr schema_;
+  const std::vector<FieldSharedPtr> outputs_;
 };
 
 } // namespace gandiva

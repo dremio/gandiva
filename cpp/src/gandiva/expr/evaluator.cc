@@ -16,23 +16,43 @@
 
 #include <memory>
 #include <vector>
+#include <utility>
 #include "expr/evaluator.h"
 
 namespace gandiva {
 
+// TODO : exceptions
 std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema,
-                                           ExpressionVector exprs) {
-  LLVMGenerator *llvm_gen = new LLVMGenerator();
+                                           const ExpressionVector &exprs) {
+  // TODO: validate schema
+  // TODO : validate expressions (fields, function signatures, output types, ..)
 
-  // TODO: What is the schema used for?
-  // Gandiva shouldn't be doing schema checks right
+  /*
+   * Build LLVM generator, and generate code for the specified expressions.
+   */
+  std::unique_ptr<LLVMGenerator> llvm_gen(new LLVMGenerator());
   llvm_gen->Build(exprs);
 
-  return std::shared_ptr<Evaluator>(new Evaluator(llvm_gen));
+  /*
+   * save the output field types. Used for validation at Evaluate() time.
+   */
+  std::vector<FieldSharedPtr> output_fields;
+  for (auto it = exprs.begin(); it != exprs.end(); ++it) {
+    output_fields.push_back((*it)->result());
+  }
+  return std::shared_ptr<Evaluator>(new Evaluator(std::move(llvm_gen),
+                                                  schema,
+                                                  output_fields));
 }
 
-void Evaluator::Evaluate(RecordBatchSharedPtr batch, arrow::ArrayVector outputs) {
-  llvm_gen_->Execute(batch, outputs);
+void Evaluator::Evaluate(RecordBatchSharedPtr batch,
+                         const arrow::ArrayVector &outputs) {
+  // TODO : validate that the schema from the batch matches the one used in the
+  //        constructor.
+  // TODO : validate that the datatype of the output vectors matches the one used in the
+  //        constructor.
+  // TODO : validate that the outputs vectors have sufficient capcity.
+  llvm_generator_->Execute(batch, outputs);
 }
 
 } // namespace gandiva
