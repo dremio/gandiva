@@ -100,7 +100,6 @@ TEST_F(TestEvaluator, TestIntSumSub) {
   EXPECT_TRUE(exp_sub->Equals(outputs.at(1)));
 }
 
-#if 0
 TEST_F(TestEvaluator, TestFloatLessThan) {
   /* schema for input fields */
   auto field0 = field("f0", float32());
@@ -141,6 +140,43 @@ TEST_F(TestEvaluator, TestFloatLessThan) {
    */
   EXPECT_TRUE(exp->Equals(outputs.at(0)));
 }
-#endif
+
+TEST_F(TestEvaluator, TestIsNotNull) {
+  /* schema for input fields */
+  auto field0 = field("f0", float32());
+  auto schema = arrow::schema({field0});
+
+  /* output fields */
+  auto field_result = field("res", boolean());
+
+  /*
+   * Build expression
+   */
+  auto myexpr = TreeExprBuilder::MakeExpression("isnotnull", {field0}, field_result);
+
+  /*
+   * Build an evaluator for the expressions.
+   */
+  auto evaluator = Evaluator::Make(schema, {myexpr}, pool_);
+
+  /* Create a row-batch with some sample data */
+  int num_records = 3;
+  auto array0 = MakeArrowArrayFloat32({ 1.0, 8.9, 3.0 }, { true, true, false });
+  /* expected output */
+  auto exp = MakeArrowArrayBool({ true, true, false }, { true, true, true });
+
+  /* prepare input record batch */
+  auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0});
+
+  /*
+   * Evaluate expression
+   */
+  auto outputs = evaluator->Evaluate(in_batch);
+
+  /*
+   * Validate results
+   */
+  EXPECT_TRUE(exp->Equals(outputs.at(0)));
+}
 
 } // namespace gandiva

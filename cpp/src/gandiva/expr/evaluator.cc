@@ -67,11 +67,9 @@ ArraySharedPtr Evaluator::AllocArray(DataTypeSharedPtr type, int length) {
   status = null_bitmap->Resize(arrow::BitUtil::BytesForBits(length));
   DCHECK(status.ok());
 
-  const auto &fw_type = arrow::checked_cast<const arrow::FixedWidthType&>(*type);
-  int element_sz = fw_type.bit_width() / 8;
-
   auto data = std::make_shared<arrow::PoolBuffer>(pool_);
-  status = data->Resize(length * element_sz);
+  const auto &fw_type = arrow::checked_cast<const arrow::FixedWidthType&>(*type);
+  status = data->Resize(((length * fw_type.bit_width()) + 7) / 8);
   DCHECK(status.ok());
 
   auto array_data = arrow::ArrayData::Make(type, length, { null_bitmap, data });
