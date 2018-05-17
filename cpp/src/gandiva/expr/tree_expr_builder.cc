@@ -40,4 +40,16 @@ ExpressionSharedPtr TreeExprBuilder::MakeExpression(NodeSharedPtr root_node,
   return ExpressionSharedPtr(new Expression(root_node, result_field));
 }
 
+ExpressionSharedPtr TreeExprBuilder::MakeExpression(const std::string &function,
+                                                    std::vector<FieldSharedPtr> in_fields,
+                                                    FieldSharedPtr out_field) {
+  std::vector<NodeSharedPtr> field_nodes;
+  for (auto it = in_fields.begin(); it != in_fields.end(); ++it) {
+    auto node = MakeField(*it);
+    field_nodes.push_back(node);
+  }
+  auto func_node = FunctionNode::CreateFunction(function, field_nodes, out_field->type());
+  return MakeExpression(func_node, out_field);
+}
+
 } // namespace gandiva

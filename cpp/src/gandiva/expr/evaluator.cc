@@ -23,36 +23,59 @@ namespace gandiva {
 
 // TODO : exceptions
 std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema,
-                                           const ExpressionVector &exprs) {
+                                           const ExpressionVector &exprs,
+                                           arrow::MemoryPool *pool) {
   // TODO: validate schema
   // TODO : validate expressions (fields, function signatures, output types, ..)
 
-  /*
-   * Build LLVM generator, and generate code for the specified expressions.
-   */
+  // Build LLVM generator, and generate code for the specified expressions
   std::unique_ptr<LLVMGenerator> llvm_gen(new LLVMGenerator());
   llvm_gen->Build(exprs);
 
-  /*
-   * save the output field types. Used for validation at Evaluate() time.
-   */
+  // save the output field types. Used for validation at Evaluate() time.
   std::vector<FieldSharedPtr> output_fields;
   for (auto it = exprs.begin(); it != exprs.end(); ++it) {
     output_fields.push_back((*it)->result());
   }
+
+  // Instantiate the evaluator with the completely built llvm generator
   return std::shared_ptr<Evaluator>(new Evaluator(std::move(llvm_gen),
                                                   schema,
-                                                  output_fields));
+                                                  output_fields,
+                                                  pool));
 }
 
-void Evaluator::Evaluate(RecordBatchSharedPtr batch,
-                         const arrow::ArrayVector &outputs) {
-  // TODO : validate that the schema from the batch matches the one used in the
-  //        constructor.
-  // TODO : validate that the datatype of the output vectors matches the one used in the
-  //        constructor.
-  // TODO : validate that the outputs vectors have sufficient capcity.
+arrow::ArrayVector Evaluator::Evaluate(RecordBatchSharedPtr batch) {
+  DCHECK_EQ(batch->schema(), schema_);
+  DCHECK_GT(batch->num_rows(), 0);
+
+  arrow::ArrayVector outputs;
+  for (auto it = output_fields_.begin(); it != output_fields_.end(); ++it) {
+    FieldSharedPtr field = *it;
+    auto output = AllocArray(field->type(), batch->num_rows());
+    outputs.push_back(output);
+  }
   llvm_generator_->Execute(batch, outputs);
+  return outputs;
+}
+
+// TODO : handle variable-len vectors
+ArraySharedPtr Evaluator::AllocArray(DataTypeSharedPtr type, int length) {
+  arrow::Status status;
+
+  auto null_bitmap = std::make_shared<arrow::PoolBuffer>(pool_);
+  status = null_bitmap->Resize(arrow::BitUtil::BytesForBits(length));
+  DCHECK(status.ok());
+
+  const auto &fw_type = arrow::checked_cast<const arrow::FixedWidthType&>(*type);
+  int element_sz = fw_type.bit_width() / 8;
+
+  auto data = std::make_shared<arrow::PoolBuffer>(pool_);
+  status = data->Resize(length * element_sz);
+  DCHECK(status.ok());
+
+  auto array_data = arrow::ArrayData::Make(type, length, { null_bitmap, data });
+  return arrow::MakeArray(array_data);
 }
 
 } // namespace gandiva

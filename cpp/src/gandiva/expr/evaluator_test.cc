@@ -25,6 +25,8 @@
 namespace gandiva {
 
 using arrow::int32;
+using arrow::float32;
+using arrow::boolean;
 using arrow::Status;
 
 class TestEvaluator : public ::testing::Test {
@@ -35,26 +37,6 @@ class TestEvaluator : public ::testing::Test {
   arrow::MemoryPool* pool_;
 };
 
-#if 0
-// Added to compare Array buffers on our own
-static bool Compare(ArraySharedPtr src, ArraySharedPtr dst) {
-  if (src->length() != dst->length()) {
-    std::cout << "Lengths differ\n";
-    return false;
-  }
-
-  auto length = src->length();
-  for (auto i = 0; i < length; i++) {
-    if (src->IsValid(i) != dst->IsValid(i)) {
-      std::cout << "Validity bits differ at " << i << "\n";
-      return false;
-    }
-  }
-
-  return true;
-}
-#endif
-
 /*
  * Helper function to create an arrow-array of type ARROWTYPE
  * from primitive vectors of data & validity.
@@ -62,90 +44,103 @@ static bool Compare(ArraySharedPtr src, ArraySharedPtr dst) {
  * arrow/test-util.h has good utility classes for this purpose.
  * Using those
  */
-static void MakeArrowArrayInt32(std::vector<int32_t> values,
-                                std::vector<bool> validity,
-                                ArraySharedPtr *out) {
-  arrow::ArrayFromVector<arrow::Int32Type, int32_t>(validity, values, out);
+template<typename TYPE, typename C_TYPE>
+static ArraySharedPtr MakeArrowArray(std::vector<C_TYPE> values,
+                                     std::vector<bool> validity) {
+  ArraySharedPtr out;
+  arrow::ArrayFromVector<TYPE, C_TYPE>(validity, values, &out);
+  return out;
 }
+#define MakeArrowArrayInt32 MakeArrowArray<arrow::Int32Type, int32_t>
+#define MakeArrowArrayFloat32 MakeArrowArray<arrow::FloatType, float_t>
+#define MakeArrowArrayBool MakeArrowArray<arrow::BooleanType, bool>
 
-
-TEST_F(TestEvaluator, TestSumSub) {
-  /* schema for input/output fields */
+TEST_F(TestEvaluator, TestIntSumSub) {
+  /* schema for input fields */
   auto field0 = field("f0", int32());
   auto field1 = field("f2", int32());
-  auto in_schema = arrow::schema({field0, field1});
+  auto schema = arrow::schema({field0, field1});
 
+  /* output fields */
   auto field_sum = field("add", int32());
   auto field_sub = field("subtract", int32());
-  auto out_schema = arrow::schema({field_sum, field_sub});
-
-  /* sample data */
-  ArraySharedPtr arrow_v0, arrow_v1, arrow_exp_sum, arrow_exp_sub;
-  MakeArrowArrayInt32({ 1, 2, 3, 4},
-                      { true, true, true, false },
-                      &arrow_v0);
-  MakeArrowArrayInt32({ 11, 13, 15, 17},
-                      { true, true, false, true },
-                      &arrow_v1);
-
-  /* prepare input record batch */
-  arrow::ArrayVector array_vector = {arrow_v0, arrow_v1};
-  auto in_batch = arrow::RecordBatch::Make(in_schema, 4, array_vector);
-
-  /* expected output */
-  MakeArrowArrayInt32({ 12, 15, 0, 0},
-                      { true, true, false, false },
-                      &arrow_exp_sum);
-
-  MakeArrowArrayInt32({ -10, -11, 0, 0},
-                      { true, true, false, false },
-                      &arrow_exp_sub);
-
-  /*
-   * output builders
-   */
-
-  std::unique_ptr<arrow::ArrayBuilder> sum_array_builder;
-  Status ret = MakeBuilder(pool_, int32(), &sum_array_builder);
-  assert(ret.ok());
-
-  // make arrow::ArrayVector for the output
-  arrow::ArrayVector output;
-  ArraySharedPtr add_out, sub_out;
-  MakeArrowArrayInt32({0, 0, 0, 0}, {false, false, false, false}, &add_out);
-  MakeArrowArrayInt32({0, 0, 0, 0}, {false, false, false, false}, &sub_out);
-
-  output.push_back(add_out);
-  output.push_back(sub_out);
 
   /*
    * Build expression
    */
-  auto node0 = TreeExprBuilder::MakeField(field0);
-  auto node1 = TreeExprBuilder::MakeField(field1);
-  auto func_sum = TreeExprBuilder::MakeBinaryFunction("add", node0, node1,
-                                                      int32() /*outType*/);
-  auto sum_expr = TreeExprBuilder::MakeExpression(func_sum /*expression root */,
-                                                  field_sum /*output field*/);
+  auto sum_expr = TreeExprBuilder::MakeExpression("add", {field0, field1}, field_sum);
+  auto sub_expr = TreeExprBuilder::MakeExpression("subtract", {field0, field1},
+                                                  field_sub);
 
-  auto func_sub = TreeExprBuilder::MakeBinaryFunction("subtract", node0, node1,
-                                                      int32() /*outType*/);
-  auto sub_expr = TreeExprBuilder::MakeExpression(func_sub, field_sub);
+  /*
+   * Build an evaluator for the expressions.
+   */
+  auto evaluator = Evaluator::Make(schema, {sum_expr, sub_expr}, pool_);
 
+  /* Create a row-batch with some sample data */
+  int num_records = 4;
+  auto array0 = MakeArrowArrayInt32({ 1, 2, 3, 4 }, { true, true, true, false });
+  auto array1 = MakeArrowArrayInt32({ 11, 13, 15, 17 }, { true, true, false, true });
+  /* expected output */
+  auto exp_sum = MakeArrowArrayInt32({ 12, 15, 0, 0 }, { true, true, false, false });
+  auto exp_sub = MakeArrowArrayInt32({ -10, -11, 0, 0 }, { true, true, false, false });
+
+  /* prepare input record batch */
+  auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
   /*
    * Evaluate expression
    */
-  auto evaluator = Evaluator::Make(in_schema, {sum_expr, sub_expr});
-  evaluator->Evaluate(in_batch, output);
+  auto outputs = evaluator->Evaluate(in_batch);
 
   /*
    * Validate results
    */
-  // TODO: Need to figure out why this fails without the Slice
-  // This also succeeds with RangeEquals(output.at(0), 0, 3, 0)
-  EXPECT_TRUE(arrow_exp_sum->Equals(output.at(0)->Slice(0, 4)));
-  EXPECT_TRUE(arrow_exp_sub->Equals(output.at(1)->Slice(0, 4)));
+  EXPECT_TRUE(exp_sum->Equals(outputs.at(0)));
+  EXPECT_TRUE(exp_sub->Equals(outputs.at(1)));
 }
+
+#if 0
+TEST_F(TestEvaluator, TestFloatLessThan) {
+  /* schema for input fields */
+  auto field0 = field("f0", float32());
+  auto field1 = field("f2", float32());
+  auto schema = arrow::schema({field0, field1});
+
+  /* output fields */
+  auto field_result = field("res", boolean());
+
+  /*
+   * Build expression
+   */
+  auto lt_expr = TreeExprBuilder::MakeExpression("less_than", {field0, field1},
+                                                 field_result);
+
+  /*
+   * Build an evaluator for the expressions.
+   */
+  auto evaluator = Evaluator::Make(schema, {lt_expr}, pool_);
+
+  /* Create a row-batch with some sample data */
+  int num_records = 3;
+  auto array0 = MakeArrowArrayFloat32({ 1.0, 8.9, 3.0 }, { true, true, false });
+  auto array1 = MakeArrowArrayFloat32({ 4.0, 3.4, 6.8 }, { true, true, true });
+  /* expected output */
+  auto exp = MakeArrowArrayBool({ true, false, false }, { true, true, false });
+
+  /* prepare input record batch */
+  auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
+
+  /*
+   * Evaluate expression
+   */
+  auto outputs = evaluator->Evaluate(in_batch);
+
+  /*
+   * Validate results
+   */
+  EXPECT_TRUE(exp->Equals(outputs.at(0)));
+}
+#endif
 
 } // namespace gandiva

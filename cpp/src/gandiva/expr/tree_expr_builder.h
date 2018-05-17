@@ -17,6 +17,7 @@
 #define GANDIVA_EXPR_TREE_BUILDER_H
 
 #include <string>
+#include <vector>
 #include "expr/node.h"
 #include "expr/expression.h"
 
@@ -43,7 +44,11 @@ class TreeExprBuilder {
   /// result written to result_field.
   static ExpressionSharedPtr MakeExpression(NodeSharedPtr root_node,
                                             FieldSharedPtr result_field);
- private:
+
+  /// \brief convenience function for simple function expressions.
+  static ExpressionSharedPtr MakeExpression(const std::string &function,
+                                            std::vector<FieldSharedPtr> in_fields,
+                                            FieldSharedPtr out_field);
 };
 
 } // namespace gandiva
