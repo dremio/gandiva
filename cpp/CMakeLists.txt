@@ -45,10 +45,17 @@ if (UNIX)
   find_program(CPPLINT_BIN NAMES cpplint cpplint.py HINTS ${BUILD_SUPPORT_DIR})
   message(STATUS "Found cpplint executable at ${CPPLINT_BIN}")
 
+  FOREACH(item ${LINT_FILES})
+    IF(NOT ((item MATCHES "irhelpers.cc") OR
+            (item MATCHES "nativehelpers.cc")))
+      LIST(APPEND FILTERED_LINT_FILES ${item})
+    ENDIF()
+  ENDFOREACH(item ${LINT_FILES})
+
   # Full lint
   # Balancing act: cpplint.py takes a non-trivial time to launch,
   # so process 12 files per invocation, while still ensuring parallelism
-  add_custom_target(lint echo ${LINT_FILES} | xargs -n12 -P8
+  add_custom_target(lint echo ${FILTERED_LINT_FILES} | xargs -n12 -P8
   ${CPPLINT_BIN}
   --verbose=2
   --linelength=90

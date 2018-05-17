@@ -22,13 +22,12 @@
 #include "expr/annotator.h"
 #include "expr/tree_expr_builder.h"
 
-using namespace arrow;
-
-namespace llvm {
-int DisableABIBreakingChecks;
-} // namespace llvm
+int llvm::DisableABIBreakingChecks;
 
 namespace gandiva {
+
+using arrow::int32;
+using arrow::boolean;
 
 class TestExprTree : public ::testing::Test {
  public:

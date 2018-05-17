@@ -22,13 +22,14 @@
 #include "expr/evaluator.h"
 #include "expr/tree_expr_builder.h"
 
-using namespace arrow;
-
 namespace gandiva {
+
+using arrow::int32;
+using arrow::Status;
 
 class TestEvaluator : public ::testing::Test {
  public:
-  void SetUp() { pool_ = default_memory_pool(); }
+  void SetUp() { pool_ = arrow::default_memory_pool(); }
 
  protected:
   arrow::MemoryPool* pool_;
@@ -64,7 +65,7 @@ static bool Compare(ArraySharedPtr src, ArraySharedPtr dst) {
 static void MakeArrowArrayInt32(std::vector<int32_t> values,
                                 std::vector<bool> validity,
                                 ArraySharedPtr *out) {
-  ArrayFromVector<Int32Type, int32_t>(validity, values, out);
+  arrow::ArrayFromVector<arrow::Int32Type, int32_t>(validity, values, out);
 }
 
 
@@ -72,11 +73,11 @@ TEST_F(TestEvaluator, TestSumSub) {
   /* schema for input/output fields */
   auto field0 = field("f0", int32());
   auto field1 = field("f2", int32());
-  auto in_schema = schema({field0, field1});
+  auto in_schema = arrow::schema({field0, field1});
 
   auto field_sum = field("add", int32());
   auto field_sub = field("subtract", int32());
-  auto out_schema = schema({field_sum, field_sub});
+  auto out_schema = arrow::schema({field_sum, field_sub});
 
   /* sample data */
   ArraySharedPtr arrow_v0, arrow_v1, arrow_exp_sum, arrow_exp_sub;
@@ -88,8 +89,8 @@ TEST_F(TestEvaluator, TestSumSub) {
                       &arrow_v1);
 
   /* prepare input record batch */
-  ArrayVector array_vector = {arrow_v0, arrow_v1};
-  auto in_batch = RecordBatch::Make(in_schema, 4, array_vector);
+  arrow::ArrayVector array_vector = {arrow_v0, arrow_v1};
+  auto in_batch = arrow::RecordBatch::Make(in_schema, 4, array_vector);
 
   /* expected output */
   MakeArrowArrayInt32({ 12, 15, 0, 0},
@@ -104,7 +105,7 @@ TEST_F(TestEvaluator, TestSumSub) {
    * output builders
    */
 
-  std::unique_ptr<ArrayBuilder> sum_array_builder;
+  std::unique_ptr<arrow::ArrayBuilder> sum_array_builder;
   Status ret = MakeBuilder(pool_, int32(), &sum_array_builder);
   assert(ret.ok());
 

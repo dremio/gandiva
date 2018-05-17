@@ -58,10 +58,10 @@ Annotator::PrepareBuffersForField(FieldDescriptorSharedPtr desc,
   // - validity is optional
   // - may have offsets also
 
-  uint8_t *validity_buf = (uint8_t *)array->data()->buffers[0]->data();
+  uint8_t *validity_buf = const_cast<uint8_t *>(array->data()->buffers[0]->data());
   eval_batch->SetBufferAtIdx(desc->validity_idx(), validity_buf);
 
-  uint8_t *data_buf = (uint8_t *)array->data()->buffers[1]->data();
+  uint8_t *data_buf = const_cast<uint8_t *>(array->data()->buffers[1]->data());
   eval_batch->SetBufferAtIdx(desc->data_idx(), data_buf);
 }
 

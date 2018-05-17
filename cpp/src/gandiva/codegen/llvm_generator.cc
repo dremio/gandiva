@@ -308,16 +308,16 @@ void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr,
   auto validities = compiled_expr->value_validity()->validity_exprs();
 
   int num_bitmaps = validities.size();
-  uint64_t *src_bitmaps[num_bitmaps];
+  uint8_t *src_bitmaps[num_bitmaps];
   for (int i = 0; i < num_bitmaps; i++) {
     Dex *validity_dex = validities.at(i).get();
     VectorReadValidityDex *value_dex =
         dynamic_cast<VectorReadValidityDex *>(validity_dex);
-    src_bitmaps[i] = (uint64_t *) addrs[value_dex->ValidityIdx()];
+    src_bitmaps[i] = addrs[value_dex->ValidityIdx()];
   }
 
   int out_idx = compiled_expr->output()->validity_idx();
-  uint64_t *dst_bitmap = (uint64_t *) addrs[out_idx];
+  uint8_t *dst_bitmap = addrs[out_idx];
 
   IntersectBitMaps(dst_bitmap, src_bitmaps, num_bitmaps, record_count);
 }
@@ -326,38 +326,44 @@ void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr,
  * Compute the intersection of multiple bitmaps.
  */
 void
-LLVMGenerator::IntersectBitMaps(uint64_t *dst_map, uint64_t **src_maps,
+LLVMGenerator::IntersectBitMaps(uint8_t *dst_map, uint8_t **src_maps,
                                 int nmaps,
                                 int num_records) {
-  int num_bytes = (num_records + 63) / 8; // aligned to 8-byte.
-  int num_words = num_bytes / 8;
+  uint64_t *dst_map64 = reinterpret_cast<uint64_t *>(dst_map);
+  int num_words = (num_records + 63) / 64; // aligned to 8-byte.
+  int num_bytes = num_words * 8;
 
   switch (nmaps) {
     case 0: {
       /* no src_maps bitmap. simply set all bits */
-      memset((uint8_t *) dst_map, 0xff, num_bytes);
+      memset(dst_map, 0xff, num_bytes);
       break;
     }
 
     case 1: {
       /* one src_maps bitmap. copy to dst_map */
-      memcpy((uint8_t *) dst_map, (uint8_t *) src_maps[0], num_bytes);
+      memcpy(dst_map, src_maps[0], num_bytes);
       break;
     }
 
-    case 2:
+    case 2: {
       /* two src_maps bitmaps. do 64-bit ANDs */
+      uint64_t *src_maps0_64 = reinterpret_cast<uint64_t *>(src_maps[0]);
+      uint64_t *src_maps1_64 = reinterpret_cast<uint64_t *>(src_maps[1]);
       for (int i = 0; i < num_words; ++i) {
-        dst_map[i] = src_maps[0][i] & src_maps[1][i];
+        dst_map64[i] = src_maps0_64[i] & src_maps1_64[i];
       }
       break;
+    }
 
     default: {
       /* > 2 src_maps bitmaps. do 64-bit ANDs */
-      memcpy((uint8_t *) dst_map, (uint8_t *) src_maps[0], num_bytes);
+      uint64_t *src_maps0_64 = reinterpret_cast<uint64_t *>(src_maps[0]);
+      memcpy(dst_map64, src_maps0_64, num_bytes);
       for (int m = 1; m < nmaps; ++m) {
         for (int i = 0; i < num_words; ++i) {
-          dst_map[i] &= src_maps[m][i];
+          uint64_t *src_mapsm_64 = reinterpret_cast<uint64_t *>(src_maps[m]);
+          dst_map64[i] &= src_mapsm_64[i];
         }
       }
 

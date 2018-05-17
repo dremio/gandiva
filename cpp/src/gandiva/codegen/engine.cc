@@ -39,7 +39,7 @@
 
 namespace gandiva {
 
-const std::string Engine::kLibPreCompiledIRDir = "/tmp/";
+const char *Engine::kLibPreCompiledIRDir = "/tmp/";
 bool Engine::init_once_done_ = false;
 std::once_flag init_once_flag;
 
@@ -84,7 +84,7 @@ Engine::Engine()
  * Handling for pre-compiled IR libraries.
  */
 void Engine::LoadPreCompiledIRFiles() {
-  std::string fileName = kLibPreCompiledIRDir + "irhelpers.bc";
+  std::string fileName = std::string(kLibPreCompiledIRDir) + "irhelpers.bc";
 
   /// Read from file into memory buffer.
   llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer_or_error =

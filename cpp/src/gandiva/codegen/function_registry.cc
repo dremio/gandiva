@@ -17,10 +17,15 @@
 #include <vector>
 #include "codegen/function_registry.h"
 
-using namespace std;
-using namespace arrow;
-
 namespace gandiva {
+
+using std::vector;
+using arrow::int32;
+using arrow::int64;
+using arrow::float32;
+using arrow::float64;
+using arrow::boolean;
+using arrow::date64;
 
 #define STRINGIFY(a) #a
 
@@ -137,9 +142,10 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
   for (int i = 0; i < num_entries; i++) {
     const NativeFunction *entry = &pc_registry_[i];
 
-    //assert(LookupSignature(entry->signature()) == NULL);
+    DCHECK(LookupSignature(entry->signature()) == NULL);
     map[&entry->signature()] = entry;
-    printf("%s -> %s\n", entry->signature().ToString().c_str(), entry->pc_name().c_str());
+    //printf("%s -> %s\n", entry->signature().ToString().c_str(),
+    //      entry->pc_name().c_str());
   }
   return map;
 }

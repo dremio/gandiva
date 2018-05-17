@@ -20,8 +20,6 @@
 #include "expr/annotator.h"
 #include "codegen/field_descriptor.h"
 
-using namespace arrow;
-
 namespace gandiva {
 
 class TestAnnotator : public ::testing::Test {
@@ -30,18 +28,22 @@ class TestAnnotator : public ::testing::Test {
 };
 
 ArraySharedPtr TestAnnotator::MakeInt32Array(int length) {
-  Status status;
+  arrow::Status status;
 
-  std::shared_ptr<Buffer> validity;
-  status = arrow::AllocateBuffer(default_memory_pool(), (length + 63) / 8, &validity);
+  std::shared_ptr<arrow::Buffer> validity;
+  status = arrow::AllocateBuffer(arrow::default_memory_pool(),
+                                 (length + 63) / 8,
+                                 &validity);
   DCHECK_EQ(status.ok(), true);
 
-  std::shared_ptr<Buffer> value;
-  status = AllocateBuffer(default_memory_pool(), length * sizeof (int32_t), &value);
+  std::shared_ptr<arrow::Buffer> value;
+  status = AllocateBuffer(arrow::default_memory_pool(),
+                          length * sizeof (int32_t),
+                          &value);
   DCHECK_EQ(status.ok(), true);
 
-  auto array_data = arrow::ArrayData::Make(int32(), length, {validity, value});
-  return MakeArray(array_data);
+  auto array_data = arrow::ArrayData::Make(arrow::int32(), length, {validity, value});
+  return arrow::MakeArray(array_data);
 }
 
 TEST_F(TestAnnotator, TestAdd) {
@@ -78,7 +80,8 @@ TEST_F(TestAnnotator, TestAdd) {
   auto arrow_v1 = MakeInt32Array(num_records);
 
   /* prepare input record batch */
-  auto record_batch = RecordBatch::Make(in_schema, num_records, {arrow_v0, arrow_v1});
+  auto record_batch = arrow::RecordBatch::Make(in_schema,
+                                               num_records, {arrow_v0, arrow_v1});
 
   /* TODO : use builder ? */
   auto arrow_sum = MakeInt32Array(num_records);

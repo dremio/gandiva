@@ -21,10 +21,10 @@
 
 extern "C" {
 
-#include "types.h"
-#include "bitmap.cc"
-#include "arithmetic_ops.cc"
-#include "time.cc"
+#include "./types.h"
+#include "./bitmap.cc"
+#include "./arithmetic_ops.cc"
+#include "./time.cc"
 
 int print_double(char *msg, double val) {
   return printf(msg, val);

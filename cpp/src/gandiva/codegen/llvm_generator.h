@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 #include <gtest/gtest_prod.h>
 #include "common/gandiva_fwd.h"
 #include "codegen/dex_visitor.h"
@@ -115,8 +115,8 @@ class LLVMGenerator {
                              uint8_t **buffers,
                              int record_count);
 
-  static void IntersectBitMaps(uint64_t *dst_map,
-                               uint64_t **src_maps,
+  static void IntersectBitMaps(uint8_t *dst_map,
+                               uint8_t **src_maps,
                                int nmaps,
                                int num_records);
 

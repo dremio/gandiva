@@ -50,7 +50,7 @@ class Engine {
   void *CompiledFunction(llvm::Function *irFunction);
 
  private:
-  static const std::string kLibPreCompiledIRDir;
+  static const char *kLibPreCompiledIRDir;
 
   static void InitOnce();
   static bool init_once_done_;

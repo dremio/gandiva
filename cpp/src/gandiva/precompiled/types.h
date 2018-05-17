@@ -17,7 +17,7 @@
 #ifndef PRECOMPILED_TYPES_H
 #define PRECOMPILED_TYPES_H
 
-#include <stdint.h>
+#include <cstdint>
 
 /*
  * Use the same names as in arrow data types. Makes it easy to write pre-processor macros.

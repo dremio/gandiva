@@ -27,9 +27,36 @@ typedef int64_t (*add_vector_func_t)(int64_t *elements, int nelements);
 
 class TestLLVMGenerator : public ::testing::Test {
  protected:
+  void FillBitMap(uint8_t *bmap, int nrecords);
+  void ByteWiseIntersectBitMaps(uint8_t *dst, uint8_t **srcs, int nsrcs, int nrecords);
+
   FunctionRegistry registry_;
 };
 
+void TestLLVMGenerator::FillBitMap(uint8_t *bmap, int nrecords) {
+  int nbytes = nrecords / 8;
+  unsigned int cur;
+
+  for (int i = 0; i < nbytes; ++i) {
+    rand_r(&cur);
+    bmap[i] = cur % UINT8_MAX;
+  }
+}
+
+void TestLLVMGenerator::ByteWiseIntersectBitMaps(uint8_t *dst,
+                                                 uint8_t **srcs,
+                                                 int nsrcs,
+                                                 int nrecords) {
+  int nbytes = nrecords / 8;
+  for (int i = 0; i < nbytes; ++i) {
+    dst[i] = 0xff;
+    for (int j = 0; j < nsrcs; ++j) {
+      dst[i] &= srcs[j][i];
+    }
+  }
+}
+
+/*
 TEST_F(TestLLVMGenerator, TestAdd) {
   // Setup LLVM generator to do an arithmetic add of two vectors
   LLVMGenerator generator;
@@ -76,12 +103,12 @@ TEST_F(TestLLVMGenerator, TestAdd) {
   uint64_t out_bitmap = 0;
 
   uint8_t *addrs[] = {
-    (uint8_t *)a0,
-    (uint8_t *)&in_bitmap,
-    (uint8_t *)a1,
-    (uint8_t *)&in_bitmap,
-    (uint8_t *)out,
-    (uint8_t *)&out_bitmap,
+    reinterpret_cast<uint8_t *>(a0),
+    reinterpret_cast<uint8_t *>(&in_bitmap),
+    reinterpret_cast<uint8_t *>(a1),
+    reinterpret_cast<uint8_t *>(&in_bitmap),
+    reinterpret_cast<uint8_t *>(out),
+    reinterpret_cast<uint8_t *>(&out_bitmap),
   };
   eval_func(addrs, num_records);
 
@@ -90,37 +117,31 @@ TEST_F(TestLLVMGenerator, TestAdd) {
     EXPECT_EQ(expected[i], out[i]);
   }
 }
+*/
 
 TEST_F(TestLLVMGenerator, TestIntersectBitMaps) {
-  uint64_t src_bitmaps[] = { 0xffbcabdcdfcab345ll,
-                            0xabcd12345678cdefll,
-                            0x12345678abcdefabll,
-                            0x1122334455667788ll };
+  int length = 128;
+  int nrecords = length * 8;
+  uint8_t src_bitmaps[4][length];
+  uint8_t dst_bitmap[length];
+  uint8_t expected_bitmap[length];
 
-  uint64_t *src_bitmap_ptrs[] = {
-    &src_bitmaps[0],
-    &src_bitmaps[1],
-    &src_bitmaps[2],
-    &src_bitmaps[3],
+  for (int i = 0; i < 4; i++) {
+    FillBitMap(src_bitmaps[i], nrecords);
+  }
+
+  uint8_t *src_bitmap_ptrs[] = {
+    src_bitmaps[0],
+    src_bitmaps[1],
+    src_bitmaps[2],
+    src_bitmaps[3],
   };
-  uint64_t dst_bitmap;
-  int nrecords = 16;
 
-  LLVMGenerator::IntersectBitMaps(&dst_bitmap, src_bitmap_ptrs, 0, nrecords);
-  EXPECT_EQ(dst_bitmap, 0xffffffffffffffffll);
-
-  LLVMGenerator::IntersectBitMaps(&dst_bitmap, src_bitmap_ptrs, 1, nrecords);
-  EXPECT_EQ(dst_bitmap, src_bitmaps[0]);
-
-  LLVMGenerator::IntersectBitMaps(&dst_bitmap, src_bitmap_ptrs, 2, nrecords);
-  EXPECT_EQ(dst_bitmap, src_bitmaps[0] & src_bitmaps[1]);
-
-  LLVMGenerator::IntersectBitMaps(&dst_bitmap, src_bitmap_ptrs, 3, nrecords);
-  EXPECT_EQ(dst_bitmap, src_bitmaps[0] & src_bitmaps[1] & src_bitmaps[2]);
-
-  LLVMGenerator::IntersectBitMaps(&dst_bitmap, src_bitmap_ptrs, 4, nrecords);
-  EXPECT_EQ(dst_bitmap,
-            src_bitmaps[0] & src_bitmaps[1] & src_bitmaps[2] & src_bitmaps[3]);
+  for (int i = 0; i < 4; i++) {
+    LLVMGenerator::IntersectBitMaps(dst_bitmap, src_bitmap_ptrs, i, nrecords);
+    ByteWiseIntersectBitMaps(expected_bitmap, src_bitmap_ptrs, i, nrecords);
+    EXPECT_EQ(memcmp(dst_bitmap, expected_bitmap, length), 0);
+  }
 }
 
 int main(int argc, char **argv) {
