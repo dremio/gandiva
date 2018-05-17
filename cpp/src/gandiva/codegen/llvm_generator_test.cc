@@ -56,7 +56,6 @@ void TestLLVMGenerator::ByteWiseIntersectBitMaps(uint8_t *dst,
   }
 }
 
-/*
 TEST_F(TestLLVMGenerator, TestAdd) {
   // Setup LLVM generator to do an arithmetic add of two vectors
   LLVMGenerator generator;
@@ -117,7 +116,6 @@ TEST_F(TestLLVMGenerator, TestAdd) {
     EXPECT_EQ(expected[i], out[i]);
   }
 }
-*/
 
 TEST_F(TestLLVMGenerator, TestIntersectBitMaps) {
   int length = 128;

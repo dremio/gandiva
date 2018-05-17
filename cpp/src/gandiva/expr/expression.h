@@ -23,21 +23,20 @@ namespace gandiva {
 
 class Expression {
  public:
-  Expression(const NodeSharedPtr node, const FieldSharedPtr field)
-    : node_(node), field_(field) {}
+  Expression(const NodeSharedPtr root, const FieldSharedPtr result)
+    : root_(root), result_(result) {}
 
-  NodeSharedPtr node() { return node_; }
+  NodeSharedPtr root() { return root_; }
 
-  FieldSharedPtr field() { return field_; }
+  FieldSharedPtr result() { return result_; }
 
-  virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) {
-    // return whatever node does
-    return node_->Decompose(annotator);
+  ValueValidityPairSharedPtr Decompose(Annotator *annotator) {
+    return root_->Decompose(annotator);
   }
 
  private:
-  const NodeSharedPtr node_;
-  const FieldSharedPtr field_;
+  const NodeSharedPtr root_;
+  const FieldSharedPtr result_;
 };
 
 } // namespace gandiva

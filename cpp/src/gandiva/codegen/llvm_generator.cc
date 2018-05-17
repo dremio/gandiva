@@ -61,7 +61,7 @@ void LLVMGenerator::Build(ExpressionVector exprs) {
   for (auto it = exprs.begin(); it != exprs.end(); it++) {
     ExpressionSharedPtr expr = *it;
 
-    auto output = annotator_.AddOutputFieldDescriptor(expr->field());
+    auto output = annotator_.AddOutputFieldDescriptor(expr->result());
     Add(expr, output);
   }
 

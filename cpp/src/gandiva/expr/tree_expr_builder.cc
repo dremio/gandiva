@@ -22,14 +22,14 @@ NodeSharedPtr TreeExprBuilder::MakeField(FieldSharedPtr field) {
   return NodeSharedPtr(new FieldNode(field));
 }
 
-NodeSharedPtr TreeExprBuilder::MakeBinaryFunction(std::string function,
+NodeSharedPtr TreeExprBuilder::MakeBinaryFunction(const std::string &function,
                                                   NodeSharedPtr left,
                                                   NodeSharedPtr right,
                                                   DataTypeSharedPtr result) {
   return FunctionNode::CreateFunction(function, {left, right}, result);
 }
 
-NodeSharedPtr TreeExprBuilder::MakeUnaryFunction(std::string function,
+NodeSharedPtr TreeExprBuilder::MakeUnaryFunction(const std::string &function,
                                                  NodeSharedPtr param,
                                                  DataTypeSharedPtr result) {
   return FunctionNode::CreateFunction(function, {param}, result);

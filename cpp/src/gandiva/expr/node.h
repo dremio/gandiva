@@ -31,10 +31,10 @@ namespace gandiva {
  */
 class Node {
  public:
-  explicit Node(const DataTypeSharedPtr type)
-    : type_(type) { }
+  explicit Node(const DataTypeSharedPtr return_type)
+    : return_type_(return_type) { }
 
-  DataTypeSharedPtr getReturnType() { return type_; }
+  DataTypeSharedPtr return_type() { return return_type_; }
 
   /*
    * Called during code generation to separate out validity and value.
@@ -42,7 +42,7 @@ class Node {
   virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) = 0;
 
  protected:
-  DataTypeSharedPtr type_;
+  DataTypeSharedPtr return_type_;
 };
 
 /*

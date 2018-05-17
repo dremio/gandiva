@@ -78,7 +78,7 @@ NodeSharedPtr FunctionNode::CreateFunction(const std::string &name,
                                            DataTypeSharedPtr retType) {
   std::vector<DataTypeSharedPtr> paramTypes;
   for (auto it = children.begin(); it != children.end(); ++it) {
-    auto arg = (*it)->getReturnType();
+    auto arg = (*it)->return_type();
     paramTypes.push_back(arg);
   }
 

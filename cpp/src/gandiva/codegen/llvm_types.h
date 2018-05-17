@@ -101,7 +101,8 @@ class LLVMTypes {
    * For a given minor type, find the corresponding ir type.
    */
   llvm::Type *IRType(ArrowTypeID arrow_type) {
-    return arrow_id_to_llvm_type_map_[arrow_type];
+    auto found = arrow_id_to_llvm_type_map_.find(arrow_type);
+    return (found == arrow_id_to_llvm_type_map_.end()) ? NULL : found->second;
   }
 
  private:

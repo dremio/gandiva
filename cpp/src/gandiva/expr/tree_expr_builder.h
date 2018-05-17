@@ -29,13 +29,13 @@ class TreeExprBuilder {
   static NodeSharedPtr MakeField(FieldSharedPtr field);
 
   /// \brief create a node with a binary function.
-  static NodeSharedPtr MakeBinaryFunction(std::string function,
+  static NodeSharedPtr MakeBinaryFunction(const std::string &function,
                                           NodeSharedPtr left,
                                           NodeSharedPtr right,
                                           DataTypeSharedPtr result);
 
   /// \brief create a node with a unary function.
-  static NodeSharedPtr MakeUnaryFunction(std::string function,
+  static NodeSharedPtr MakeUnaryFunction(const std::string &function,
                                          NodeSharedPtr param,
                                          DataTypeSharedPtr result);
 

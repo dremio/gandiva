@@ -49,15 +49,20 @@ TEST_F(TestExprTree, TestField) {
   Annotator annotator;
 
   auto n0 = TreeExprBuilder::MakeField(i0_);
-  EXPECT_EQ(n0->getReturnType(), int32());
+  EXPECT_EQ(n0->return_type(), int32());
 
   auto n1 = TreeExprBuilder::MakeField(b0_);
-  EXPECT_EQ(n1->getReturnType(), boolean());
+  EXPECT_EQ(n1->return_type(), boolean());
 
   auto pair = n1->Decompose(&annotator);
   auto value = pair->value_expr();
   auto value_dex = std::dynamic_pointer_cast<VectorReadValueDex>(value);
   EXPECT_EQ(value_dex->FieldType(), boolean());
+
+  EXPECT_EQ(pair->validity_exprs().size(), 1);
+  auto validity = pair->validity_exprs().at(0);
+  auto validity_dex = std::dynamic_pointer_cast<VectorReadValidityDex>(validity);
+  EXPECT_NE(validity_dex->ValidityIdx(), value_dex->DataIdx());
 }
 
 TEST_F(TestExprTree, TestBinary) {
@@ -74,7 +79,7 @@ TEST_F(TestExprTree, TestBinary) {
                          func_desc->params(),
                          func_desc->return_type());
 
-  EXPECT_EQ(add->getReturnType(), int32());
+  EXPECT_EQ(add->return_type(), int32());
   EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
 
   auto pair = n->Decompose(&annotator);
@@ -97,7 +102,7 @@ TEST_F(TestExprTree, TestUnary) {
   FunctionSignature sign(func_desc->name(),
                          func_desc->params(),
                          func_desc->return_type());
-  EXPECT_EQ(unaryFn->getReturnType(), boolean());
+  EXPECT_EQ(unaryFn->return_type(), boolean());
   EXPECT_TRUE(sign == FunctionSignature("isnumeric", {int32()}, boolean()));
 
   auto pair = n->Decompose(&annotator);
@@ -116,8 +121,8 @@ TEST_F(TestExprTree, TestExpression) {
 
   auto n = TreeExprBuilder::MakeBinaryFunction("add", left, right, int32());
   auto e = TreeExprBuilder::MakeExpression(n, field("r", int32()));
-  auto root_node = e->node();
-  EXPECT_EQ(root_node->getReturnType(), int32());
+  auto root_node = e->root();
+  EXPECT_EQ(root_node->return_type(), int32());
 
   auto add_node = std::dynamic_pointer_cast<FunctionNode>(root_node);
   auto func_desc = add_node->func_descriptor();
