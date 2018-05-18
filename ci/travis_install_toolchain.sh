@@ -27,7 +27,8 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
         ccache \
         cmake \
         curl \
-        ninja
+        ninja \
+        arrow-cpp
 
     conda update -y -q -p $CPP_TOOLCHAIN ca-certificates -c defaults
 fi
