@@ -1,0 +1,35 @@
+language: cpp
+
+env:
+  global:
+    - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
+    - RUN_TESTS=true
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: false 
+      compiler: gcc
+      addons:
+       apt:
+         packages:
+           - gcc
+           - g++
+           - cmake
+
+         sources:
+           - ubuntu-toolchain-r-test
+           - llvm-toolchain-precise
+    
+script:
+    ############################################################################
+    # Build main and tests
+    ############################################################################
+     - cd cpp
+     - mkdir -p build
+     - cd build
+     - cmake .. 
+     - make
+     - make lint 
+     - ctest
