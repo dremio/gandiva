@@ -70,6 +70,7 @@ ValueValidityPairSharedPtr FunctionNode::Decompose(Annotator *annotator) {
   } else {
     // TODO
     DCHECK(0);
+    return NULL;
   }
 }
 
