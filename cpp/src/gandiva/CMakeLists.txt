@@ -15,8 +15,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(gandiva)
 
-find_package(LLVM REQUIRED CONFIG HINTS
-             /usr/local/opt/llvm)
+set(REQD_LLVM_VERSION 6.0)
+find_package(LLVM ${REQD_LLVM_VERSION} REQUIRED CONFIG HINTS
+             /usr/local/opt/llvm
+             /usr/share)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 include_directories(${LLVM_INCLUDE_DIRS})
@@ -59,7 +61,7 @@ SET(PRECOMPILED_SRC precompiled/irhelpers.cc)
 #TODO : fix this
 SET(PRECOMPILED_OUTPUT /tmp/irhelpers.bc)
 
-find_program(CLANG_EXECUTABLE clang++)
+find_program(CLANG_EXECUTABLE clang++-${REQD_LLVM_VERSION})
 message(STATUS "Found clang++ ${CLANG_EXECUTABLE}")
 
 get_filename_component(PRECOMPILED_ABSOLUTE_SRC ${PRECOMPILED_SRC} ABSOLUTE)
