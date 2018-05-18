@@ -73,7 +73,7 @@ class FunctionSignature {
 
   std::string ToString() const {
     std::stringstream params;
-    for (int i = 0; i < param_types_.size(); i++) {
+    for (uint32_t i = 0; i < param_types_.size(); i++) {
       if (i > 0) {
         params << ", ";
       }
