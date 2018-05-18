@@ -61,7 +61,7 @@ SET(PRECOMPILED_SRC precompiled/irhelpers.cc)
 #TODO : fix this
 SET(PRECOMPILED_OUTPUT /tmp/irhelpers.bc)
 
-find_program(CLANG_EXECUTABLE clang++-${REQD_LLVM_VERSION})
+find_program(CLANG_EXECUTABLE NAMES clang++-${REQD_LLVM_VERSION} clang)
 message(STATUS "Found clang++ ${CLANG_EXECUTABLE}")
 
 get_filename_component(PRECOMPILED_ABSOLUTE_SRC ${PRECOMPILED_SRC} ABSOLUTE)
@@ -81,6 +81,9 @@ target_link_libraries(gandiva ${ARROW_LIB})
 
 # Test related
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 function(ADD_GANDIVA_TEST LABEL REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
   set(TEST_PATH "${EXECUTABLE_OUTPUT_PATH}/${TEST_NAME}")
@@ -94,6 +97,7 @@ function(ADD_GANDIVA_TEST LABEL REL_TEST_NAME)
   endif()
   target_link_libraries(${TEST_NAME} ${ARROW_LIB})
   target_link_libraries(${TEST_NAME} ${GTEST_BOTH_LIBRARIES})
+  target_link_libraries(${TEST_NAME} Threads::Threads)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS ${LABEL} ${TEST_NAME})
 endfunction()
