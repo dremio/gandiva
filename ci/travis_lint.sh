@@ -16,6 +16,8 @@
 
 set -ex
 
+source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
+
 # Fail fast for code linting issues
 
 mkdir $TRAVIS_BUILD_DIR/cpp/lint
