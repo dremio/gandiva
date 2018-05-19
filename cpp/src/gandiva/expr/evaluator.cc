@@ -68,7 +68,7 @@ ArraySharedPtr Evaluator::AllocArray(DataTypeSharedPtr type, int length) {
   DCHECK(status.ok());
 
   auto data = std::make_shared<arrow::PoolBuffer>(pool_);
-  const auto &fw_type = arrow::checked_cast<const arrow::FixedWidthType&>(*type);
+  const auto &fw_type = dynamic_cast<const arrow::FixedWidthType&>(*type);
   status = data->Resize(((length * fw_type.bit_width()) + 7) / 8);
   DCHECK(status.ok());
 
