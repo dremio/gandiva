@@ -28,7 +28,8 @@ typedef int64_t (*add_vector_func_t)(int64_t *elements, int nelements);
 class TestLLVMGenerator : public ::testing::Test {
  protected:
   void FillBitMap(uint8_t *bmap, int nrecords);
-  void ByteWiseIntersectBitMaps(uint8_t *dst, uint8_t **srcs, int nsrcs, int nrecords);
+  void ByteWiseIntersectBitMaps(uint8_t *dst, const std::vector<uint8_t *> &srcs,
+                                int nrecords);
 
   FunctionRegistry registry_;
 };
@@ -44,13 +45,12 @@ void TestLLVMGenerator::FillBitMap(uint8_t *bmap, int nrecords) {
 }
 
 void TestLLVMGenerator::ByteWiseIntersectBitMaps(uint8_t *dst,
-                                                 uint8_t **srcs,
-                                                 int nsrcs,
+                                                 const std::vector<uint8_t *> &srcs,
                                                  int nrecords) {
   int nbytes = nrecords / 8;
   for (int i = 0; i < nbytes; ++i) {
     dst[i] = 0xff;
-    for (int j = 0; j < nsrcs; ++j) {
+    for (int j = 0; j < srcs.size(); ++j) {
       dst[i] &= srcs[j][i];
     }
   }
@@ -118,8 +118,8 @@ TEST_F(TestLLVMGenerator, TestAdd) {
 }
 
 TEST_F(TestLLVMGenerator, TestIntersectBitMaps) {
-  int length = 128;
-  int nrecords = length * 8;
+  const int length = 128;
+  const int nrecords = length * 8;
   uint8_t src_bitmaps[4][length];
   uint8_t dst_bitmap[length];
   uint8_t expected_bitmap[length];
@@ -128,16 +128,14 @@ TEST_F(TestLLVMGenerator, TestIntersectBitMaps) {
     FillBitMap(src_bitmaps[i], nrecords);
   }
 
-  uint8_t *src_bitmap_ptrs[] = {
-    src_bitmaps[0],
-    src_bitmaps[1],
-    src_bitmaps[2],
-    src_bitmaps[3],
-  };
-
   for (int i = 0; i < 4; i++) {
-    LLVMGenerator::IntersectBitMaps(dst_bitmap, src_bitmap_ptrs, i, nrecords);
-    ByteWiseIntersectBitMaps(expected_bitmap, src_bitmap_ptrs, i, nrecords);
+    std::vector<uint8_t *> src_bitmap_ptrs;
+    for (int j = 0; j < i; ++j) {
+      src_bitmap_ptrs.push_back(src_bitmaps[j]);
+    }
+
+    LLVMGenerator::IntersectBitMaps(dst_bitmap, src_bitmap_ptrs, nrecords);
+    ByteWiseIntersectBitMaps(expected_bitmap, src_bitmap_ptrs, nrecords);
     EXPECT_EQ(memcmp(dst_bitmap, expected_bitmap, length), 0);
   }
 }

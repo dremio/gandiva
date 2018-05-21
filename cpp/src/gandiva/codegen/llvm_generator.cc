@@ -307,31 +307,31 @@ void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr,
                                           int record_count) {
   auto validities = compiled_expr->value_validity()->validity_exprs();
 
-  int num_bitmaps = validities.size();
-  uint8_t *src_bitmaps[num_bitmaps];
-  for (int i = 0; i < num_bitmaps; i++) {
-    Dex *validity_dex = validities.at(i).get();
+  std::vector<uint8_t *> src_bitmaps;
+  for (auto it = validities.begin(); it != validities.end(); it++) {
+    Dex *validity_dex = (*it).get();
     VectorReadValidityDex *value_dex =
         dynamic_cast<VectorReadValidityDex *>(validity_dex);
-    src_bitmaps[i] = addrs[value_dex->ValidityIdx()];
+    src_bitmaps.push_back(addrs[value_dex->ValidityIdx()]);
   }
 
   int out_idx = compiled_expr->output()->validity_idx();
   uint8_t *dst_bitmap = addrs[out_idx];
 
-  IntersectBitMaps(dst_bitmap, src_bitmaps, num_bitmaps, record_count);
+  IntersectBitMaps(dst_bitmap, src_bitmaps, record_count);
 }
 
 /*
  * Compute the intersection of multiple bitmaps.
  */
 void
-LLVMGenerator::IntersectBitMaps(uint8_t *dst_map, uint8_t **src_maps,
-                                int nmaps,
+LLVMGenerator::IntersectBitMaps(uint8_t *dst_map,
+                                const std::vector<uint8_t *> &src_maps,
                                 int num_records) {
   uint64_t *dst_map64 = reinterpret_cast<uint64_t *>(dst_map);
   int num_words = (num_records + 63) / 64; // aligned to 8-byte.
   int num_bytes = num_words * 8;
+  int nmaps = src_maps.size();
 
   switch (nmaps) {
     case 0: {

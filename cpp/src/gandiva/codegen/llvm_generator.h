@@ -116,8 +116,7 @@ class LLVMGenerator {
                              int record_count);
 
   static void IntersectBitMaps(uint8_t *dst_map,
-                               uint8_t **src_maps,
-                               int nmaps,
+                               const std::vector<uint8_t *> &src_maps,
                                int num_records);
 
   // tracing related
