@@ -33,8 +33,7 @@ matrix:
   allow_failures:
   include:
   # C++ & Python w/ clang 6.0
-  - compiler: clang
-    language: cpp
+  - language: cpp
     os: linux
     group: deprecated
     env:
