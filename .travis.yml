@@ -52,3 +52,7 @@ matrix:
     - $TRAVIS_BUILD_DIR/ci/travis_lint.sh
     script:
     - $TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh
+
+after_failure:
+- COREFILE=$(find . -maxdepth 2 -name "core*" | head -n 1)
+- if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt" -ex "set pagination 0" -batch; fi

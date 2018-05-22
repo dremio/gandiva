@@ -106,7 +106,7 @@ TEST_F(TestEngine, TestAddUnoptimised) {
   Engine engine;
   LLVMTypes types(engine.context());
   llvm::Function *ir_func = BuildVecAdd(&engine, &types);
-  engine.FinalizeModule(false, true);
+  engine.FinalizeModule(false, false);
 
   add_vector_func_t add_func =
       reinterpret_cast<add_vector_func_t>(engine.CompiledFunction(ir_func));

@@ -10,6 +10,8 @@ Build Gandiva requires:
 * A C++11-enabled compiler. On Linux, gcc 4.8 and higher should be sufficient.
 * CMake
 * LLVM 
+* Arrow
+* GTest
 
 On OS X, you can use [Homebrew][1]:
 
