@@ -33,14 +33,14 @@ matrix:
   allow_failures:
   include:
   # C++ & Python w/ clang 6.0
-  - os: linux
+  - language: cpp
+    os: linux
     group: deprecated
     env:
     - GANDIVA_TRAVIS_USE_TOOLCHAIN=1
     - GANDIVA_BUILD_WARNING_LEVEL=CHECKIN
-    - MATRIC_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
-    before_install:
-    - eval "${MATRIX_EVAL}"
+    - CC="clang-6.0"
+    - CXX="clang++-6.0"
     before_script:
     - ulimit -c unlimited -S
     - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
