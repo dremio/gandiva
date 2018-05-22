@@ -29,6 +29,14 @@ using arrow::date64;
 
 #define STRINGIFY(a) #a
 
+/*
+ * Binary functions that :
+ * - have the same input type for both params
+ * - output type is same as the input type
+ * - NULL handling is of type NULL_IF_NULL
+ *
+ * The pre-compiled fn name includes the base name & input type names. eg. add_int32_int32
+ */
 #define BINARY_SYMMETRIC_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
     vector<DataTypeSharedPtr>{TYPE(), TYPE()}, \
@@ -37,6 +45,13 @@ using arrow::date64;
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##TYPE##_##TYPE))
 
+/*
+ * Binary functions that :
+ * - have different input types, or output type
+ * - NULL handling is of type NULL_IF_NULL
+ *
+ * The pre-compiled fn name includes the base name & input type names. eg. mod_int64_int32
+ */
 #define BINARY_GENERIC_SAFE_NULL_IF_NULL(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE) \
   NativeFunction(#NAME, \
     vector<DataTypeSharedPtr>{IN_TYPE1(), IN_TYPE2()}, \
@@ -45,6 +60,15 @@ using arrow::date64;
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##IN_TYPE1##_##IN_TYPE2))
 
+/*
+ * Binary functions that :
+ * - have the same input type
+ * - output type is boolean
+ * - NULL handling is of type NULL_IF_NULL
+ *
+ * The pre-compiled fn name includes the base name & input type names.
+ * eg. equal_int32_int32
+ */
 #define BINARY_RELATIONAL_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
     vector<DataTypeSharedPtr>{TYPE(), TYPE()}, \
@@ -53,6 +77,12 @@ using arrow::date64;
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##TYPE##_##TYPE))
 
+/*
+ * Unary functions that :
+ * - NULL handling is of type NULL_IF_NULL
+ *
+ * The pre-compiled fn name includes the base name & input type name. eg. castFloat_int32
+ */
 #define CAST_UNARY_SAFE_NULL_IF_NULL(NAME, IN_TYPE, OUT_TYPE) \
   NativeFunction(#NAME, \
     vector<DataTypeSharedPtr>{IN_TYPE()}, \
@@ -61,6 +91,12 @@ using arrow::date64;
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##IN_TYPE))
 
+/*
+ * Unary functions that :
+ * - NULL handling is of type NULL_NEVER
+ *
+ * The pre-compiled fn name includes the base name & input type name. eg. isnull_int32
+ */
 #define UNARY_SAFE_NULL_NEVER_BOOL(NAME, TYPE) \
   NativeFunction(#NAME, \
     vector<DataTypeSharedPtr>{TYPE()}, \
@@ -69,6 +105,12 @@ using arrow::date64;
     RESULT_NULL_NEVER, \
     STRINGIFY(NAME##_##TYPE))
 
+/*
+ * Extract functions (used with data/time types) that :
+ * - NULL handling is of type NULL_IF_NULL
+ *
+ * The pre-compiled fn name includes the base name & input type name. eg. extractYear_date
+ */
 #define EXTRACT_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
     vector<DataTypeSharedPtr>{TYPE()}, \
@@ -77,16 +119,19 @@ using arrow::date64;
     RESULT_NULL_IF_NULL, \
     STRINGIFY(NAME##_##TYPE))
 
+/* Iterate the inner macro over all numeric types */
 #define NUMERIC_TYPES(INNER, NAME) \
   INNER(NAME, int32), \
   INNER(NAME, int64), \
   INNER(NAME, float32), \
   INNER(NAME, float64)
 
+/* Iterate the inner macro over all numeric types and bool type */
 #define NUMERIC_AND_BOOL_TYPES(INNER, NAME) \
   NUMERIC_TYPES(INNER, NAME), \
   INNER(NAME, boolean)
 
+/* Iterate the inner macro over all data types */
 #define DATE_TYPES(INNER, NAME) \
   INNER(NAME, date64), \
   INNER(NAME, time64), \
