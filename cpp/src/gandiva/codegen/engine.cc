@@ -39,6 +39,7 @@
 
 namespace gandiva {
 
+constexpr char Engine::kLibPreCompiledIRDir[] = "/tmp/";
 bool Engine::init_once_done_ = false;
 std::once_flag init_once_flag;
 

@@ -50,7 +50,7 @@ class Engine {
   void *CompiledFunction(llvm::Function *irFunction);
 
  private:
-  static constexpr const char *kLibPreCompiledIRDir = "/tmp/";
+  static const char kLibPreCompiledIRDir[];
 
   static void InitOnce();
   static bool init_once_done_;
