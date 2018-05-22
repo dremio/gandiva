@@ -47,7 +47,7 @@ class TreeExprBuilder {
 
   /// \brief convenience function for simple function expressions.
   static ExpressionSharedPtr MakeExpression(const std::string &function,
-                                            std::vector<FieldSharedPtr> in_fields,
+                                            const std::vector<FieldSharedPtr> &in_fields,
                                             FieldSharedPtr out_field);
 };
 

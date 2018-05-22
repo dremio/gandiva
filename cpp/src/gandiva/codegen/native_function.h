@@ -47,7 +47,7 @@ class NativeFunction {
                  DataTypeSharedPtr ret_type,
                  bool param_null_safe,
                  const ResultNullableType &result_nullable_type,
-                 std::string pc_name)
+                 const std::string &pc_name)
       : signature_(base_name, param_types, ret_type),
         param_null_safe_(param_null_safe),
         result_nullable_type_(result_nullable_type),

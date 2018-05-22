@@ -15,9 +15,6 @@
 sudo: required
 dist: trusty
 
-services:
-  - docker
-
 cache:
   ccache: true
 
@@ -46,6 +43,7 @@ matrix:
     - CC="clang-6.0"
     - CXX="clang++-6.0"
     before_script:
+    - ulimit -c unlimited -S
     - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
     - $TRAVIS_BUILD_DIR/ci/travis_install_clang_tools.sh
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh

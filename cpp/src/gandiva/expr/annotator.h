@@ -75,7 +75,7 @@ class Annotator {
    * Prepare an eval batch for the incoming record batch.
    */
   EvalBatchSharedPtr PrepareEvalBatch(RecordBatchSharedPtr batch,
-                                      arrow::ArrayVector out_arrays);
+                                      const arrow::ArrayVector &out_arrays);
 
  private:
   FieldDescriptorSharedPtr MakeDesc(FieldSharedPtr field);

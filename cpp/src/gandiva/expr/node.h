@@ -71,7 +71,7 @@ class FieldNode : public Node {
 class FunctionNode : public Node {
  public:
   FunctionNode(FuncDescriptorSharedPtr desc,
-               const std::vector<NodeSharedPtr> children,
+               const std::vector<NodeSharedPtr> &children,
                DataTypeSharedPtr retType)
     : Node(retType), desc_(desc), children_(children) { }
 

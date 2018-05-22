@@ -41,10 +41,10 @@ class LLVMGenerator {
   ~LLVMGenerator();
 
   /// \brief Build from expression tree, represented by an element of the vector
-  void Build(ExpressionVector exprs);
+  void Build(const ExpressionVector &exprs);
 
   /// \brief Execute the built expression against the provided arguments.
-  int Execute(RecordBatchSharedPtr record_batch, arrow::ArrayVector outputs);
+  int Execute(RecordBatchSharedPtr record_batch, const arrow::ArrayVector &outputs);
 
  private:
   FRIEND_TEST(TestLLVMGenerator, TestAdd);
@@ -78,7 +78,7 @@ class LLVMGenerator {
     llvm::IRBuilder<> &ir_builder() { return generator_->ir_builder(); }
     llvm::Module *module() { return generator_->module(); }
 
-    llvm::Value *BuildCombinedValidity(std::vector<DexSharedPtr> validities);
+    llvm::Value *BuildCombinedValidity(const std::vector<DexSharedPtr> &validities);
     void AddTrace(const std::string &msg, llvm::Value *value = NULL);
 
     LLVMGenerator *generator_;
@@ -108,7 +108,7 @@ class LLVMGenerator {
 
   llvm::Value *GetPackedBitValue(llvm::Value *bitMap, llvm::Value *position);
   void SetPackedBitValue(llvm::Value *bitMap, llvm::Value *position, llvm::Value *value);
-  llvm::Value *AddFunctionCall(std::string full_name,
+  llvm::Value *AddFunctionCall(const std::string &full_name,
                                llvm::Type *ret_type,
                                const std::vector<llvm::Value *> &args);
 
@@ -121,7 +121,7 @@ class LLVMGenerator {
                                int num_records);
 
   // tracing related
-  std::string ReplaceFormatInTrace(std::string msg,
+  std::string ReplaceFormatInTrace(const std::string &msg,
                                    llvm::Value *value,
                                    std::string *print_fn);
   void AddTrace(const std::string &msg, llvm::Value *value = NULL);

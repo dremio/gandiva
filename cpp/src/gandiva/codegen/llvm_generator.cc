@@ -58,7 +58,7 @@ void LLVMGenerator::Add(const ExpressionSharedPtr expr,
 /*
  * Build and optimise module for projection expression.
  */
-void LLVMGenerator::Build(ExpressionVector exprs) {
+void LLVMGenerator::Build(const ExpressionVector &exprs) {
   for (auto it = exprs.begin(); it != exprs.end(); it++) {
     ExpressionSharedPtr expr = *it;
 
@@ -82,7 +82,7 @@ void LLVMGenerator::Build(ExpressionVector exprs) {
  * Execute the compiled module against the provided vectors.
  */
 int LLVMGenerator::Execute(RecordBatchSharedPtr record_batch,
-                           arrow::ArrayVector outputs) {
+                           const arrow::ArrayVector &outputs) {
   DCHECK_GT(record_batch->num_rows(), 0);
 
   auto eval_batch = annotator_.PrepareEvalBatch(record_batch, outputs);
@@ -373,7 +373,7 @@ LLVMGenerator::IntersectBitMaps(uint8_t *dst_map,
   }
 }
 
-llvm::Value *LLVMGenerator::AddFunctionCall(std::string full_name,
+llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
                                             llvm::Type *ret_type,
                                             const std::vector<llvm::Value *> &args) {
   // add to list of functions that need to be compiled
@@ -513,7 +513,7 @@ void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
  * Bitwise-AND of a vector of bits to get the combined validity.
  */
 llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(
-    std::vector<DexSharedPtr> validities) {
+    const std::vector<DexSharedPtr> &validities) {
 
   llvm::IRBuilder<> &builder = ir_builder();
   LLVMTypes &types = generator_->types_;
@@ -534,9 +534,10 @@ llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(
  * For some reason, float/double literals are getting lost when printing with the generic
  * printf. so, use a wrapper instead.
  */
-std::string LLVMGenerator::ReplaceFormatInTrace(std::string msg,
+std::string LLVMGenerator::ReplaceFormatInTrace(const std::string &in_msg,
                                                 llvm::Value *value,
                                                 std::string *print_fn) {
+  std::string msg = in_msg;
   std::size_t pos = msg.find("%T");
   if (pos == std::string::npos) {
     assert(0);

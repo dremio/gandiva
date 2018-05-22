@@ -26,7 +26,8 @@ namespace gandiva {
  */
 class ValueValidityPair {
  public:
-  ValueValidityPair(std::vector<DexSharedPtr> validity_exprs, DexSharedPtr value_expr)
+  ValueValidityPair(const std::vector<DexSharedPtr> &validity_exprs,
+                    DexSharedPtr value_expr)
       : validity_exprs_(validity_exprs),
         value_expr_(value_expr) {}
 

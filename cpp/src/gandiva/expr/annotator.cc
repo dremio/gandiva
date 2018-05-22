@@ -66,7 +66,7 @@ Annotator::PrepareBuffersForField(FieldDescriptorSharedPtr desc,
 }
 
 EvalBatchSharedPtr Annotator::PrepareEvalBatch(RecordBatchSharedPtr record_batch,
-                                               arrow::ArrayVector out_arrays) {
+                                               const arrow::ArrayVector &out_arrays) {
   EvalBatchSharedPtr eval_batch = std::make_shared<EvalBatch>(buffer_count_);
 
   // Fill in the entries for the input fields.

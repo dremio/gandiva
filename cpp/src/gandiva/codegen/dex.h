@@ -103,7 +103,7 @@ class FuncDex : public Dex {
  public:
   FuncDex(FuncDescriptorSharedPtr func_descriptor,
           const NativeFunction *native_function,
-          const std::vector<ValueValidityPairSharedPtr> args)
+          const std::vector<ValueValidityPairSharedPtr> &args)
       : func_descriptor_(func_descriptor),
         native_function_(native_function),
         args_(args) {}
