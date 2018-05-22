@@ -50,7 +50,7 @@ void TestLLVMGenerator::ByteWiseIntersectBitMaps(uint8_t *dst,
   int nbytes = nrecords / 8;
   for (int i = 0; i < nbytes; ++i) {
     dst[i] = 0xff;
-    for (int j = 0; j < srcs.size(); ++j) {
+    for (uint32_t j = 0; j < srcs.size(); ++j) {
       dst[i] &= srcs[j][i];
     }
   }
