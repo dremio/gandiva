@@ -30,8 +30,9 @@ class Expression {
 
   FieldSharedPtr result() { return result_; }
 
-  ValueValidityPairSharedPtr Decompose(Annotator *annotator) {
-    return root_->Decompose(annotator);
+  ValueValidityPairSharedPtr Decompose(const FunctionRegistry &registry,
+                                       Annotator &annotator) {
+    return root_->Decompose(registry, annotator);
   }
 
  private:

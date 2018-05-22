@@ -57,7 +57,7 @@ set(PRECOMPILED_SOURCED_FILES
     precompiled/time.cc)
 
 SET(PRECOMPILED_SRC precompiled/irhelpers.cc)
-#TODO : fix this
+#TODO : fix the location of the .bc file, it shouldn't be /tmp.
 SET(PRECOMPILED_OUTPUT /tmp/irhelpers.bc)
 
 find_program(CLANG_EXECUTABLE NAMES clang++-${REQD_LLVM_VERSION} clang)

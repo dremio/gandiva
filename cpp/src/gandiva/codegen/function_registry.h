@@ -25,7 +25,7 @@ namespace gandiva {
 class FunctionRegistry {
  public:
   /// Lookup a pre-compiled function by its signature.
-  static const NativeFunction *LookupSignature(const FunctionSignature &signature);
+  const NativeFunction *LookupSignature(const FunctionSignature &signature) const;
 
  private:
   struct KeyHash {

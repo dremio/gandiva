@@ -25,6 +25,10 @@
 #include "codegen/value_validity_pair.h"
 
 namespace gandiva {
+
+class FunctionRegistry;
+class Annotator;
+
 /*
  * Represents a node in the expression tree. Validity and value are
  * in a joined state.
@@ -39,7 +43,8 @@ class Node {
   /*
    * Called during code generation to separate out validity and value.
    */
-  virtual ValueValidityPairSharedPtr Decompose(Annotator *annotator) = 0;
+  virtual ValueValidityPairSharedPtr Decompose(const FunctionRegistry &registry,
+                                               Annotator &annotator) = 0;
 
  protected:
   DataTypeSharedPtr return_type_;
@@ -53,7 +58,8 @@ class FieldNode : public Node {
   explicit FieldNode(const FieldSharedPtr field)
     : Node(field->type()), field_(field) {}
 
-  ValueValidityPairSharedPtr Decompose(Annotator *annotator) override;
+  ValueValidityPairSharedPtr Decompose(const FunctionRegistry &registry,
+                                       Annotator &annotator) override;
 
  private:
   FieldSharedPtr field_;
@@ -69,7 +75,8 @@ class FunctionNode : public Node {
                DataTypeSharedPtr retType)
     : Node(retType), desc_(desc), children_(children) { }
 
-  ValueValidityPairSharedPtr Decompose(Annotator *annotator) override;
+  ValueValidityPairSharedPtr Decompose(const FunctionRegistry &registry,
+                                       Annotator &annotator) override;
 
   FuncDescriptorSharedPtr func_descriptor() { return desc_; }
 

@@ -108,7 +108,7 @@ class FuncDex : public Dex {
         native_function_(native_function),
         args_(args) {}
 
-  const FuncDescriptor *func_descriptor() const { return func_descriptor_.get(); }
+  const FuncDescriptorSharedPtr func_descriptor() const { return func_descriptor_; }
 
   const NativeFunction *native_function() const { return native_function_; }
 

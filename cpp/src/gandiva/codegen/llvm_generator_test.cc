@@ -78,7 +78,8 @@ TEST_F(TestLLVMGenerator, TestAdd) {
   FunctionSignature signature(func_desc->name(),
                               func_desc->params(),
                               func_desc->return_type());
-  const NativeFunction *native_func = FunctionRegistry::LookupSignature(signature);
+  const NativeFunction *native_func =
+      generator.function_registry_.LookupSignature(signature);
 
   std::vector<ValueValidityPairSharedPtr> pairs{pair0, pair1};
   auto func_dex = std::make_shared<NonNullableFuncDex>(func_desc, native_func, pairs);

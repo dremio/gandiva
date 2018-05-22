@@ -93,7 +93,7 @@ using arrow::date64;
   INNER(NAME, timestamp64)
 
 /*
- * Complete list of registered native functions.
+ * list of registered native functions.
  */
 NativeFunction FunctionRegistry::pc_registry_[] = {
     /* Arithmetic operations */
@@ -142,7 +142,7 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
   for (int i = 0; i < num_entries; i++) {
     const NativeFunction *entry = &pc_registry_[i];
 
-    DCHECK(LookupSignature(entry->signature()) == NULL);
+    DCHECK(map.find(&entry->signature()) == map.end());
     map[&entry->signature()] = entry;
     //printf("%s -> %s\n", entry->signature().ToString().c_str(),
     //      entry->pc_name().c_str());
@@ -151,7 +151,7 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
 }
 
 const NativeFunction *FunctionRegistry::LookupSignature(
-    const FunctionSignature &signature) {
+    const FunctionSignature &signature) const {
   auto got = pc_registry_map_.find(&signature);
   return got == pc_registry_map_.end() ? NULL : got->second;
 }

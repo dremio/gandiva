@@ -25,25 +25,27 @@
 
 namespace gandiva {
 
-ValueValidityPairSharedPtr FieldNode::Decompose(Annotator *annotator) {
-  FieldDescriptorSharedPtr desc = annotator->CheckAndAddInputFieldDescriptor(field_);
+ValueValidityPairSharedPtr FieldNode::Decompose(const FunctionRegistry &registry,
+                                                Annotator &annotator) {
+  FieldDescriptorSharedPtr desc = annotator.CheckAndAddInputFieldDescriptor(field_);
 
   DexSharedPtr validity_dex = std::make_shared<VectorReadValidityDex>(desc);
   DexSharedPtr value_dex = std::make_shared<VectorReadValueDex>(desc);
   return std::make_shared<ValueValidityPair>(validity_dex, value_dex);
 }
 
-ValueValidityPairSharedPtr FunctionNode::Decompose(Annotator *annotator) {
+ValueValidityPairSharedPtr FunctionNode::Decompose(const FunctionRegistry &registry,
+                                                   Annotator &annotator) {
   FunctionSignature signature(desc_->name(),
                               desc_->params(),
                               desc_->return_type());
-  const NativeFunction *native_function = FunctionRegistry::LookupSignature(signature);
+  const NativeFunction *native_function = registry.LookupSignature(signature);
   DCHECK(native_function);
 
   // decompose the children.
   std::vector<ValueValidityPairSharedPtr> args;
   for (auto it = children_.begin(); it != children_.end(); ++it) {
-    ValueValidityPairSharedPtr child = (*it)->Decompose(annotator);
+    ValueValidityPairSharedPtr child = (*it)->Decompose(registry, annotator);
     args.push_back(child);
   }
 

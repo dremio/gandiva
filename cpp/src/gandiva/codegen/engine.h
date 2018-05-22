@@ -46,11 +46,11 @@ class Engine {
   /// Optimise and compile the module.
   void FinalizeModule(bool optimise_ir, bool dump_ir);
 
-  /// Get the compiled function corresponding to  the irfunction.
+  /// Get the compiled function corresponding to the irfunction.
   void *CompiledFunction(llvm::Function *irFunction);
 
  private:
-  static const char *kLibPreCompiledIRDir;
+  static constexpr const char *kLibPreCompiledIRDir = "/tmp/";
 
   static void InitOnce();
   static bool init_once_done_;

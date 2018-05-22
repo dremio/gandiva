@@ -43,7 +43,8 @@ void LLVMGenerator::Add(const ExpressionSharedPtr expr,
   int idx = compiled_exprs_.size();
 
   // decompose the expression to separate out value and validities.
-  ValueValidityPairSharedPtr value_validity = expr->Decompose(&annotator_);
+  ValueValidityPairSharedPtr value_validity = expr->Decompose(function_registry_,
+                                                              annotator_);
 
   // Generate the IR function for the decomposed expression.
   llvm::Function *ir_function = CodeGenExprValue(value_validity->value_expr(),

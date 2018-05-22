@@ -43,6 +43,7 @@ class TestExprTree : public ::testing::Test {
   FieldSharedPtr i1_; // int32
 
   FieldSharedPtr b0_; // bool
+  FunctionRegistry registry_;
 };
 
 TEST_F(TestExprTree, TestField) {
@@ -54,7 +55,7 @@ TEST_F(TestExprTree, TestField) {
   auto n1 = TreeExprBuilder::MakeField(b0_);
   EXPECT_EQ(n1->return_type(), boolean());
 
-  auto pair = n1->Decompose(&annotator);
+  auto pair = n1->Decompose(registry_, annotator);
   auto value = pair->value_expr();
   auto value_dex = std::dynamic_pointer_cast<VectorReadValueDex>(value);
   EXPECT_EQ(value_dex->FieldType(), boolean());
@@ -82,12 +83,12 @@ TEST_F(TestExprTree, TestBinary) {
   EXPECT_EQ(add->return_type(), int32());
   EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
 
-  auto pair = n->Decompose(&annotator);
+  auto pair = n->Decompose(registry_, annotator);
   auto value = pair->value_expr();
   auto null_if_null = std::dynamic_pointer_cast<NonNullableFuncDex>(value);
 
   FunctionSignature signature("add", {int32(), int32()}, int32());
-  const NativeFunction *fn = FunctionRegistry::LookupSignature(signature);
+  const NativeFunction *fn = registry_.LookupSignature(signature);
   EXPECT_EQ(null_if_null->native_function(), fn);
 }
 
@@ -105,12 +106,12 @@ TEST_F(TestExprTree, TestUnary) {
   EXPECT_EQ(unaryFn->return_type(), boolean());
   EXPECT_TRUE(sign == FunctionSignature("isnumeric", {int32()}, boolean()));
 
-  auto pair = n->Decompose(&annotator);
+  auto pair = n->Decompose(registry_, annotator);
   auto value = pair->value_expr();
   auto never_null = std::dynamic_pointer_cast<NullableNeverFuncDex>(value);
 
   FunctionSignature signature("isnumeric", {int32()}, boolean());
-  const NativeFunction *fn = FunctionRegistry::LookupSignature(signature);
+  const NativeFunction *fn = registry_.LookupSignature(signature);
   EXPECT_EQ(never_null->native_function(), fn);
 }
 
@@ -131,12 +132,12 @@ TEST_F(TestExprTree, TestExpression) {
                          func_desc->return_type());
   EXPECT_TRUE(sign == FunctionSignature("add", {int32(), int32()}, int32()));
 
-  auto pair = e->Decompose(&annotator);
+  auto pair = e->Decompose(registry_, annotator);
   auto value = pair->value_expr();
   auto null_if_null = std::dynamic_pointer_cast<NonNullableFuncDex>(value);
 
   FunctionSignature signature("add", {int32(), int32()}, int32());
-  const NativeFunction *fn = FunctionRegistry::LookupSignature(signature);
+  const NativeFunction *fn = registry_.LookupSignature(signature);
   EXPECT_EQ(null_if_null->native_function(), fn);
 }
 

@@ -16,7 +16,7 @@
 #ifndef GANDIVA_CODEGEN_EXCEPTION_H
 #define GANDIVA_CODEGEN_EXCEPTION_H
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 namespace gandiva {
@@ -24,22 +24,10 @@ namespace gandiva {
 /*
  * Exceptions from LLVMGenerator.
  */
-class CodeGenException : public std::exception {
+class CodeGenException : public std::runtime_error {
  public:
-  CodeGenException(int error, const std::string &msg)
-    : error_(error),
-      error_msg_(msg) {}
-
   explicit CodeGenException(const std::string &msg)
-    : error_(1),
-      error_msg_(msg) {}
-
-  int error() { return error_; }
-  std::string error_msg() { return error_msg_; }
-
- private:
-  int error_;
-  std::string error_msg_;
+    : std::runtime_error(msg) {}
 };
 
 #endif // GANDIVA_CODEGEN_EXCEPTION_H

@@ -25,6 +25,7 @@
 #include "codegen/dex_visitor.h"
 #include "codegen/compiled_expr.h"
 #include "codegen/engine.h"
+#include "codegen/function_registry.h"
 #include "codegen/value_validity_pair.h"
 #include "codegen/llvm_types.h"
 #include "codegen/lvalue.h"
@@ -128,6 +129,7 @@ class LLVMGenerator {
   std::unique_ptr<Engine> engine_;
   std::vector<CompiledExpr *> compiled_exprs_;
   LLVMTypes types_;
+  FunctionRegistry function_registry_;
   Annotator annotator_;
 
   // used in replay/debug
