@@ -50,7 +50,7 @@ class FunctionSignature {
       return false;
     }
 
-    for (int idx = 0; idx < param_types_.size(); idx++) {
+    for (size_t idx = 0; idx < param_types_.size(); idx++) {
       if (!DataTypeEquals(param_types_[idx], other.param_types_[idx])) {
         return false;
       }
