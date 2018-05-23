@@ -35,10 +35,10 @@ class Annotator;
  */
 class Node {
  public:
-  explicit Node(const DataTypePtr return_type)
+  explicit Node(DataTypePtr return_type)
     : return_type_(return_type) { }
 
-  DataTypePtr return_type() { return return_type_; }
+  const DataTypePtr &return_type() { return return_type_; }
 
   /*
    * Called during code generation to separate out validity and value.
@@ -55,7 +55,7 @@ class Node {
  */
 class FieldNode : public Node {
  public:
-  explicit FieldNode(const FieldPtr field)
+  explicit FieldNode(FieldPtr field)
     : Node(field->type()), field_(field) {}
 
   ValueValidityPairPtr Decompose(const FunctionRegistry &registry,
@@ -78,7 +78,7 @@ class FunctionNode : public Node {
   ValueValidityPairPtr Decompose(const FunctionRegistry &registry,
                                  Annotator &annotator) override;
 
-  FuncDescriptorPtr func_descriptor() { return desc_; }
+  const FuncDescriptorPtr &func_descriptor() { return desc_; }
 
   static NodePtr CreateFunction(const std::string &name,
                                 const NodeVector &children,
@@ -86,7 +86,7 @@ class FunctionNode : public Node {
 
  private:
   FuncDescriptorPtr desc_;
-  const NodeVector children_;
+  NodeVector children_;
 };
 
 } // namespace gandiva

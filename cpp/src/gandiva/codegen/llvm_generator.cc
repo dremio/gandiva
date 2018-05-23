@@ -81,9 +81,9 @@ void LLVMGenerator::Build(const ExpressionVector &exprs) {
 /*
  * Execute the compiled module against the provided vectors.
  */
-int LLVMGenerator::Execute(RecordBatchPtr record_batch,
+int LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
                            const arrow::ArrayVector &outputs) {
-  DCHECK_GT(record_batch->num_rows(), 0);
+  DCHECK_GT(record_batch.num_rows(), 0);
 
   auto eval_batch = annotator_.PrepareEvalBatch(record_batch, outputs);
   DCHECK_GT(eval_batch->num_buffers(), 0);
@@ -94,10 +94,11 @@ int LLVMGenerator::Execute(RecordBatchPtr record_batch,
 
     // generate data/offset vectors.
     eval_func_t jit_function = compiled_expr->jit_function();
-    jit_function(eval_batch->buffers(), record_batch->num_rows());
+    jit_function(eval_batch->buffers(), record_batch.num_rows());
 
     // generate validity vectors.
-    ComputeBitMapsForExpr(compiled_expr, eval_batch->buffers(), record_batch->num_rows());
+    ComputeBitMapsForExpr(compiled_expr, eval_batch->buffers(), eval_batch->num_buffers(),
+                          record_batch.num_rows());
   }
   return 0;
 }
@@ -304,7 +305,8 @@ void LLVMGenerator::SetPackedBitValue(llvm::Value *bitmap,
  * Extract the bitmap addresses, and do an intersection.
  */
 void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr,
-                                          uint8_t **addrs,
+                                          uint8_t **buffers,
+                                          int num_buffers,
                                           int record_count) {
   auto validities = compiled_expr->value_validity()->validity_exprs();
 
@@ -313,11 +315,14 @@ void LLVMGenerator::ComputeBitMapsForExpr(CompiledExpr *compiled_expr,
     Dex *validity_dex = (*it).get();
     VectorReadValidityDex *value_dex =
         dynamic_cast<VectorReadValidityDex *>(validity_dex);
-    src_bitmaps.push_back(addrs[value_dex->ValidityIdx()]);
+
+    DCHECK_LT(value_dex->ValidityIdx(), num_buffers);
+    src_bitmaps.push_back(buffers[value_dex->ValidityIdx()]);
   }
 
   int out_idx = compiled_expr->output()->validity_idx();
-  uint8_t *dst_bitmap = addrs[out_idx];
+  DCHECK_LT(out_idx, num_buffers);
+  uint8_t *dst_bitmap = buffers[out_idx];
 
   IntersectBitMaps(dst_bitmap, src_bitmaps, record_count);
 }
@@ -415,10 +420,6 @@ LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator,
       loop_var_(loop_var) {
 
   AddTrace("Iteration %T", loop_var);
-}
-
-void LLVMGenerator::Visitor::AddTrace(const std::string &msg, llvm::Value *value) {
-  generator_->AddTrace(msg, value);
 }
 
 void LLVMGenerator::Visitor::Visit(const VectorReadValueDex &dex) {

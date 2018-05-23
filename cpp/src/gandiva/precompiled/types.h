@@ -22,13 +22,13 @@
 /*
  * Use the same names as in arrow data types. Makes it easy to write pre-processor macros.
  */
-typedef bool boolean;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef float float32;
-typedef double float64;
-typedef int64_t date;
-typedef int64_t time64;
-typedef int64_t timestamp64;
+using boolean = bool;
+using int32 = int32_t;
+using int64 = int64_t;
+using float32 = float;
+using float64 = double;
+using date = int64_t;
+using time64 = int64_t;
+using timestamp64 = int64_t;
 
 #endif //PRECOMPILED_TYPES_H

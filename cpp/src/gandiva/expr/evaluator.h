@@ -38,7 +38,7 @@ class Evaluator {
 
   /// Evaluate the specified record batch, and fill the output vectors.
   /// TODO : need a zero-copy variant if the caller can alloc the output vectors.
-  arrow::ArrayVector Evaluate(RecordBatchPtr batch);
+  arrow::ArrayVector Evaluate(const arrow::RecordBatch &batch);
 
  private:
   Evaluator(std::unique_ptr<LLVMGenerator> llvm_generator,

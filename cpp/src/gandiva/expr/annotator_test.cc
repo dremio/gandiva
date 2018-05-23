@@ -85,7 +85,7 @@ TEST_F(TestAnnotator, TestAdd) {
 
   /* TODO : use builder ? */
   auto arrow_sum = MakeInt32Array(num_records);
-  EvalBatchPtr batch = annotator.PrepareEvalBatch(record_batch, {arrow_sum});
+  EvalBatchPtr batch = annotator.PrepareEvalBatch(*record_batch, {arrow_sum});
   EXPECT_EQ(batch->num_buffers(), 6);
 
   auto buffers = batch->buffers();

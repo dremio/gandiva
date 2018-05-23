@@ -41,7 +41,7 @@ class ValueValidityPair {
 
   const DexVector &validity_exprs() { return validity_exprs_; }
 
-  DexPtr value_expr() { return value_expr_; }
+  const DexPtr &value_expr() { return value_expr_; }
 
  private:
   DexVector validity_exprs_;

@@ -91,7 +91,7 @@ TEST_F(TestEvaluator, TestIntSumSub) {
   /*
    * Evaluate expression
    */
-  auto outputs = evaluator->Evaluate(in_batch);
+  auto outputs = evaluator->Evaluate(*in_batch);
 
   /*
    * Validate results
@@ -133,7 +133,7 @@ TEST_F(TestEvaluator, TestFloatLessThan) {
   /*
    * Evaluate expression
    */
-  auto outputs = evaluator->Evaluate(in_batch);
+  auto outputs = evaluator->Evaluate(*in_batch);
 
   /*
    * Validate results
@@ -171,7 +171,7 @@ TEST_F(TestEvaluator, TestIsNotNull) {
   /*
    * Evaluate expression
    */
-  auto outputs = evaluator->Evaluate(in_batch);
+  auto outputs = evaluator->Evaluate(*in_batch);
 
   /*
    * Validate results

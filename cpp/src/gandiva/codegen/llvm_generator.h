@@ -34,17 +34,18 @@
 
 namespace gandiva {
 
-/// Builds an LLVM mode and generates code for the specified set of expressions.
+/// Builds an LLVM module and generates code for the specified set of expressions.
 class LLVMGenerator {
  public:
   LLVMGenerator();
   ~LLVMGenerator();
 
-  /// \brief Build from expression tree, represented by an element of the vector
+  /// \brief Build the code for the expression trees. Each element in the vector
+  /// represents an expression tree
   void Build(const ExpressionVector &exprs);
 
   /// \brief Execute the built expression against the provided arguments.
-  int Execute(RecordBatchPtr record_batch, const arrow::ArrayVector &outputs);
+  int Execute(const arrow::RecordBatch &record_batch, const arrow::ArrayVector &outputs);
 
  private:
   FRIEND_TEST(TestLLVMGenerator, TestAdd);
@@ -55,8 +56,7 @@ class LLVMGenerator {
   llvm::IRBuilder<> &ir_builder() { return engine_->ir_builder(); }
   LLVMTypes &types() { return types_; }
 
-  llvm::Function *CodeGenVecAdd();
-
+  /// Visitor to generate the code for a decomposed expression.
   class Visitor : public DexVisitor {
    public:
     Visitor(LLVMGenerator *generator,
@@ -78,8 +78,13 @@ class LLVMGenerator {
     llvm::IRBuilder<> &ir_builder() { return generator_->ir_builder(); }
     llvm::Module *module() { return generator_->module(); }
 
+    // Generate the code to build the combined validity (bitwise and) from the
+    // vector of validities.
     llvm::Value *BuildCombinedValidity(const DexVector &validities);
-    void AddTrace(const std::string &msg, llvm::Value *value = NULL);
+
+    void AddTrace(const std::string &msg, llvm::Value *value = nullptr) {
+      generator_->AddTrace(msg, value);
+    }
 
     LLVMGenerator *generator_;
     LValuePtr result_;
@@ -89,14 +94,21 @@ class LLVMGenerator {
     llvm::Value *loop_var_;
   };
 
+  // Generate the code for one expression, with the output of the expression going to
+  // 'output'.
   void Add(const ExpressionPtr expr, const FieldDescriptorPtr output);
 
+  /// Generate code to load the vector at specified index in the 'arg_addrs' array.
   llvm::Value *LoadVectorAtIndex(llvm::Value *arg_addrs,
                                  int idx,
                                  const std::string &name);
+
+  /// Generate code to load the vector at specified index and cast it as bitmap.
   llvm::Value *GetValidityReference(llvm::Value *arg_addrs,
                                     int idx,
                                     FieldPtr field);
+
+  /// Generate code to load the vector at specified index and cast it as data array.
   llvm::Value *GetDataReference(llvm::Value *arg_addrs,
                                 int idx,
                                 FieldPtr field);
@@ -106,25 +118,43 @@ class LLVMGenerator {
                                    FieldDescriptorPtr output,
                                    int suffix_idx);
 
+  /// Generate code to get the bit value at 'position' in the bitmap.
   llvm::Value *GetPackedBitValue(llvm::Value *bitMap, llvm::Value *position);
+
+  /// Generate code to set the bit value at 'position' in the bitmap to 'value'.
   void SetPackedBitValue(llvm::Value *bitMap, llvm::Value *position, llvm::Value *value);
+
+  /// Generate code to make a function call (to a pre-compiled IR function) which takes
+  /// 'args' and has a return type 'ret_type'.
   llvm::Value *AddFunctionCall(const std::string &full_name,
                                llvm::Type *ret_type,
                                const std::vector<llvm::Value *> &args);
 
+  /// Compute the result bitmap for the expression.
+  ///
+  /// \param[in] : the compiled expression (includes the bitmap indices to be used for
+  ///              computing the validity bitmap of the result).
+  /// \param[in] : raw buffers from a record batch.
+  /// \param[in] : number of buffers
+  /// \param[in] : number of records in the batch (same as #bits in the bitmap).
   void ComputeBitMapsForExpr(CompiledExpr *compiledExpr,
                              uint8_t **buffers,
+                             int num_buffers,
                              int record_count);
 
+  /// Compute the result bitmap by doing a bitwise-and of the source bitmaps.
   static void IntersectBitMaps(uint8_t *dst_map,
                                const std::vector<uint8_t *> &src_maps,
                                int num_records);
 
-  // tracing related
+  /// Replace the %T in the trace msg with the correct type corresponding to 'type'
+  /// eg. %d for int32, %ld for int64, ..
   std::string ReplaceFormatInTrace(const std::string &msg,
                                    llvm::Value *value,
                                    std::string *print_fn);
-  void AddTrace(const std::string &msg, llvm::Value *value = NULL);
+
+  /// Generate the code to print a trace msg with one optional argument (%T)
+  void AddTrace(const std::string &msg, llvm::Value *value = nullptr);
 
   std::unique_ptr<Engine> engine_;
   std::vector<CompiledExpr *> compiled_exprs_;

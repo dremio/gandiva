@@ -45,14 +45,14 @@ std::shared_ptr<Evaluator> Evaluator::Make(SchemaPtr schema,
                                                   pool));
 }
 
-arrow::ArrayVector Evaluator::Evaluate(RecordBatchPtr batch) {
-  DCHECK_EQ(batch->schema(), schema_);
-  DCHECK_GT(batch->num_rows(), 0);
+arrow::ArrayVector Evaluator::Evaluate(const arrow::RecordBatch &batch) {
+  DCHECK_EQ(batch.schema(), schema_);
+  DCHECK_GT(batch.num_rows(), 0);
 
   arrow::ArrayVector outputs;
   for (auto it = output_fields_.begin(); it != output_fields_.end(); ++it) {
-    FieldPtr field = *it;
-    auto output = AllocArray(field->type(), batch->num_rows());
+    auto field = *it;
+    auto output = AllocArray(field->type(), batch.num_rows());
     outputs.push_back(output);
   }
   llvm_generator_->Execute(batch, outputs);
