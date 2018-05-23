@@ -41,11 +41,11 @@ class FunctionRegistry {
   };
 
  private:
-  static DataTypeSharedPtr time64() {
+  static DataTypePtr time64() {
     return arrow::time64(arrow::TimeUnit::MICRO);
   }
 
-  static DataTypeSharedPtr timestamp64() {
+  static DataTypePtr timestamp64() {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
   }
 

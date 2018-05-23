@@ -18,34 +18,34 @@
 
 namespace gandiva {
 
-NodeSharedPtr TreeExprBuilder::MakeField(FieldSharedPtr field) {
-  return NodeSharedPtr(new FieldNode(field));
+NodePtr TreeExprBuilder::MakeField(FieldPtr field) {
+  return NodePtr(new FieldNode(field));
 }
 
-NodeSharedPtr TreeExprBuilder::MakeBinaryFunction(const std::string &function,
-                                                  NodeSharedPtr left,
-                                                  NodeSharedPtr right,
-                                                  DataTypeSharedPtr result) {
+NodePtr TreeExprBuilder::MakeBinaryFunction(const std::string &function,
+                                            NodePtr left,
+                                            NodePtr right,
+                                            DataTypePtr result) {
   return FunctionNode::CreateFunction(function, {left, right}, result);
 }
 
-NodeSharedPtr TreeExprBuilder::MakeUnaryFunction(const std::string &function,
-                                                 NodeSharedPtr param,
-                                                 DataTypeSharedPtr result) {
+NodePtr TreeExprBuilder::MakeUnaryFunction(const std::string &function,
+                                           NodePtr param,
+                                           DataTypePtr result) {
   return FunctionNode::CreateFunction(function, {param}, result);
 }
 
-ExpressionSharedPtr TreeExprBuilder::MakeExpression(NodeSharedPtr root_node,
-                                                    FieldSharedPtr result_field) {
-  return ExpressionSharedPtr(new Expression(root_node, result_field));
+ExpressionPtr TreeExprBuilder::MakeExpression(NodePtr root_node,
+                                              FieldPtr result_field) {
+  return ExpressionPtr(new Expression(root_node, result_field));
 }
 
-ExpressionSharedPtr TreeExprBuilder::MakeExpression(
+ExpressionPtr TreeExprBuilder::MakeExpression(
     const std::string &function,
-    const std::vector<FieldSharedPtr> &in_fields,
-    FieldSharedPtr out_field) {
+    const FieldVector &in_fields,
+    FieldPtr out_field) {
 
-  std::vector<NodeSharedPtr> field_nodes;
+  std::vector<NodePtr> field_nodes;
   for (auto it = in_fields.begin(); it != in_fields.end(); ++it) {
     auto node = MakeField(*it);
     field_nodes.push_back(node);

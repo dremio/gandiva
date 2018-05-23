@@ -18,7 +18,7 @@
 
 #include <string>
 #include <vector>
-#include "common/gandiva_fwd.h"
+#include "common/gandiva_aliases.h"
 #include "codegen/dex_visitor.h"
 #include "codegen/field_descriptor.h"
 #include "codegen/func_descriptor.h"
@@ -37,7 +37,7 @@ class Dex {
 // validity component of a ValueVector
 class VectorReadValidityDex : public Dex {
  public:
-  explicit VectorReadValidityDex(FieldDescriptorSharedPtr field_desc)
+  explicit VectorReadValidityDex(FieldDescriptorPtr field_desc)
       : field_desc_(field_desc) {}
 
   int ValidityIdx() const {
@@ -48,11 +48,11 @@ class VectorReadValidityDex : public Dex {
     return field_desc_->Name();
   }
 
-  const DataTypeSharedPtr FieldType() const {
+  const DataTypePtr FieldType() const {
     return field_desc_->Type();
   }
 
-  const FieldSharedPtr Field() const {
+  const FieldPtr Field() const {
     return field_desc_->field();
   }
 
@@ -61,13 +61,13 @@ class VectorReadValidityDex : public Dex {
   }
 
  private:
-  FieldDescriptorSharedPtr field_desc_;
+  FieldDescriptorPtr field_desc_;
 };
 
 // value component of a ValueVector
 class VectorReadValueDex : public Dex {
  public:
-  explicit VectorReadValueDex(FieldDescriptorSharedPtr field_desc)
+  explicit VectorReadValueDex(FieldDescriptorPtr field_desc)
   : field_desc_(field_desc) {}
 
   int DataIdx() const {
@@ -82,11 +82,11 @@ class VectorReadValueDex : public Dex {
     return field_desc_->Name();
   }
 
-  const DataTypeSharedPtr FieldType() const {
+  const DataTypePtr FieldType() const {
     return field_desc_->Type();
   }
 
-  const FieldSharedPtr Field() const {
+  const FieldPtr Field() const {
     return field_desc_->field();
   }
 
@@ -95,38 +95,38 @@ class VectorReadValueDex : public Dex {
   }
 
  private:
-  FieldDescriptorSharedPtr field_desc_;
+  FieldDescriptorPtr field_desc_;
 };
 
 // base function expression
 class FuncDex : public Dex {
  public:
-  FuncDex(FuncDescriptorSharedPtr func_descriptor,
+  FuncDex(FuncDescriptorPtr func_descriptor,
           const NativeFunction *native_function,
-          const std::vector<ValueValidityPairSharedPtr> &args)
+          const std::vector<ValueValidityPairPtr> &args)
       : func_descriptor_(func_descriptor),
         native_function_(native_function),
         args_(args) {}
 
-  const FuncDescriptorSharedPtr func_descriptor() const { return func_descriptor_; }
+  const FuncDescriptorPtr func_descriptor() const { return func_descriptor_; }
 
   const NativeFunction *native_function() const { return native_function_; }
 
-  const std::vector<ValueValidityPairSharedPtr> &args() const { return args_; }
+  const std::vector<ValueValidityPairPtr> &args() const { return args_; }
 
  private:
-  FuncDescriptorSharedPtr func_descriptor_;
+  FuncDescriptorPtr func_descriptor_;
   const NativeFunction *native_function_;
-  std::vector<ValueValidityPairSharedPtr> args_;
+  std::vector<ValueValidityPairPtr> args_;
 };
 
 // A function expression that only deals with non-null inputs, and generates non-null
 // outputs.
 class NonNullableFuncDex : public FuncDex {
  public:
-  NonNullableFuncDex(FuncDescriptorSharedPtr func_descriptor,
+  NonNullableFuncDex(FuncDescriptorPtr func_descriptor,
                      const NativeFunction *native_function,
-                     const std::vector<ValueValidityPairSharedPtr> &args)
+                     const std::vector<ValueValidityPairPtr> &args)
       : FuncDex(func_descriptor, native_function, args) {}
 
   void Accept(DexVisitor *visitor) override {
@@ -138,9 +138,9 @@ class NonNullableFuncDex : public FuncDex {
 // outputs.
 class NullableNeverFuncDex : public FuncDex {
  public:
-  NullableNeverFuncDex(FuncDescriptorSharedPtr func_descriptor,
+  NullableNeverFuncDex(FuncDescriptorPtr func_descriptor,
                        const NativeFunction *native_function,
-                       const std::vector<ValueValidityPairSharedPtr> &args)
+                       const std::vector<ValueValidityPairPtr> &args)
       : FuncDex(func_descriptor, native_function, args) {}
 
   void Accept(DexVisitor *visitor) override {
@@ -151,10 +151,10 @@ class NullableNeverFuncDex : public FuncDex {
 // decomposed expression for a literal.
 class LiteralDex : public Dex {
  public:
-  explicit LiteralDex(const DataTypeSharedPtr type)
+  explicit LiteralDex(const DataTypePtr type)
       : type_(type) {}
 
-  const DataTypeSharedPtr type() const {
+  const DataTypePtr type() const {
     return type_;
   }
 
@@ -163,7 +163,7 @@ class LiteralDex : public Dex {
   }
 
  private:
-  const DataTypeSharedPtr type_;
+  const DataTypePtr type_;
 };
 
 

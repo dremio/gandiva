@@ -38,13 +38,13 @@ LLVMGenerator::~LLVMGenerator() {
   }
 }
 
-void LLVMGenerator::Add(const ExpressionSharedPtr expr,
-                        const FieldDescriptorSharedPtr output) {
+void LLVMGenerator::Add(const ExpressionPtr expr,
+                        const FieldDescriptorPtr output) {
   int idx = compiled_exprs_.size();
 
   // decompose the expression to separate out value and validities.
-  ValueValidityPairSharedPtr value_validity = expr->Decompose(function_registry_,
-                                                              annotator_);
+  ValueValidityPairPtr value_validity = expr->Decompose(function_registry_,
+                                                        annotator_);
 
   // Generate the IR function for the decomposed expression.
   llvm::Function *ir_function = CodeGenExprValue(value_validity->value_expr(),
@@ -60,7 +60,7 @@ void LLVMGenerator::Add(const ExpressionSharedPtr expr,
  */
 void LLVMGenerator::Build(const ExpressionVector &exprs) {
   for (auto it = exprs.begin(); it != exprs.end(); it++) {
-    ExpressionSharedPtr expr = *it;
+    ExpressionPtr expr = *it;
 
     auto output = annotator_.AddOutputFieldDescriptor(expr->result());
     Add(expr, output);
@@ -81,7 +81,7 @@ void LLVMGenerator::Build(const ExpressionVector &exprs) {
 /*
  * Execute the compiled module against the provided vectors.
  */
-int LLVMGenerator::Execute(RecordBatchSharedPtr record_batch,
+int LLVMGenerator::Execute(RecordBatchPtr record_batch,
                            const arrow::ArrayVector &outputs) {
   DCHECK_GT(record_batch->num_rows(), 0);
 
@@ -117,7 +117,7 @@ llvm::Value *LLVMGenerator::LoadVectorAtIndex(llvm::Value *arg_addrs,
  */
 llvm::Value *LLVMGenerator::GetValidityReference(llvm::Value *arg_addrs,
                                                  int idx,
-                                                 FieldSharedPtr field) {
+                                                 FieldPtr field) {
   const std::string &name = field->name();
   llvm::Value *load = LoadVectorAtIndex(arg_addrs, idx, name);
   return ir_builder().CreateIntToPtr(load, types_.i64_ptr_type(), name + "_varray");
@@ -128,7 +128,7 @@ llvm::Value *LLVMGenerator::GetValidityReference(llvm::Value *arg_addrs,
  */
 llvm::Value *LLVMGenerator::GetDataReference(llvm::Value *arg_addrs,
                                              int idx,
-                                             FieldSharedPtr field) {
+                                             FieldPtr field) {
   const std::string &name = field->name();
   llvm::Value *load = LoadVectorAtIndex(arg_addrs, idx, name);
   llvm::Type *base_type = types_.DataVecType(field->type());
@@ -187,8 +187,8 @@ llvm::Value *LLVMGenerator::GetDataReference(llvm::Value *arg_addrs,
  * }
  *
  */
-llvm::Function *LLVMGenerator::CodeGenExprValue(DexSharedPtr value_expr,
-                                                FieldDescriptorSharedPtr output,
+llvm::Function *LLVMGenerator::CodeGenExprValue(DexPtr value_expr,
+                                                FieldDescriptorPtr output,
                                                 int suffix_idx) {
   llvm::IRBuilder<> &builder = ir_builder();
 
@@ -243,7 +243,7 @@ llvm::Function *LLVMGenerator::CodeGenExprValue(DexSharedPtr value_expr,
   // The visitor can add code to both the entry/loop blocks.
   Visitor visitor(this, fn, loop_entry, loop_body, arg_addrs, loop_var);
   value_expr->Accept(&visitor);
-  LValueSharedPtr output_value = visitor.result();
+  LValuePtr output_value = visitor.result();
 
   // add jump to "loop block" at the end of the "setup block".
   builder.SetInsertPoint(loop_entry);
@@ -468,7 +468,7 @@ void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
   std::vector<llvm::Value *> args;
   for (auto it = dex.args().begin(); it != dex.args().end(); it++) {
     // add value
-    DexSharedPtr value_expr = (*it)->value_expr();
+    DexPtr value_expr = (*it)->value_expr();
 
     value_expr->Accept(this);
     args.push_back(result()->data());
@@ -489,10 +489,10 @@ void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
   // build the function params, along with the validities.
   std::vector<llvm::Value *> args;
   for (auto it = dex.args().begin(); it != dex.args().end(); it++) {
-    ValueValidityPairSharedPtr pair = *it;
+    ValueValidityPairPtr pair = *it;
 
     // build value.
-    DexSharedPtr value_expr = pair->value_expr();
+    DexPtr value_expr = pair->value_expr();
     value_expr->Accept(this);
     args.push_back(result()->data());
 
@@ -512,9 +512,7 @@ void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
 /*
  * Bitwise-AND of a vector of bits to get the combined validity.
  */
-llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(
-    const std::vector<DexSharedPtr> &validities) {
-
+llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(const DexVector &validities) {
   llvm::IRBuilder<> &builder = ir_builder();
   LLVMTypes &types = generator_->types_;
 

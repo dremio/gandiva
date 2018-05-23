@@ -32,29 +32,29 @@ namespace gandiva {
 class Evaluator {
  public:
   /// Build an evaluator for the given schema to evaluate the vector of expressions.
-  static std::shared_ptr<Evaluator> Make(SchemaSharedPtr schema,
+  static std::shared_ptr<Evaluator> Make(SchemaPtr schema,
                                          const ExpressionVector &exprs,
                                          arrow::MemoryPool *pool);
 
   /// Evaluate the specified record batch, and fill the output vectors.
   /// TODO : need a zero-copy variant if the caller can alloc the output vectors.
-  arrow::ArrayVector Evaluate(RecordBatchSharedPtr batch);
+  arrow::ArrayVector Evaluate(RecordBatchPtr batch);
 
  private:
   Evaluator(std::unique_ptr<LLVMGenerator> llvm_generator,
-            SchemaSharedPtr schema,
-            const std::vector<FieldSharedPtr> &output_fields,
+            SchemaPtr schema,
+            const FieldVector &output_fields,
             arrow::MemoryPool *pool)
     : llvm_generator_(std::move(llvm_generator)),
       schema_(schema),
       output_fields_(output_fields),
       pool_(pool) {}
 
-  ArraySharedPtr AllocArray(DataTypeSharedPtr type, int length);
+  ArrayPtr AllocArray(DataTypePtr type, int length);
 
   const std::unique_ptr<LLVMGenerator> llvm_generator_;
-  const SchemaSharedPtr schema_;
-  const std::vector<FieldSharedPtr> output_fields_;
+  const SchemaPtr schema_;
+  const FieldVector output_fields_;
   arrow::MemoryPool *pool_;
 };
 

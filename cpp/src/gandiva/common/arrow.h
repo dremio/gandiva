@@ -21,18 +21,23 @@
 #include <arrow/builder.h>
 #include <arrow/record_batch.h>
 #include <arrow/type.h>
-#include <arrow/util/logging.h>
 
 namespace gandiva {
 
-using ArrowTypeID = arrow::Type::type;
-using ArraySharedPtr = std::shared_ptr<arrow::Array>;
-using ArrayBuilderSharedPtr = std::shared_ptr<arrow::ArrayBuilder>;
-using ArrayBuilderVector = std::vector<ArrayBuilderSharedPtr>;
-using DataTypeSharedPtr = std::shared_ptr<arrow::DataType>;
-using FieldSharedPtr = std::shared_ptr<arrow::Field>;
-using RecordBatchSharedPtr = std::shared_ptr<arrow::RecordBatch>;
-using SchemaSharedPtr = std::shared_ptr<arrow::Schema>;
+using ArrayPtr = std::shared_ptr<arrow::Array>;
+
+using ArrayBuilderPtr = std::shared_ptr<arrow::ArrayBuilder>;
+using ArrayBuilderVector = std::vector<ArrayBuilderPtr>;
+
+using DataTypePtr = std::shared_ptr<arrow::DataType>;
+using DataTypeVector = std::vector<DataTypePtr>;
+
+using FieldPtr = std::shared_ptr<arrow::Field>;
+using FieldVector = std::vector<FieldPtr>;
+
+using RecordBatchPtr = std::shared_ptr<arrow::RecordBatch>;
+
+using SchemaPtr = std::shared_ptr<arrow::Schema>;
 
 } // namespace gandiva
 

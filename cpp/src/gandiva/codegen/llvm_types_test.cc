@@ -33,14 +33,14 @@ class TestLLVMTypes : public ::testing::Test {
 };
 
 TEST_F(TestLLVMTypes, TestFound) {
-  EXPECT_EQ(types_->IRType(ArrowTypeID::BOOL), types_->i1_type());
-  EXPECT_EQ(types_->IRType(ArrowTypeID::INT32), types_->i32_type());
-  EXPECT_EQ(types_->IRType(ArrowTypeID::INT64), types_->i64_type());
-  EXPECT_EQ(types_->IRType(ArrowTypeID::FLOAT), types_->float_type());
-  EXPECT_EQ(types_->IRType(ArrowTypeID::DOUBLE), types_->double_type());
-  EXPECT_EQ(types_->IRType(ArrowTypeID::DATE64), types_->i64_type());
-  EXPECT_EQ(types_->IRType(ArrowTypeID::TIME64), types_->i64_type());
-  EXPECT_EQ(types_->IRType(ArrowTypeID::TIMESTAMP), types_->i64_type());
+  EXPECT_EQ(types_->IRType(arrow::Type::BOOL), types_->i1_type());
+  EXPECT_EQ(types_->IRType(arrow::Type::INT32), types_->i32_type());
+  EXPECT_EQ(types_->IRType(arrow::Type::INT64), types_->i64_type());
+  EXPECT_EQ(types_->IRType(arrow::Type::FLOAT), types_->float_type());
+  EXPECT_EQ(types_->IRType(arrow::Type::DOUBLE), types_->double_type());
+  EXPECT_EQ(types_->IRType(arrow::Type::DATE64), types_->i64_type());
+  EXPECT_EQ(types_->IRType(arrow::Type::TIME64), types_->i64_type());
+  EXPECT_EQ(types_->IRType(arrow::Type::TIMESTAMP), types_->i64_type());
 
   EXPECT_EQ(types_->DataVecType(arrow::boolean()), types_->i1_type());
   EXPECT_EQ(types_->DataVecType(arrow::int32()), types_->i32_type());
@@ -55,7 +55,7 @@ TEST_F(TestLLVMTypes, TestFound) {
 }
 
 TEST_F(TestLLVMTypes, TestNotFound) {
-  EXPECT_EQ(types_->IRType(ArrowTypeID::UNION), nullptr);
+  EXPECT_EQ(types_->IRType(arrow::Type::type::UNION), nullptr);
   EXPECT_EQ(types_->DataVecType(arrow::null()), nullptr);
 }
 

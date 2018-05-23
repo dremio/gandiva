@@ -73,7 +73,7 @@ TEST_F(TestLLVMGenerator, TestAdd) {
   auto value_dex1 = std::make_shared<VectorReadValueDex>(desc1);
   auto pair1 = std::make_shared<ValueValidityPair>(validity_dex1, value_dex1);
 
-  std::vector<DataTypeSharedPtr> params{arrow::int32(), arrow::int32()};
+  DataTypeVector params{arrow::int32(), arrow::int32()};
   auto func_desc = std::make_shared<FuncDescriptor>("add", params, arrow::int32());
   FunctionSignature signature(func_desc->name(),
                               func_desc->params(),
@@ -81,7 +81,7 @@ TEST_F(TestLLVMGenerator, TestAdd) {
   const NativeFunction *native_func =
       generator.function_registry_.LookupSignature(signature);
 
-  std::vector<ValueValidityPairSharedPtr> pairs{pair0, pair1};
+  std::vector<ValueValidityPairPtr> pairs{pair0, pair1};
   auto func_dex = std::make_shared<NonNullableFuncDex>(func_desc, native_func, pairs);
 
   auto field_sum = std::make_shared<arrow::Field>("out", arrow::int32());

@@ -16,6 +16,7 @@
 #ifndef GANDIVA_COMPILED_EXPR_H
 #define GANDIVA_COMPILED_EXPR_H
 
+#include <llvm/IR/IRBuilder.h>
 #include "codegen/value_validity_pair.h"
 
 namespace gandiva {
@@ -27,17 +28,17 @@ typedef int (*eval_func_t)(uint8_t **addrs, int record_count);
  */
 class CompiledExpr {
  public:
-  CompiledExpr(ValueValidityPairSharedPtr value_validity,
-               const FieldDescriptorSharedPtr output,
+  CompiledExpr(ValueValidityPairPtr value_validity,
+               const FieldDescriptorPtr output,
                llvm::Function *ir_function)
       : value_validity_(value_validity),
         output_(output),
         ir_function_(ir_function),
         jit_function_(NULL) {}
 
-  ValueValidityPairSharedPtr value_validity() { return value_validity_; }
+  ValueValidityPairPtr value_validity() { return value_validity_; }
 
-  const FieldDescriptorSharedPtr output() { return output_; }
+  const FieldDescriptorPtr output() { return output_; }
 
   llvm::Function *ir_function() { return ir_function_; }
 
@@ -46,8 +47,8 @@ class CompiledExpr {
   void set_jit_function(eval_func_t jit_function) { jit_function_ = jit_function; }
 
  private:
-  ValueValidityPairSharedPtr value_validity_;
-  const FieldDescriptorSharedPtr output_;
+  ValueValidityPairPtr value_validity_;
+  const FieldDescriptorPtr output_;
   llvm::Function *ir_function_;
   eval_func_t jit_function_;
 };

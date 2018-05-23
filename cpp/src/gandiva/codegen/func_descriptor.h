@@ -28,8 +28,8 @@ namespace gandiva {
 class FuncDescriptor {
  public:
   FuncDescriptor(const std::string &name,
-                 const std::vector<DataTypeSharedPtr> &params,
-                 const DataTypeSharedPtr return_type)
+                 const DataTypeVector &params,
+                 const DataTypePtr return_type)
       : name_(name),
         params_(params),
         return_type_(return_type)
@@ -37,14 +37,14 @@ class FuncDescriptor {
 
   const std::string &name() const { return name_;}
 
-  std::vector<DataTypeSharedPtr> &params() { return params_; }
+  const DataTypeVector &params() const { return params_; }
 
-  const DataTypeSharedPtr return_type() const { return return_type_; }
+  const DataTypePtr return_type() const { return return_type_; }
 
  private:
   std::string name_;
-  std::vector<DataTypeSharedPtr> params_;
-  const DataTypeSharedPtr return_type_;
+  DataTypeVector params_;
+  const DataTypePtr return_type_;
 };
 
 } // namespace gandiva

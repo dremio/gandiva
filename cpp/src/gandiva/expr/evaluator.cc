@@ -22,7 +22,7 @@
 namespace gandiva {
 
 // TODO : exceptions
-std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema,
+std::shared_ptr<Evaluator> Evaluator::Make(SchemaPtr schema,
                                            const ExpressionVector &exprs,
                                            arrow::MemoryPool *pool) {
   // TODO: validate schema
@@ -33,7 +33,7 @@ std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema,
   llvm_gen->Build(exprs);
 
   // save the output field types. Used for validation at Evaluate() time.
-  std::vector<FieldSharedPtr> output_fields;
+  std::vector<FieldPtr> output_fields;
   for (auto it = exprs.begin(); it != exprs.end(); ++it) {
     output_fields.push_back((*it)->result());
   }
@@ -45,13 +45,13 @@ std::shared_ptr<Evaluator> Evaluator::Make(SchemaSharedPtr schema,
                                                   pool));
 }
 
-arrow::ArrayVector Evaluator::Evaluate(RecordBatchSharedPtr batch) {
+arrow::ArrayVector Evaluator::Evaluate(RecordBatchPtr batch) {
   DCHECK_EQ(batch->schema(), schema_);
   DCHECK_GT(batch->num_rows(), 0);
 
   arrow::ArrayVector outputs;
   for (auto it = output_fields_.begin(); it != output_fields_.end(); ++it) {
-    FieldSharedPtr field = *it;
+    FieldPtr field = *it;
     auto output = AllocArray(field->type(), batch->num_rows());
     outputs.push_back(output);
   }
@@ -60,7 +60,7 @@ arrow::ArrayVector Evaluator::Evaluate(RecordBatchSharedPtr batch) {
 }
 
 // TODO : handle variable-len vectors
-ArraySharedPtr Evaluator::AllocArray(DataTypeSharedPtr type, int length) {
+ArrayPtr Evaluator::AllocArray(DataTypePtr type, int length) {
   arrow::Status status;
 
   auto null_bitmap = std::make_shared<arrow::PoolBuffer>(pool_);

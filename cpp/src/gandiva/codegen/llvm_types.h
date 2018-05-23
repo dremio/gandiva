@@ -93,20 +93,20 @@ class LLVMTypes {
   /*
    * For a given data type, find the ir type used for the data vector slot.
    */
-  llvm::Type *DataVecType(const DataTypeSharedPtr &data_type) {
+  llvm::Type *DataVecType(const DataTypePtr &data_type) {
     return IRType(data_type->id());
   }
 
   /*
    * For a given minor type, find the corresponding ir type.
    */
-  llvm::Type *IRType(ArrowTypeID arrow_type) {
+  llvm::Type *IRType(arrow::Type::type arrow_type) {
     auto found = arrow_id_to_llvm_type_map_.find(arrow_type);
     return (found == arrow_id_to_llvm_type_map_.end()) ? NULL : found->second;
   }
 
  private:
-  std::map<ArrowTypeID, llvm::Type *> arrow_id_to_llvm_type_map_;
+  std::map<arrow::Type::type, llvm::Type *> arrow_id_to_llvm_type_map_;
 
   llvm::LLVMContext *context_;
 };

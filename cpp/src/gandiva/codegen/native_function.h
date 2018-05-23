@@ -43,8 +43,8 @@ class NativeFunction {
 
  private:
   NativeFunction(const std::string &base_name,
-                 const std::vector<DataTypeSharedPtr> &param_types,
-                 DataTypeSharedPtr ret_type,
+                 const DataTypeVector &param_types,
+                 DataTypePtr ret_type,
                  bool param_null_safe,
                  const ResultNullableType &result_nullable_type,
                  const std::string &pc_name)

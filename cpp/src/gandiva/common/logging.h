@@ -13,23 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "codegen/llvm_types.h"
+#ifndef GANDIVA_LOGGING_H
+#define GANDIVA_LOGGING_H
 
-namespace gandiva {
+// TODO : setup logging or use glog.
+#include <arrow/util/logging.h>
 
-LLVMTypes::LLVMTypes(llvm::LLVMContext *context)
-    : context_(context) {
-
-  arrow_id_to_llvm_type_map_ = {
-      {arrow::Type::type::BOOL, i1_type()},
-      {arrow::Type::type::INT32, i32_type()},
-      {arrow::Type::type::INT64, i64_type()},
-      {arrow::Type::type::FLOAT, float_type()},
-      {arrow::Type::type::DOUBLE, double_type()},
-      {arrow::Type::type::DATE64, i64_type()},
-      {arrow::Type::type::TIME64, i64_type()},
-      {arrow::Type::type::TIMESTAMP, i64_type()},
-  };
-}
-
-} // namespace gandiva
+#endif // GANDIVA_LOGGING_H

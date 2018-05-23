@@ -21,7 +21,7 @@
 #include <vector>
 #include <cstdint>
 #include <gtest/gtest_prod.h>
-#include "common/gandiva_fwd.h"
+#include "common/gandiva_aliases.h"
 #include "codegen/dex_visitor.h"
 #include "codegen/compiled_expr.h"
 #include "codegen/engine.h"
@@ -44,7 +44,7 @@ class LLVMGenerator {
   void Build(const ExpressionVector &exprs);
 
   /// \brief Execute the built expression against the provided arguments.
-  int Execute(RecordBatchSharedPtr record_batch, const arrow::ArrayVector &outputs);
+  int Execute(RecordBatchPtr record_batch, const arrow::ArrayVector &outputs);
 
  private:
   FRIEND_TEST(TestLLVMGenerator, TestAdd);
@@ -72,38 +72,38 @@ class LLVMGenerator {
     void Visit(const NonNullableFuncDex &dex) override;
     void Visit(const NullableNeverFuncDex &dex) override;
 
-    LValueSharedPtr result() { return result_; }
+    LValuePtr result() { return result_; }
 
    private:
     llvm::IRBuilder<> &ir_builder() { return generator_->ir_builder(); }
     llvm::Module *module() { return generator_->module(); }
 
-    llvm::Value *BuildCombinedValidity(const std::vector<DexSharedPtr> &validities);
+    llvm::Value *BuildCombinedValidity(const DexVector &validities);
     void AddTrace(const std::string &msg, llvm::Value *value = NULL);
 
     LLVMGenerator *generator_;
-    LValueSharedPtr result_;
+    LValuePtr result_;
     llvm::BasicBlock *entry_block_;
     llvm::BasicBlock *loop_block_;
     llvm::Value *arg_addrs_;
     llvm::Value *loop_var_;
   };
 
-  void Add(const ExpressionSharedPtr expr, const FieldDescriptorSharedPtr output);
+  void Add(const ExpressionPtr expr, const FieldDescriptorPtr output);
 
   llvm::Value *LoadVectorAtIndex(llvm::Value *arg_addrs,
                                  int idx,
                                  const std::string &name);
   llvm::Value *GetValidityReference(llvm::Value *arg_addrs,
                                     int idx,
-                                    FieldSharedPtr field);
+                                    FieldPtr field);
   llvm::Value *GetDataReference(llvm::Value *arg_addrs,
                                 int idx,
-                                FieldSharedPtr field);
+                                FieldPtr field);
 
   /// Generate code for the value array of one expression.
-  llvm::Function *CodeGenExprValue(DexSharedPtr value_expr,
-                                   FieldDescriptorSharedPtr output,
+  llvm::Function *CodeGenExprValue(DexPtr value_expr,
+                                   FieldDescriptorPtr output,
                                    int suffix_idx);
 
   llvm::Value *GetPackedBitValue(llvm::Value *bitMap, llvm::Value *position);

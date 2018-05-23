@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GANDIVA_FWD_H
-#define GANDIVA_FWD_H
+#ifndef GANDIVA_ALIASES_H
+#define GANDIVA_ALIASES_H
 
 #include <memory>
 #include <vector>
@@ -22,34 +22,32 @@
 namespace gandiva {
 
 class Dex;
-using DexSharedPtr = std::shared_ptr<Dex>;
-
-class DexVisitor;
+using DexPtr = std::shared_ptr<Dex>;
+using DexVector = std::vector<std::shared_ptr<Dex>>;
 
 class ValueValidityPair;
-using ValueValidityPairSharedPtr = std::shared_ptr<ValueValidityPair>;
+using ValueValidityPairPtr = std::shared_ptr<ValueValidityPair>;
 
 class FieldDescriptor;
-using FieldDescriptorSharedPtr = std::shared_ptr<FieldDescriptor>;
+using FieldDescriptorPtr = std::shared_ptr<FieldDescriptor>;
 
 class FuncDescriptor;
-using FuncDescriptorSharedPtr = std::shared_ptr<FuncDescriptor>;
+using FuncDescriptorPtr = std::shared_ptr<FuncDescriptor>;
 
 class LValue;
-using LValueSharedPtr = std::shared_ptr<LValue>;
+using LValuePtr = std::shared_ptr<LValue>;
 
 class Expression;
-using ExpressionSharedPtr = std::shared_ptr<Expression>;
-using ExpressionVector = std::vector<ExpressionSharedPtr>;
+using ExpressionPtr = std::shared_ptr<Expression>;
+using ExpressionVector = std::vector<ExpressionPtr>;
 
 class Node;
-using NodeSharedPtr = std::shared_ptr<Node>;
-
-class Annotator;
+using NodePtr = std::shared_ptr<Node>;
+using NodeVector = std::vector<std::shared_ptr<Node>>;
 
 class EvalBatch;
-using EvalBatchSharedPtr = std::shared_ptr<EvalBatch>;
+using EvalBatchPtr = std::shared_ptr<EvalBatch>;
 
 } // namespace gandiva
 
-#endif // GANDIVA_FWD_H
+#endif // GANDIVA_ALIASES_H

@@ -18,11 +18,9 @@
 #include "codegen/dex.h"
 #include "codegen/function_signature.h"
 #include "codegen/function_registry.h"
-#include "common/gandiva_fwd.h"
+#include "common/gandiva_aliases.h"
 #include "expr/annotator.h"
 #include "expr/tree_expr_builder.h"
-
-int llvm::DisableABIBreakingChecks;
 
 namespace gandiva {
 
@@ -39,10 +37,10 @@ class TestExprTree : public ::testing::Test {
   }
 
  protected:
-  FieldSharedPtr i0_; // int32
-  FieldSharedPtr i1_; // int32
+  FieldPtr i0_; // int32
+  FieldPtr i1_; // int32
 
-  FieldSharedPtr b0_; // bool
+  FieldPtr b0_; // bool
   FunctionRegistry registry_;
 };
 

@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 #include "common/arrow.h"
-#include "common/gandiva_fwd.h"
+#include "common/gandiva_aliases.h"
 #include "codegen/func_descriptor.h"
 #include "codegen/dex.h"
 #include "codegen/value_validity_pair.h"
@@ -35,19 +35,19 @@ class Annotator;
  */
 class Node {
  public:
-  explicit Node(const DataTypeSharedPtr return_type)
+  explicit Node(const DataTypePtr return_type)
     : return_type_(return_type) { }
 
-  DataTypeSharedPtr return_type() { return return_type_; }
+  DataTypePtr return_type() { return return_type_; }
 
   /*
    * Called during code generation to separate out validity and value.
    */
-  virtual ValueValidityPairSharedPtr Decompose(const FunctionRegistry &registry,
-                                               Annotator &annotator) = 0;
+  virtual ValueValidityPairPtr Decompose(const FunctionRegistry &registry,
+                                         Annotator &annotator) = 0;
 
  protected:
-  DataTypeSharedPtr return_type_;
+  DataTypePtr return_type_;
 };
 
 /*
@@ -55,14 +55,14 @@ class Node {
  */
 class FieldNode : public Node {
  public:
-  explicit FieldNode(const FieldSharedPtr field)
+  explicit FieldNode(const FieldPtr field)
     : Node(field->type()), field_(field) {}
 
-  ValueValidityPairSharedPtr Decompose(const FunctionRegistry &registry,
-                                       Annotator &annotator) override;
+  ValueValidityPairPtr Decompose(const FunctionRegistry &registry,
+                                 Annotator &annotator) override;
 
  private:
-  FieldSharedPtr field_;
+  FieldPtr field_;
 };
 
 /*
@@ -70,23 +70,23 @@ class FieldNode : public Node {
  */
 class FunctionNode : public Node {
  public:
-  FunctionNode(FuncDescriptorSharedPtr desc,
-               const std::vector<NodeSharedPtr> &children,
-               DataTypeSharedPtr retType)
+  FunctionNode(FuncDescriptorPtr desc,
+               const NodeVector &children,
+               DataTypePtr retType)
     : Node(retType), desc_(desc), children_(children) { }
 
-  ValueValidityPairSharedPtr Decompose(const FunctionRegistry &registry,
-                                       Annotator &annotator) override;
+  ValueValidityPairPtr Decompose(const FunctionRegistry &registry,
+                                 Annotator &annotator) override;
 
-  FuncDescriptorSharedPtr func_descriptor() { return desc_; }
+  FuncDescriptorPtr func_descriptor() { return desc_; }
 
-  static NodeSharedPtr CreateFunction(const std::string &name,
-                                      const std::vector<NodeSharedPtr> children,
-                                      DataTypeSharedPtr retType);
+  static NodePtr CreateFunction(const std::string &name,
+                                const NodeVector &children,
+                                DataTypePtr retType);
 
  private:
-  FuncDescriptorSharedPtr desc_;
-  const std::vector<NodeSharedPtr> children_;
+  FuncDescriptorPtr desc_;
+  const NodeVector children_;
 };
 
 } // namespace gandiva

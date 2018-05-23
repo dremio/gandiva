@@ -35,9 +35,9 @@ class TestFunctionSignature : public ::testing::Test {
   }
 
   // virtual void TearDown() {}
-  DataTypeSharedPtr local_i32_type_;
-  DataTypeSharedPtr local_i64_type_;
-  DataTypeSharedPtr local_date32_type_;
+  DataTypePtr local_i32_type_;
+  DataTypePtr local_i64_type_;
+  DataTypePtr local_date32_type_;
 };
 
 TEST_F(TestFunctionSignature, TestToString) {

@@ -28,7 +28,7 @@ class FieldDescriptor {
  public:
   static const int kInvalidIdx = -1;
 
-  FieldDescriptor(FieldSharedPtr field,
+  FieldDescriptor(FieldPtr field,
                   int data_idx,
                   int validity_idx = kInvalidIdx,
                   int offsets_idx = kInvalidIdx)
@@ -46,13 +46,13 @@ class FieldDescriptor {
   /* Index of offsets array in the array-of-pointers argument */
   int offsets_idx() const { return offsets_idx_; }
 
-  const FieldSharedPtr field() const { return field_; }
+  const FieldPtr field() const { return field_; }
 
   const std::string &Name() const { return field_->name(); }
-  const DataTypeSharedPtr Type() const { return field_->type(); }
+  const DataTypePtr Type() const { return field_->type(); }
 
  private:
-  FieldSharedPtr field_;
+  FieldPtr field_;
   int data_idx_;
   int validity_idx_;
   int offsets_idx_;

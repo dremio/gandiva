@@ -45,9 +45,9 @@ class TestEvaluator : public ::testing::Test {
  * Using those
  */
 template<typename TYPE, typename C_TYPE>
-static ArraySharedPtr MakeArrowArray(std::vector<C_TYPE> values,
+static ArrayPtr MakeArrowArray(std::vector<C_TYPE> values,
                                      std::vector<bool> validity) {
-  ArraySharedPtr out;
+  ArrayPtr out;
   arrow::ArrayFromVector<TYPE, C_TYPE>(validity, values, &out);
   return out;
 }

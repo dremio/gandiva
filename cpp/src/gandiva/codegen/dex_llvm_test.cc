@@ -70,8 +70,8 @@ TEST_F(TestDex, TestVisitor) {
   std::string desc;
   TestVisitor visitor(&name_map_, &desc);
 
-  FieldSharedPtr field = arrow::field("abc", arrow::int32());
-  FieldDescriptorSharedPtr field_desc = std::make_shared<FieldDescriptor>(field, 0, 1, 2);
+  FieldPtr field = arrow::field("abc", arrow::int32());
+  FieldDescriptorPtr field_desc = std::make_shared<FieldDescriptor>(field, 0, 1, 2);
   VectorReadValidityDex vv_dex(field_desc);
   vv_dex.Accept(&visitor);
   EXPECT_EQ(desc, name_map_[&typeid(VectorReadValidityDex)]);
@@ -80,8 +80,8 @@ TEST_F(TestDex, TestVisitor) {
   vd_dex.Accept(&visitor);
   EXPECT_EQ(desc, name_map_[&typeid(VectorReadValueDex)]);
 
-  std::vector<DataTypeSharedPtr> params{arrow::int32()};
-  FuncDescriptorSharedPtr my_func =
+  std::vector<DataTypePtr> params{arrow::int32()};
+  FuncDescriptorPtr my_func =
       std::make_shared<FuncDescriptor>("abc", params, arrow::boolean());
 
   NonNullableFuncDex non_nullable_func(my_func, NULL, {NULL});

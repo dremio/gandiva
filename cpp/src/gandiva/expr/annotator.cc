@@ -21,9 +21,7 @@
 
 namespace gandiva {
 
-FieldDescriptorSharedPtr Annotator::CheckAndAddInputFieldDescriptor(
-    FieldSharedPtr field) {
-
+FieldDescriptorPtr Annotator::CheckAndAddInputFieldDescriptor(FieldPtr field) {
   // If the field is already in the map, return the entry.
   auto found = in_name_to_desc_.find(field->name());
   if (found != in_name_to_desc_.end()) {
@@ -35,13 +33,13 @@ FieldDescriptorSharedPtr Annotator::CheckAndAddInputFieldDescriptor(
   return desc;
 }
 
-FieldDescriptorSharedPtr Annotator::AddOutputFieldDescriptor(FieldSharedPtr field) {
+FieldDescriptorPtr Annotator::AddOutputFieldDescriptor(FieldPtr field) {
   auto desc = MakeDesc(field);
   out_descs_.push_back(desc);
   return desc;
 }
 
-FieldDescriptorSharedPtr Annotator::MakeDesc(FieldSharedPtr field) {
+FieldDescriptorPtr Annotator::MakeDesc(FieldPtr field) {
   // TODO:
   // - validity is optional
   // - may have offsets also
@@ -51,9 +49,9 @@ FieldDescriptorSharedPtr Annotator::MakeDesc(FieldSharedPtr field) {
 }
 
 void
-Annotator::PrepareBuffersForField(FieldDescriptorSharedPtr desc,
-                                  ArraySharedPtr array,
-                                  EvalBatchSharedPtr eval_batch) {
+Annotator::PrepareBuffersForField(FieldDescriptorPtr desc,
+                                  ArrayPtr array,
+                                  EvalBatchPtr eval_batch) {
   // TODO:
   // - validity is optional
   // - may have offsets also
@@ -65,9 +63,9 @@ Annotator::PrepareBuffersForField(FieldDescriptorSharedPtr desc,
   eval_batch->SetBufferAtIdx(desc->data_idx(), data_buf);
 }
 
-EvalBatchSharedPtr Annotator::PrepareEvalBatch(RecordBatchSharedPtr record_batch,
-                                               const arrow::ArrayVector &out_arrays) {
-  EvalBatchSharedPtr eval_batch = std::make_shared<EvalBatch>(buffer_count_);
+EvalBatchPtr Annotator::PrepareEvalBatch(RecordBatchPtr record_batch,
+                                         const arrow::ArrayVector &out_arrays) {
+  EvalBatchPtr eval_batch = std::make_shared<EvalBatch>(buffer_count_);
 
   // Fill in the entries for the input fields.
   for (int i = 0; i < record_batch->num_columns(); ++i) {
@@ -84,7 +82,7 @@ EvalBatchSharedPtr Annotator::PrepareEvalBatch(RecordBatchSharedPtr record_batch
   // Fill in the entries for the output fields.
   int idx = 0;
   for (auto it = out_arrays.begin(); it != out_arrays.end(); ++it, ++idx) {
-    FieldDescriptorSharedPtr desc = out_descs_.at(idx);
+    FieldDescriptorPtr desc = out_descs_.at(idx);
     PrepareBuffersForField(desc, *it, eval_batch);
   }
   return eval_batch;

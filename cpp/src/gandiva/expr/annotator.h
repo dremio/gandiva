@@ -21,7 +21,8 @@
 #include <vector>
 #include <unordered_map>
 #include "common/arrow.h"
-#include "common/gandiva_fwd.h"
+#include "common/gandiva_aliases.h"
+#include "common/logging.h"
 
 namespace gandiva {
 
@@ -66,26 +67,26 @@ class Annotator {
 
   /// Add an annotated field descriptor for a field in the input schema.
   /// If the field already exists, returns that instead of creating again.
-  FieldDescriptorSharedPtr CheckAndAddInputFieldDescriptor(FieldSharedPtr field);
+  FieldDescriptorPtr CheckAndAddInputFieldDescriptor(FieldPtr field);
 
   /// Add an annotated field descriptor for an output field.
-  FieldDescriptorSharedPtr AddOutputFieldDescriptor(FieldSharedPtr field);
+  FieldDescriptorPtr AddOutputFieldDescriptor(FieldPtr field);
 
   /*
    * Prepare an eval batch for the incoming record batch.
    */
-  EvalBatchSharedPtr PrepareEvalBatch(RecordBatchSharedPtr batch,
-                                      const arrow::ArrayVector &out_arrays);
+  EvalBatchPtr PrepareEvalBatch(RecordBatchPtr batch,
+                                const arrow::ArrayVector &out_arrays);
 
  private:
-  FieldDescriptorSharedPtr MakeDesc(FieldSharedPtr field);
-  void PrepareBuffersForField(FieldDescriptorSharedPtr desc,
-                              ArraySharedPtr array,
-                              EvalBatchSharedPtr eval_batch);
+  FieldDescriptorPtr MakeDesc(FieldPtr field);
+  void PrepareBuffersForField(FieldDescriptorPtr desc,
+                              ArrayPtr array,
+                              EvalBatchPtr eval_batch);
   int buffer_count_;
 
-  std::unordered_map<std::string, FieldDescriptorSharedPtr> in_name_to_desc_;
-  std::vector<FieldDescriptorSharedPtr> out_descs_;
+  std::unordered_map<std::string, FieldDescriptorPtr> in_name_to_desc_;
+  std::vector<FieldDescriptorPtr> out_descs_;
 };
 
 } // namespace gandiva

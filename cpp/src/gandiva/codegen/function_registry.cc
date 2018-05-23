@@ -39,7 +39,7 @@ using arrow::date64;
  */
 #define BINARY_SYMMETRIC_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
-    vector<DataTypeSharedPtr>{TYPE(), TYPE()}, \
+    DataTypeVector{TYPE(), TYPE()}, \
     TYPE(), \
     true, \
     RESULT_NULL_IF_NULL, \
@@ -54,7 +54,7 @@ using arrow::date64;
  */
 #define BINARY_GENERIC_SAFE_NULL_IF_NULL(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE) \
   NativeFunction(#NAME, \
-    vector<DataTypeSharedPtr>{IN_TYPE1(), IN_TYPE2()}, \
+    DataTypeVector{IN_TYPE1(), IN_TYPE2()}, \
     OUT_TYPE(), \
     true, \
     RESULT_NULL_IF_NULL, \
@@ -71,7 +71,7 @@ using arrow::date64;
  */
 #define BINARY_RELATIONAL_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
-    vector<DataTypeSharedPtr>{TYPE(), TYPE()}, \
+    DataTypeVector{TYPE(), TYPE()}, \
     boolean(), \
     true, \
     RESULT_NULL_IF_NULL, \
@@ -85,7 +85,7 @@ using arrow::date64;
  */
 #define CAST_UNARY_SAFE_NULL_IF_NULL(NAME, IN_TYPE, OUT_TYPE) \
   NativeFunction(#NAME, \
-    vector<DataTypeSharedPtr>{IN_TYPE()}, \
+    DataTypeVector{IN_TYPE()}, \
     OUT_TYPE(), \
     true, \
     RESULT_NULL_IF_NULL, \
@@ -99,7 +99,7 @@ using arrow::date64;
  */
 #define UNARY_SAFE_NULL_NEVER_BOOL(NAME, TYPE) \
   NativeFunction(#NAME, \
-    vector<DataTypeSharedPtr>{TYPE()}, \
+    DataTypeVector{TYPE()}, \
     boolean(), \
     true, \
     RESULT_NULL_NEVER, \
@@ -113,7 +113,7 @@ using arrow::date64;
  */
 #define EXTRACT_SAFE_NULL_IF_NULL(NAME, TYPE) \
   NativeFunction(#NAME, \
-    vector<DataTypeSharedPtr>{TYPE()}, \
+    DataTypeVector{TYPE()}, \
     int64(), \
     true, \
     RESULT_NULL_IF_NULL, \

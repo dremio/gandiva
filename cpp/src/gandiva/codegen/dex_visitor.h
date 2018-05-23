@@ -16,8 +16,6 @@
 #ifndef GANDIVA_DEX_DEXVISITOR_H
 #define GANDIVA_DEX_DEXVISITOR_H
 
-#include "codegen/lvalue.h"
-
 namespace gandiva {
 
 class VectorReadValidityDex;

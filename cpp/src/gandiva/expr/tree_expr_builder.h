@@ -27,28 +27,28 @@ namespace gandiva {
 class TreeExprBuilder {
  public:
   /// \brief create a node on arrow field.
-  static NodeSharedPtr MakeField(FieldSharedPtr field);
+  static NodePtr MakeField(FieldPtr field);
 
   /// \brief create a node with a binary function.
-  static NodeSharedPtr MakeBinaryFunction(const std::string &function,
-                                          NodeSharedPtr left,
-                                          NodeSharedPtr right,
-                                          DataTypeSharedPtr result);
+  static NodePtr MakeBinaryFunction(const std::string &function,
+                                    NodePtr left,
+                                    NodePtr right,
+                                    DataTypePtr result);
 
   /// \brief create a node with a unary function.
-  static NodeSharedPtr MakeUnaryFunction(const std::string &function,
-                                         NodeSharedPtr param,
-                                         DataTypeSharedPtr result);
+  static NodePtr MakeUnaryFunction(const std::string &function,
+                                   NodePtr param,
+                                   DataTypePtr result);
 
   /// \brief create an expression with the specified root_node, and the
   /// result written to result_field.
-  static ExpressionSharedPtr MakeExpression(NodeSharedPtr root_node,
-                                            FieldSharedPtr result_field);
+  static ExpressionPtr MakeExpression(NodePtr root_node,
+                                      FieldPtr result_field);
 
   /// \brief convenience function for simple function expressions.
-  static ExpressionSharedPtr MakeExpression(const std::string &function,
-                                            const std::vector<FieldSharedPtr> &in_fields,
-                                            FieldSharedPtr out_field);
+  static ExpressionPtr MakeExpression(const std::string &function,
+                                      const FieldVector &in_fields,
+                                      FieldPtr out_field);
 };
 
 } // namespace gandiva

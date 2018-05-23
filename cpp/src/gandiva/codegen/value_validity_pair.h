@@ -17,7 +17,7 @@
 #define GANDIVA_VALUEVALIDITYPAIR_H
 
 #include <vector>
-#include "common/gandiva_fwd.h"
+#include "common/gandiva_aliases.h"
 
 namespace gandiva {
 
@@ -26,26 +26,26 @@ namespace gandiva {
  */
 class ValueValidityPair {
  public:
-  ValueValidityPair(const std::vector<DexSharedPtr> &validity_exprs,
-                    DexSharedPtr value_expr)
+  ValueValidityPair(const DexVector &validity_exprs,
+                    DexPtr value_expr)
       : validity_exprs_(validity_exprs),
         value_expr_(value_expr) {}
 
-  ValueValidityPair(DexSharedPtr validity_expr, DexSharedPtr value_expr)
+  ValueValidityPair(DexPtr validity_expr, DexPtr value_expr)
       : value_expr_(value_expr) {
     validity_exprs_.push_back(validity_expr);
   }
 
-  explicit ValueValidityPair(DexSharedPtr value_expr)
+  explicit ValueValidityPair(DexPtr value_expr)
       : value_expr_(value_expr) {}
 
-  const std::vector<DexSharedPtr> &validity_exprs() { return validity_exprs_; }
+  const DexVector &validity_exprs() { return validity_exprs_; }
 
-  DexSharedPtr value_expr() { return value_expr_; }
+  DexPtr value_expr() { return value_expr_; }
 
  private:
-  std::vector<DexSharedPtr> validity_exprs_;
-  DexSharedPtr value_expr_;
+  DexVector validity_exprs_;
+  DexPtr value_expr_;
 };
 
 } // namespace gandiva

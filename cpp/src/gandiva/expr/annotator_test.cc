@@ -24,10 +24,10 @@ namespace gandiva {
 
 class TestAnnotator : public ::testing::Test {
  protected:
-  ArraySharedPtr MakeInt32Array(int length);
+  ArrayPtr MakeInt32Array(int length);
 };
 
-ArraySharedPtr TestAnnotator::MakeInt32Array(int length) {
+ArrayPtr TestAnnotator::MakeInt32Array(int length) {
   arrow::Status status;
 
   std::shared_ptr<arrow::Buffer> validity;
@@ -54,22 +54,22 @@ TEST_F(TestAnnotator, TestAdd) {
   auto in_schema = arrow::schema({field_a, field_b});
   auto field_sum = arrow::field("sum", arrow::int32());
 
-  FieldDescriptorSharedPtr desc_a = annotator.CheckAndAddInputFieldDescriptor(field_a);
+  FieldDescriptorPtr desc_a = annotator.CheckAndAddInputFieldDescriptor(field_a);
   EXPECT_EQ(desc_a->field(), field_a);
   EXPECT_EQ(desc_a->data_idx(), 0);
   EXPECT_EQ(desc_a->validity_idx(), 1);
 
   // duplicate add shouldn't cause a new descriptor.
-  FieldDescriptorSharedPtr dup = annotator.CheckAndAddInputFieldDescriptor(field_a);
+  FieldDescriptorPtr dup = annotator.CheckAndAddInputFieldDescriptor(field_a);
   EXPECT_EQ(dup, desc_a);
   EXPECT_EQ(dup->validity_idx(), desc_a->validity_idx());
 
-  FieldDescriptorSharedPtr desc_b = annotator.CheckAndAddInputFieldDescriptor(field_b);
+  FieldDescriptorPtr desc_b = annotator.CheckAndAddInputFieldDescriptor(field_b);
   EXPECT_EQ(desc_b->field(), field_b);
   EXPECT_EQ(desc_b->data_idx(), 2);
   EXPECT_EQ(desc_b->validity_idx(), 3);
 
-  FieldDescriptorSharedPtr desc_sum = annotator.AddOutputFieldDescriptor(field_sum);
+  FieldDescriptorPtr desc_sum = annotator.AddOutputFieldDescriptor(field_sum);
   EXPECT_EQ(desc_sum->field(), field_sum);
   EXPECT_EQ(desc_sum->data_idx(), 4);
   EXPECT_EQ(desc_sum->validity_idx(), 5);
@@ -85,7 +85,7 @@ TEST_F(TestAnnotator, TestAdd) {
 
   /* TODO : use builder ? */
   auto arrow_sum = MakeInt32Array(num_records);
-  EvalBatchSharedPtr batch = annotator.PrepareEvalBatch(record_batch, {arrow_sum});
+  EvalBatchPtr batch = annotator.PrepareEvalBatch(record_batch, {arrow_sum});
   EXPECT_EQ(batch->num_buffers(), 6);
 
   auto buffers = batch->buffers();

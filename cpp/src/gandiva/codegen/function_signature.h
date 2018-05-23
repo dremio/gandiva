@@ -20,6 +20,7 @@
 #include <sstream>
 #include <vector>
 #include "common/arrow.h"
+#include "common/logging.h"
 
 namespace gandiva {
 
@@ -29,8 +30,8 @@ namespace gandiva {
 class FunctionSignature {
  public:
   FunctionSignature(const std::string &base_name,
-                    const std::vector<DataTypeSharedPtr> &param_types,
-                    DataTypeSharedPtr ret_type)
+                    const DataTypeVector &param_types,
+                    DataTypePtr ret_type)
       : base_name_(base_name),
         param_types_(param_types),
         ret_type_(ret_type) {
@@ -69,7 +70,7 @@ class FunctionSignature {
     return result;
   }
 
-  DataTypeSharedPtr ret_type() const { return ret_type_; }
+  DataTypePtr ret_type() const { return ret_type_; }
 
   std::string ToString() const {
     std::stringstream params;
@@ -91,13 +92,13 @@ class FunctionSignature {
    * TODO : for some of the types, this shouldn't match type specific data. eg. for
    * decimals, this shouldn't match precision/scale.
    */
-  bool DataTypeEquals(const DataTypeSharedPtr left, const DataTypeSharedPtr right) const {
+  bool DataTypeEquals(const DataTypePtr left, const DataTypePtr right) const {
     return left->Equals(right);
   }
 
   std::string base_name_;
-  std::vector<DataTypeSharedPtr> param_types_;
-  DataTypeSharedPtr ret_type_;
+  DataTypeVector param_types_;
+  DataTypePtr ret_type_;
 };
 
 } // namespace gandiva

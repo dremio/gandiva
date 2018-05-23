@@ -25,17 +25,17 @@
 
 namespace gandiva {
 
-ValueValidityPairSharedPtr FieldNode::Decompose(const FunctionRegistry &registry,
-                                                Annotator &annotator) {
-  FieldDescriptorSharedPtr desc = annotator.CheckAndAddInputFieldDescriptor(field_);
+ValueValidityPairPtr FieldNode::Decompose(const FunctionRegistry &registry,
+                                          Annotator &annotator) {
+  FieldDescriptorPtr desc = annotator.CheckAndAddInputFieldDescriptor(field_);
 
-  DexSharedPtr validity_dex = std::make_shared<VectorReadValidityDex>(desc);
-  DexSharedPtr value_dex = std::make_shared<VectorReadValueDex>(desc);
+  DexPtr validity_dex = std::make_shared<VectorReadValidityDex>(desc);
+  DexPtr value_dex = std::make_shared<VectorReadValueDex>(desc);
   return std::make_shared<ValueValidityPair>(validity_dex, value_dex);
 }
 
-ValueValidityPairSharedPtr FunctionNode::Decompose(const FunctionRegistry &registry,
-                                                   Annotator &annotator) {
+ValueValidityPairPtr FunctionNode::Decompose(const FunctionRegistry &registry,
+                                             Annotator &annotator) {
   FunctionSignature signature(desc_->name(),
                               desc_->params(),
                               desc_->return_type());
@@ -43,21 +43,21 @@ ValueValidityPairSharedPtr FunctionNode::Decompose(const FunctionRegistry &regis
   DCHECK(native_function);
 
   // decompose the children.
-  std::vector<ValueValidityPairSharedPtr> args;
+  std::vector<ValueValidityPairPtr> args;
   for (auto it = children_.begin(); it != children_.end(); ++it) {
-    ValueValidityPairSharedPtr child = (*it)->Decompose(registry, annotator);
+    ValueValidityPairPtr child = (*it)->Decompose(registry, annotator);
     args.push_back(child);
   }
 
   if (native_function->result_nullable_type() == RESULT_NULL_IF_NULL) {
     // NULL_IF_NULL functions are decomposable, merge the validity bits of the children.
 
-    std::vector<DexSharedPtr> merged_validity;
+    std::vector<DexPtr> merged_validity;
 
     for (auto it = args.begin(); it != args.end(); ++it) {
       // Merge the validity_expressions of the children to build a combined validity
       // expression.
-      ValueValidityPairSharedPtr child = *it;
+      ValueValidityPairPtr child = *it;
       merged_validity.insert(merged_validity.end(),
                              child->validity_exprs().begin(),
                              child->validity_exprs().end());
@@ -66,7 +66,7 @@ ValueValidityPairSharedPtr FunctionNode::Decompose(const FunctionRegistry &regis
     auto value_dex = std::make_shared<NonNullableFuncDex>(desc_, native_function, args);
     return std::make_shared<ValueValidityPair>(merged_validity, value_dex);
   } else if (native_function->result_nullable_type() == RESULT_NULL_NEVER) {
-      // These functions always output valid results. So, no validity dex.
+    // These functions always output valid results. So, no validity dex.
     auto value_dex = std::make_shared<NullableNeverFuncDex>(desc_, native_function, args);
     return std::make_shared<ValueValidityPair>(value_dex);
   } else {
@@ -76,17 +76,17 @@ ValueValidityPairSharedPtr FunctionNode::Decompose(const FunctionRegistry &regis
   }
 }
 
-NodeSharedPtr FunctionNode::CreateFunction(const std::string &name,
-                                           const std::vector<NodeSharedPtr> children,
-                                           DataTypeSharedPtr retType) {
-  std::vector<DataTypeSharedPtr> paramTypes;
+NodePtr FunctionNode::CreateFunction(const std::string &name,
+                                     const NodeVector &children,
+                                     DataTypePtr retType) {
+  DataTypeVector paramTypes;
   for (auto it = children.begin(); it != children.end(); ++it) {
     auto arg = (*it)->return_type();
     paramTypes.push_back(arg);
   }
 
-  auto func_desc = FuncDescriptorSharedPtr(new FuncDescriptor(name, paramTypes, retType));
-  return NodeSharedPtr(new FunctionNode(func_desc, children, retType));
+  auto func_desc = FuncDescriptorPtr(new FuncDescriptor(name, paramTypes, retType));
+  return NodePtr(new FunctionNode(func_desc, children, retType));
 }
 
 } // namespace gandiva
