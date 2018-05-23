@@ -21,15 +21,13 @@
 
 namespace gandiva {
 
-typedef int (*eval_func_t)(uint8_t **addrs, int record_count);
+using EvalFunc = int(*)(uint8_t **addrs, int record_count);
 
-/*
- * Tracks the compiled state for one expression.
- */
+/// \brief Tracks the compiled state for one expression.
 class CompiledExpr {
  public:
   CompiledExpr(ValueValidityPairPtr value_validity,
-               const FieldDescriptorPtr output,
+               FieldDescriptorPtr output,
                llvm::Function *ir_function)
       : value_validity_(value_validity),
         output_(output),
@@ -38,19 +36,26 @@ class CompiledExpr {
 
   ValueValidityPairPtr value_validity() { return value_validity_; }
 
-  const FieldDescriptorPtr output() { return output_; }
+  FieldDescriptorPtr output() { return output_; }
 
   llvm::Function *ir_function() { return ir_function_; }
 
-  eval_func_t jit_function() { return jit_function_; }
+  EvalFunc jit_function() { return jit_function_; }
 
-  void set_jit_function(eval_func_t jit_function) { jit_function_ = jit_function; }
+  void set_jit_function(EvalFunc jit_function) { jit_function_ = jit_function; }
 
  private:
+  // value & validities for the expression tree (root)
   ValueValidityPairPtr value_validity_;
-  const FieldDescriptorPtr output_;
+
+  // output field
+  FieldDescriptorPtr output_;
+
+  // IR function in the generated code
   llvm::Function *ir_function_;
-  eval_func_t jit_function_;
+
+  // JIT function in the generated code (set after the module is optimised and finalized)
+  EvalFunc jit_function_;
 };
 
 } // namespace gandiva

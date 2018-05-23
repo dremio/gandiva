@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "common/logging.h"
 
 namespace gandiva {
 
@@ -39,7 +40,7 @@ class Engine {
   /// Add the function to the list of IR functions that need to be compiled.
   /// Compiling only the functions that are used by the module saves time.
   void AddFunctionToCompile(const std::string &fname) {
-    assert(!module_finalized_);
+    DCHECK(!module_finalized_);
     functions_to_compile_.push_back(fname);
   }
 
@@ -52,11 +53,16 @@ class Engine {
  private:
   static const char kLibPreCompiledIRDir[];
 
+  // do one time inits.
   static void InitOnce();
   static bool init_once_done_;
 
   llvm::ExecutionEngine &execution_engine() { return *execution_engine_.get(); }
+
+  // load pre-compiled modules and merge them into the main module.
   void LoadPreCompiledIRFiles();
+
+  // dump the IR code to stdout with the prefix string.
   void DumpIR(std::string prefix);
 
   std::unique_ptr<llvm::LLVMContext> context_;

@@ -92,7 +92,7 @@ TEST_F(TestLLVMGenerator, TestAdd) {
   generator.engine_->AddFunctionToCompile("eval_0");
   generator.engine_->FinalizeModule(true, false);
 
-  eval_func_t eval_func = (eval_func_t)generator.engine_->CompiledFunction(ir_func);
+  EvalFunc eval_func = (EvalFunc)generator.engine_->CompiledFunction(ir_func);
 
   int num_records = 4;
   uint32_t a0[] = {1, 2, 3, 4};

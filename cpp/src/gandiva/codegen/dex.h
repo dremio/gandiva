@@ -30,45 +30,53 @@ namespace gandiva {
 /// \brief Decomposed expression : the validity and value are separated.
 class Dex {
  public:
+  /// Derived classes should simply invoke the Visit api of the visitor.
   virtual void Accept(DexVisitor *visitor) = 0;
   virtual ~Dex() = default;
 };
 
-// validity component of a ValueVector
-class VectorReadValidityDex : public Dex {
+// Base class for other Vector related Dex.
+class VectorReadBaseDex : public Dex {
  public:
-  explicit VectorReadValidityDex(FieldDescriptorPtr field_desc)
-      : field_desc_(field_desc) {}
-
-  int ValidityIdx() const {
-    return field_desc_->validity_idx();
-  }
+  explicit VectorReadBaseDex(FieldDescriptorPtr field_desc)
+    : field_desc_(field_desc) {}
 
   const std::string &FieldName() const {
     return field_desc_->Name();
   }
 
-  const DataTypePtr FieldType() const {
+  DataTypePtr FieldType() const {
     return field_desc_->Type();
   }
 
-  const FieldPtr Field() const {
+  FieldPtr Field() const {
     return field_desc_->field();
+  }
+
+ protected:
+  FieldDescriptorPtr field_desc_;
+};
+
+// validity component of a ValueVector
+class VectorReadValidityDex : public VectorReadBaseDex {
+ public:
+  explicit VectorReadValidityDex(FieldDescriptorPtr field_desc)
+    : VectorReadBaseDex(field_desc) {}
+
+  int ValidityIdx() const {
+    return field_desc_->validity_idx();
   }
 
   void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
   }
-
- private:
-  FieldDescriptorPtr field_desc_;
 };
 
 // value component of a ValueVector
-class VectorReadValueDex : public Dex {
+class VectorReadValueDex : public VectorReadBaseDex {
  public:
   explicit VectorReadValueDex(FieldDescriptorPtr field_desc)
-  : field_desc_(field_desc) {}
+    : VectorReadBaseDex(field_desc) {}
 
   int DataIdx() const {
     return field_desc_->data_idx();
@@ -78,24 +86,9 @@ class VectorReadValueDex : public Dex {
     return field_desc_->offsets_idx();
   }
 
-  const std::string &FieldName() const {
-    return field_desc_->Name();
-  }
-
-  const DataTypePtr FieldType() const {
-    return field_desc_->Type();
-  }
-
-  const FieldPtr Field() const {
-    return field_desc_->field();
-  }
-
   void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
   }
-
- private:
-  FieldDescriptorPtr field_desc_;
 };
 
 // base function expression
@@ -104,11 +97,11 @@ class FuncDex : public Dex {
   FuncDex(FuncDescriptorPtr func_descriptor,
           const NativeFunction *native_function,
           const std::vector<ValueValidityPairPtr> &args)
-      : func_descriptor_(func_descriptor),
-        native_function_(native_function),
-        args_(args) {}
+    : func_descriptor_(func_descriptor),
+      native_function_(native_function),
+      args_(args) {}
 
-  const FuncDescriptorPtr func_descriptor() const { return func_descriptor_; }
+  FuncDescriptorPtr func_descriptor() const { return func_descriptor_; }
 
   const NativeFunction *native_function() const { return native_function_; }
 
@@ -127,7 +120,7 @@ class NonNullableFuncDex : public FuncDex {
   NonNullableFuncDex(FuncDescriptorPtr func_descriptor,
                      const NativeFunction *native_function,
                      const std::vector<ValueValidityPairPtr> &args)
-      : FuncDex(func_descriptor, native_function, args) {}
+    : FuncDex(func_descriptor, native_function, args) {}
 
   void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
@@ -141,7 +134,7 @@ class NullableNeverFuncDex : public FuncDex {
   NullableNeverFuncDex(FuncDescriptorPtr func_descriptor,
                        const NativeFunction *native_function,
                        const std::vector<ValueValidityPairPtr> &args)
-      : FuncDex(func_descriptor, native_function, args) {}
+    : FuncDex(func_descriptor, native_function, args) {}
 
   void Accept(DexVisitor *visitor) override {
     visitor->Visit(*this);
@@ -152,9 +145,9 @@ class NullableNeverFuncDex : public FuncDex {
 class LiteralDex : public Dex {
  public:
   explicit LiteralDex(const DataTypePtr type)
-      : type_(type) {}
+    : type_(type) {}
 
-  const DataTypePtr type() const {
+  DataTypePtr type() const {
     return type_;
   }
 
@@ -163,7 +156,7 @@ class LiteralDex : public Dex {
   }
 
  private:
-  const DataTypePtr type_;
+  DataTypePtr type_;
 };
 
 

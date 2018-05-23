@@ -73,7 +73,7 @@ void LLVMGenerator::Build(const ExpressionVector &exprs) {
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
     CompiledExpr *compiled_expr = *it;
     llvm::Function *ir_func = compiled_expr->ir_function();
-    eval_func_t fn = reinterpret_cast<eval_func_t>(engine_->CompiledFunction(ir_func));
+    EvalFunc fn = reinterpret_cast<EvalFunc>(engine_->CompiledFunction(ir_func));
     compiled_expr->set_jit_function(fn);
   }
 }
@@ -93,7 +93,7 @@ int LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
     CompiledExpr *compiled_expr = *it;
 
     // generate data/offset vectors.
-    eval_func_t jit_function = compiled_expr->jit_function();
+    EvalFunc jit_function = compiled_expr->jit_function();
     jit_function(eval_batch->buffers(), record_batch.num_rows());
 
     // generate validity vectors.

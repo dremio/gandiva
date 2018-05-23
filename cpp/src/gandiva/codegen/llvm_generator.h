@@ -137,7 +137,7 @@ class LLVMGenerator {
   /// \param[in] : raw buffers from a record batch.
   /// \param[in] : number of buffers
   /// \param[in] : number of records in the batch (same as #bits in the bitmap).
-  void ComputeBitMapsForExpr(CompiledExpr *compiledExpr,
+  void ComputeBitMapsForExpr(CompiledExpr *compiled_expr,
                              uint8_t **buffers,
                              int num_buffers,
                              int record_count);

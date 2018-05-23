@@ -21,9 +21,8 @@
 
 namespace gandiva {
 
-/*
- * Descriptor for a vector, as received from the executor.
- */
+/// \brief Descriptor for an arrow field. Holds indexes into the flattened array of
+/// buffers that is passed to LLVM generated functions.
 class FieldDescriptor {
  public:
   static const int kInvalidIdx = -1;
@@ -37,19 +36,19 @@ class FieldDescriptor {
         validity_idx_(validity_idx),
         offsets_idx_(offsets_idx) {}
 
-  /* Index of validity array in the array-of-pointers argument */
+  /// Index of validity array in the array-of-buffers
   int validity_idx() const { return validity_idx_; }
 
-  /* Index of data array in the array-of-pointers argument */
+  /// Index of data array in the array-of-buffers
   int data_idx() const { return data_idx_; }
 
-  /* Index of offsets array in the array-of-pointers argument */
+  /// Index of offsets array in the array-of-buffers
   int offsets_idx() const { return offsets_idx_; }
 
-  const FieldPtr field() const { return field_; }
+  FieldPtr field() const { return field_; }
 
   const std::string &Name() const { return field_->name(); }
-  const DataTypePtr Type() const { return field_->type(); }
+  DataTypePtr Type() const { return field_->type(); }
 
  private:
   FieldPtr field_;

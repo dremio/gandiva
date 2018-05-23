@@ -22,29 +22,29 @@
 
 namespace gandiva {
 
-/*
- * Descriptor for a function, as received from the executor.
- */
+/// Descriptor for a function in the expression.
 class FuncDescriptor {
  public:
   FuncDescriptor(const std::string &name,
                  const DataTypeVector &params,
-                 const DataTypePtr return_type)
-      : name_(name),
-        params_(params),
-        return_type_(return_type)
-  {}
+                 DataTypePtr return_type)
+    : name_(name),
+      params_(params),
+      return_type_(return_type) {}
 
+  /// base function name.
   const std::string &name() const { return name_;}
 
+  /// Data types of the input params.
   const DataTypeVector &params() const { return params_; }
 
-  const DataTypePtr return_type() const { return return_type_; }
+  /// Data type of the return parameter.
+  DataTypePtr return_type() const { return return_type_; }
 
  private:
   std::string name_;
   DataTypeVector params_;
-  const DataTypePtr return_type_;
+  DataTypePtr return_type_;
 };
 
 } // namespace gandiva

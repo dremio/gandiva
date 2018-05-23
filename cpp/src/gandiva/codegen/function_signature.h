@@ -36,7 +36,7 @@ class FunctionSignature {
         param_types_(param_types),
         ret_type_(ret_type) {
     DCHECK_GT(base_name.length(), 0);
-    DCHECK_GT(param_types.size(), 0);
+    DCHECK_GE(param_types.size(), 0);
     for (auto it = param_types_.begin(); it != param_types_.end(); it++) {
       DCHECK(*it);
     }
@@ -50,9 +50,8 @@ class FunctionSignature {
       return false;
     }
 
-    int idx = 0;
-    for (auto it = param_types_.begin(); it != param_types_.end(); it++, idx++) {
-      if (!DataTypeEquals(*it, other.param_types_[idx])) {
+    for (int idx = 0; idx < param_types_.size(); idx++) {
+      if (!DataTypeEquals(param_types_[idx], other.param_types_[idx])) {
         return false;
       }
     }
@@ -61,11 +60,14 @@ class FunctionSignature {
 
   /// includes only the id of the datatype.
   std::size_t Hash() const {
-    size_t result = 17;
-    result = result * 31 + std::hash<std::string>()(base_name_);
-    result = result * 31 + std::hash<int>()(ret_type_->id());
+    static const size_t kSeedValue = 17;
+    static const size_t kHashMultiplier = 31;
+
+    size_t result = kSeedValue;
+    result = result * kHashMultiplier + std::hash<std::string>()(base_name_);
+    result = result * kHashMultiplier + std::hash<int>()(ret_type_->id());
     for (auto it = param_types_.begin(); it != param_types_.end(); it++) {
-      result = result * 31 + std::hash<int>()(it->get()->id());
+      result = result * kHashMultiplier + std::hash<int>()(it->get()->id());
     }
     return result;
   }
@@ -73,17 +75,18 @@ class FunctionSignature {
   DataTypePtr ret_type() const { return ret_type_; }
 
   std::string ToString() const {
-    std::stringstream params;
+    std::stringstream s;
+
+    s << ret_type_->ToString() << " " << base_name_ << "(";
     for (uint32_t i = 0; i < param_types_.size(); i++) {
       if (i > 0) {
-        params << ", ";
+        s << ", ";
       }
 
-      params << param_types_[i]->ToString();
+      s << param_types_[i]->ToString();
     }
 
-    std::stringstream s;
-    s << ret_type_->ToString() << " " << base_name_ << "(" << params.str() << ")";
+    s << ")";
     return s.str();
   }
 

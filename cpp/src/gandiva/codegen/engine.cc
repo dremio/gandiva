@@ -67,7 +67,7 @@ Engine::Engine()
   std::unique_ptr<llvm::Module> cg_module(new llvm::Module("codegen", *context()));
   module_ = cg_module.get();
 
-  llvm::EngineBuilder engineBuilder(move(cg_module));
+  llvm::EngineBuilder engineBuilder(std::move(cg_module));
   engineBuilder.setEngineKind(llvm::EngineKind::JIT);
   engineBuilder.setOptLevel(llvm::CodeGenOpt::Aggressive);
   engineBuilder.setErrorStr(&llvm_error_);
