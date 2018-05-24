@@ -27,6 +27,13 @@ class FunctionRegistry {
   /// Lookup a pre-compiled function by its signature.
   const NativeFunction *LookupSignature(const FunctionSignature &signature) const;
 
+  /// Get the singleton instance of the registry.
+  static FunctionRegistry& GetInstance() {
+      // Used for thread safety.
+      static FunctionRegistry instance;
+      return instance;
+  }
+
  private:
   struct KeyHash {
     std::size_t operator()(const FunctionSignature *k) const {
@@ -41,21 +48,29 @@ class FunctionRegistry {
   };
 
  private:
-  static DataTypePtr time64() {
+  FunctionRegistry() {
+      pc_registry_map_ = InitPCMap();
+  }
+
+  FunctionRegistry(const FunctionRegistry &functionRegistry);
+
+  FunctionRegistry &operator=(const FunctionRegistry &functionRegistry);
+
+  DataTypePtr time64() {
     return arrow::time64(arrow::TimeUnit::MICRO);
   }
 
-  static DataTypePtr timestamp64() {
+  DataTypePtr timestamp64() {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
   }
 
   typedef std::unordered_map<const FunctionSignature *,
                              const NativeFunction *,
                              KeyHash, KeyEquals> SignatureMap;
-  static SignatureMap InitPCMap();
 
-  static NativeFunction pc_registry_[];
-  static SignatureMap pc_registry_map_;
+  SignatureMap InitPCMap();
+
+  SignatureMap pc_registry_map_;
 };
 
 } // namespace gandiva

@@ -31,7 +31,7 @@ class TestLLVMGenerator : public ::testing::Test {
   void ByteWiseIntersectBitMaps(uint8_t *dst, const std::vector<uint8_t *> &srcs,
                                 int nrecords);
 
-  FunctionRegistry registry_;
+  FunctionRegistry & registry_ = FunctionRegistry::GetInstance();
 };
 
 void TestLLVMGenerator::FillBitMap(uint8_t *bmap, int nrecords) {

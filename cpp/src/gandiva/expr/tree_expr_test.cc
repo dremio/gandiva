@@ -41,7 +41,7 @@ class TestExprTree : public ::testing::Test {
   FieldPtr i1_; // int32
 
   FieldPtr b0_; // bool
-  FunctionRegistry registry_;
+  FunctionRegistry & registry_ = FunctionRegistry::GetInstance();
 };
 
 TEST_F(TestExprTree, TestField) {

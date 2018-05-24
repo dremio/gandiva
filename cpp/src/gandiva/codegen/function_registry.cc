@@ -137,10 +137,14 @@ using arrow::date64;
   INNER(NAME, time64), \
   INNER(NAME, timestamp64)
 
-/*
- * list of registered native functions.
- */
-NativeFunction FunctionRegistry::pc_registry_[] = {
+FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
+  /*
+   * list of registered native functions.
+   *
+   * needs to be static so that the function objects are carried through the
+   * lifetime of the program.
+   */
+  static NativeFunction pc_registry_[] = {
     /* Arithmetic operations */
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, add),
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, subtract),
@@ -174,11 +178,8 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDay),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
-};
+  };
 
-FunctionRegistry::SignatureMap FunctionRegistry::pc_registry_map_ = InitPCMap();
-
-FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
   SignatureMap map;
 
   int num_entries = sizeof (pc_registry_) / sizeof (NativeFunction);
@@ -190,7 +191,7 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
     DCHECK(map.find(&entry->signature()) == map.end());
     map[&entry->signature()] = entry;
     //printf("%s -> %s\n", entry->signature().ToString().c_str(),
-    //      entry->pc_name().c_str());
+      //    entry->pc_name().c_str());
   }
   return map;
 }

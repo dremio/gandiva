@@ -159,7 +159,7 @@ class LLVMGenerator {
   std::unique_ptr<Engine> engine_;
   std::vector<CompiledExpr *> compiled_exprs_;
   LLVMTypes types_;
-  FunctionRegistry function_registry_;
+  FunctionRegistry & function_registry_ = FunctionRegistry::GetInstance();
   Annotator annotator_;
 
   // used in replay/debug
