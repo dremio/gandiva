@@ -22,7 +22,7 @@ namespace gandiva {
 class TestLLVMTypes : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    types_ = new LLVMTypes(&context_);
+    types_ = new LLVMTypes(context_);
   }
   virtual void TearDown() {
     delete types_;
