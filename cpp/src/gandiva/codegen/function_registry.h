@@ -29,9 +29,9 @@ class FunctionRegistry {
 
   /// Get the singleton instance of the registry.
   static FunctionRegistry& GetInstance() {
-      // Used for thread safety.
-      static FunctionRegistry instance;
-      return instance;
+    /// Used for thread safety.
+    static FunctionRegistry instance;
+    return instance;
   }
 
  private:
@@ -49,7 +49,7 @@ class FunctionRegistry {
 
  private:
   FunctionRegistry() {
-      pc_registry_map_ = InitPCMap();
+    pc_registry_map_ = InitPCMap();
   }
 
   FunctionRegistry(const FunctionRegistry &functionRegistry);
@@ -64,9 +64,9 @@ class FunctionRegistry {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
   }
 
-  typedef std::unordered_map<const FunctionSignature *,
+  using SignatureMap = std::unordered_map<const FunctionSignature *,
                              const NativeFunction *,
-                             KeyHash, KeyEquals> SignatureMap;
+                             KeyHash, KeyEquals>;
 
   SignatureMap InitPCMap();
 

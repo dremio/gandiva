@@ -138,12 +138,10 @@ using arrow::date64;
   INNER(NAME, timestamp64)
 
 FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
-  /*
-   * list of registered native functions.
-   *
-   * needs to be static so that the function objects are carried through the
-   * lifetime of the program.
-   */
+  /// list of registered native functions.
+  ///
+  /// needs to be static so that the function objects are carried through the
+  /// lifetime of the program.
   static NativeFunction pc_registry_[] = {
     /* Arithmetic operations */
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, add),
@@ -190,8 +188,6 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
 
     DCHECK(map.find(&entry->signature()) == map.end());
     map[&entry->signature()] = entry;
-    //printf("%s -> %s\n", entry->signature().ToString().c_str(),
-      //    entry->pc_name().c_str());
   }
   return map;
 }
