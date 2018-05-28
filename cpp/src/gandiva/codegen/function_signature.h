@@ -21,7 +21,7 @@
 #include <vector>
 #include "common/arrow.h"
 #include "common/logging.h"
-#include "boost/container_hash/hash.hpp"
+#include "boost/functional/hash.hpp"
 
 namespace gandiva {
 
