@@ -26,30 +26,30 @@ namespace gandiva {
 /// \brief Holder for llvm types, and mappings between arrow types and llvm types.
 class LLVMTypes {
  public:
-  explicit LLVMTypes(llvm::LLVMContext *context);
+  explicit LLVMTypes(llvm::LLVMContext &context);
 
   llvm::Type *i1_type() {
-    return llvm::Type::getInt1Ty(*context_);
+    return llvm::Type::getInt1Ty(context_);
   }
 
   llvm::Type *i8_type() {
-    return llvm::Type::getInt8Ty(*context_);
+    return llvm::Type::getInt8Ty(context_);
   }
 
   llvm::Type *i32_type() {
-    return llvm::Type::getInt32Ty(*context_);
+    return llvm::Type::getInt32Ty(context_);
   }
 
   llvm::Type *i64_type() {
-    return llvm::Type::getInt64Ty(*context_);
+    return llvm::Type::getInt64Ty(context_);
   }
 
   llvm::Type *float_type() {
-    return llvm::Type::getFloatTy(*context_);
+    return llvm::Type::getFloatTy(context_);
   }
 
   llvm::Type *double_type() {
-    return llvm::Type::getDoubleTy(*context_);
+    return llvm::Type::getDoubleTy(context_);
   }
 
   llvm::PointerType *i32_ptr_type() {
@@ -64,22 +64,22 @@ class LLVMTypes {
     return llvm::PointerType::get(base_type, 0);
   }
 
-  llvm::Type *void_type() { return llvm::Type::getVoidTy(*context_); }
+  llvm::Type *void_type() { return llvm::Type::getVoidTy(context_); }
 
   llvm::Constant *true_constant() {
-    return llvm::ConstantInt::get(*context_, llvm::APInt(1, 1));
+    return llvm::ConstantInt::get(context_, llvm::APInt(1, 1));
   }
 
   llvm::Constant *false_constant() {
-    return llvm::ConstantInt::get(*context_, llvm::APInt(1, 0));
+    return llvm::ConstantInt::get(context_, llvm::APInt(1, 0));
   }
 
   llvm::Constant *i32_constant(int32_t val) {
-    return llvm::ConstantInt::get(*context_, llvm::APInt(32, val));
+    return llvm::ConstantInt::get(context_, llvm::APInt(32, val));
   }
 
   llvm::Constant *i64_constant(int64_t val) {
-    return llvm::ConstantInt::get(*context_, llvm::APInt(64, val));
+    return llvm::ConstantInt::get(context_, llvm::APInt(64, val));
   }
 
   llvm::Constant *float_constant(float val) {
@@ -108,7 +108,7 @@ class LLVMTypes {
  private:
   std::map<arrow::Type::type, llvm::Type *> arrow_id_to_llvm_type_map_;
 
-  llvm::LLVMContext *context_;
+  llvm::LLVMContext &context_;
 };
 
 } // namespace gandiva

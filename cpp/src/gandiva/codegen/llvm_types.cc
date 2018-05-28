@@ -17,7 +17,7 @@
 
 namespace gandiva {
 
-LLVMTypes::LLVMTypes(llvm::LLVMContext *context)
+LLVMTypes::LLVMTypes(llvm::LLVMContext &context)
     : context_(context) {
 
   arrow_id_to_llvm_type_map_ = {

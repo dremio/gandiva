@@ -27,7 +27,7 @@ namespace gandiva {
 
 LLVMGenerator::LLVMGenerator()
     : engine_(new Engine()),
-      types_(engine_->context()),
+      types_(*engine_->context()),
       in_replay_(false),
       optimise_ir_(true),
       enable_ir_traces_(false) {}

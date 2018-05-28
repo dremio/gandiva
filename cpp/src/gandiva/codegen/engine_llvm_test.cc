@@ -104,7 +104,7 @@ llvm::Function *TestEngine::BuildVecAdd(Engine *engine, LLVMTypes *types) {
 
 TEST_F(TestEngine, TestAddUnoptimised) {
   Engine engine;
-  LLVMTypes types(engine.context());
+  LLVMTypes types(*engine.context());
   llvm::Function *ir_func = BuildVecAdd(&engine, &types);
   engine.FinalizeModule(false, false);
 
@@ -117,7 +117,7 @@ TEST_F(TestEngine, TestAddUnoptimised) {
 
 TEST_F(TestEngine, TestAddOptimised) {
   Engine engine;
-  LLVMTypes types(engine.context());
+  LLVMTypes types(*engine.context());
   llvm::Function *ir_func = BuildVecAdd(&engine, &types);
   engine.FinalizeModule(true, false);
 
