@@ -13,25 +13,28 @@
 # limitations under the License.
 
 # Add a unittest executable, with it's dependancies.
-function(ADD_GANDIVA_UNIT_TEST REL_TEST_NAME)
+function(add_gandiva_unit_test REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
 
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
   if(${REL_TEST_NAME} MATCHES "llvm")
     # if the unit test has llvm in it's name, include llvm.
-    TARGET_LINK_LLVM(${TEST_NAME} PRIVATE)
+    target_link_llvm(${TEST_NAME} PRIVATE)
   endif()
 
-  target_include_directories(${TEST_NAME} PRIVATE . codegen expr)
+  target_include_directories(${TEST_NAME} PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+  )
   target_link_libraries(${TEST_NAME}
     PRIVATE ${ARROW_LIB} gtest_main Boost::boost
   )
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
-endfunction()
+endfunction(add_gandiva_unit_test REL_TEST_NAME)
 
-# Add a unittest executable, with it's dependancies.
-function(ADD_GANDIVA_INTEG_TEST REL_TEST_NAME)
+# Add an integ executable, with it's dependancies.
+function(add_gandiva_integ_test REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
 
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
@@ -40,10 +43,10 @@ function(ADD_GANDIVA_INTEG_TEST REL_TEST_NAME)
   )
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS integ ${TEST_NAME})
-endfunction()
+endfunction(add_gandiva_integ_test REL_TEST_NAME)
 
 # Download and build external project.
-function(BUILD_EXTERNAL PROJ)
+function(build_external PROJ)
   message("Building ${PROJ} as external project")
   # configure the download
   configure_file(${CMAKE_SOURCE_DIR}/cmake/${PROJ}-CMakeLists.txt.in ${CMAKE_BINARY_DIR}/${PROJ}-download/CMakeLists.txt)
@@ -66,10 +69,10 @@ function(BUILD_EXTERNAL PROJ)
   add_subdirectory(${CMAKE_BINARY_DIR}/${PROJ}-src
                    ${CMAKE_BINARY_DIR}/${PROJ}-build
                    EXCLUDE_FROM_ALL)
-endfunction(BUILD_EXTERNAL)
+endfunction(build_external PROJ)
 
 # Add "make lint" target
-function(ADD_LINT)
+function(add_lint)
   if (UNIX)
     file(GLOB_RECURSE LINT_FILES
       "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
@@ -89,4 +92,11 @@ function(ADD_LINT)
     --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references,-build/include_order
     )
   endif (UNIX)
-endfunction(ADD_LINT)
+endfunction(add_lint)
+
+function(prevent_in_source_builds)
+ file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+ if(EXISTS "${LOC_PATH}")
+   message(FATAL_ERROR "Gandiva does not support in-source builds")
+ endif()
+endfunction(prevent_in_source_builds)

@@ -15,10 +15,16 @@
 cmake_minimum_required(VERSION 3.10)
 project(gandiva)
 
+# Include modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+include(BuildUtils)
+
+prevent_in_source_builds()
+
 # Default build type if none is set.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE debug)
-endif(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+endif()
 message(STATUS "using build type ${CMAKE_BUILD_TYPE}")
 
 # This ensures that things like gnu++11 get passed correctly
@@ -30,14 +36,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Select compiler flags.
 add_compile_options(-Wall -Werror)
 
-# Include modules
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-include(BuildUtils)
+# set the build-support dir.
 set(BUILD_SUPPORT_DIR "${CMAKE_SOURCE_DIR}/build-support")
+
+# build googletest
+build_external(googletest)
 
 include(CTest)
 enable_testing()
 
-add_subdirectory(src/gandiva)
+add_subdirectory(src)
 
-ADD_LINT()  # "make lint" target
+add_lint()  # "make lint" target

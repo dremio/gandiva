@@ -28,7 +28,7 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 llvm_map_components_to_libnames(LLVM_LIBS core mcjit native ipo bitreader target linker analysis debuginfodwarf)
 
 # Convenience function for targets to link llvm.
-function(TARGET_LINK_LLVM TARGET TYPE)
+function(target_link_llvm TARGET TYPE)
   target_include_directories(${TARGET} ${TYPE} ${LLVM_INCLUDE_DIRS})
   target_compile_definitions(${TARGET} ${TYPE} ${LLVM_DEFINITIONS})
   target_link_libraries(${TARGET} ${TYPE} ${LLVM_LIBS})

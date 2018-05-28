@@ -73,7 +73,6 @@ fi
 # Build and install libraries
 $TRAVIS_MAKE -j4
 
-#TODO
-#$TRAVIS_MAKE install
+$TRAVIS_MAKE install
 
 popd

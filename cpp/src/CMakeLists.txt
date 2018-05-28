@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Find Arrow library and includes.
+cmake_minimum_required(VERSION 3.10)
 
-find_library(ARROW_LIB arrow REQUIRED)
-message(STATUS "Found arrow library at ${ARROW_LIB}")
+# LLVM/Clang is required by both the subdirs.
+find_package(LLVM)
 
-find_path(ARROW_INCLUDE_DIR arrow/type.h)
-message(STATUS "found arrow includes at ${ARROW_INCLUDE_DIR}")
+# Set the path where the byte-code files will be installed.
+set(GANDIVA_BC_FILE_NAME irhelpers.bc)
+set(GANDIVA_BC_INSTALL_DIR
+  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/gandiva)
+set(GANDIVA_BC_INSTALL_PATH ${GANDIVA_BC_INSTALL_DIR}/${GANDIVA_BC_FILE_NAME})
+set(GANDIVA_BC_OUTPUT_PATH ${CMAKE_BINARY_DIR}/irhelpers.bc)
 
-# add an imported target ARROW::ARROW so that gandiva can take a dependancy.
-add_library(ARROW::ARROW INTERFACE IMPORTED)
-set_target_properties(ARROW::ARROW PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
-  INTERFACE_LINK_LIBRARIES "${ARROW_LIB}"
-)
+add_subdirectory(codegen)
+add_subdirectory(precompiled)
