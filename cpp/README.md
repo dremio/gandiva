@@ -12,11 +12,12 @@ Build Gandiva requires:
 * LLVM 
 * Arrow
 * GTest
+* Boost
 
 On OS X, you can use [Homebrew][1]:
 
 ```shell
-brew install cmake llvm
+brew install cmake llvm boost
 ```
 
 ## Building Gandiva

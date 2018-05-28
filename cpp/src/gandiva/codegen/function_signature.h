@@ -21,6 +21,7 @@
 #include <vector>
 #include "common/arrow.h"
 #include "common/logging.h"
+#include "boost/container_hash/hash.hpp"
 
 namespace gandiva {
 
@@ -58,16 +59,16 @@ class FunctionSignature {
     return true;
   }
 
-  /// includes only the id of the datatype.
+  /// calculated based on base_name, datatpype id of parameters and datatype id
+  /// of return type.
   std::size_t Hash() const {
     static const size_t kSeedValue = 17;
-    static const size_t kHashMultiplier = 31;
-
     size_t result = kSeedValue;
-    result = result * kHashMultiplier + std::hash<std::string>()(base_name_);
-    result = result * kHashMultiplier + std::hash<int>()(ret_type_->id());
+    boost::hash_combine(result, base_name_);
+    boost::hash_combine(result, ret_type_->id());
+    /// not using hash_range since we only want to include the id from the data type
     for (auto it = param_types_.begin(); it != param_types_.end(); it++) {
-      result = result * kHashMultiplier + std::hash<int>()(it->get()->id());
+      boost::hash_combine(result, it->get()->id());
     }
     return result;
   }
