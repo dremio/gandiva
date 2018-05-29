@@ -21,7 +21,7 @@ namespace gandiva {
 
 class TestFunctionRegistry : public ::testing::Test {
  protected:
-  FunctionRegistry registry_;
+  FunctionRegistry & registry_ = FunctionRegistry::GetInstance();
 };
 
 TEST_F(TestFunctionRegistry, TestFound) {
@@ -31,6 +31,12 @@ TEST_F(TestFunctionRegistry, TestFound) {
   EXPECT_NE(function, nullptr);
   EXPECT_EQ(function->signature(), add_i32_i32);
   EXPECT_EQ(function->pc_name(), "add_int32_int32");
+}
+
+TEST_F(TestFunctionRegistry, TestSingleton) {
+  FunctionRegistry & registry_local = FunctionRegistry::GetInstance();
+
+  EXPECT_TRUE(&registry_local == &registry_);
 }
 
 TEST_F(TestFunctionRegistry, TestNotFound) {
