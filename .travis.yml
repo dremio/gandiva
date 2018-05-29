@@ -28,19 +28,27 @@ before_install:
         sudo apt-get update -qq
       fi
 
-matrix:
-  fast_finish: true
-  allow_failures:
-  include:
-  # C++ & Python w/ clang 6.0
-  - language: cpp
-    os: linux
-    group: deprecated
-    env:
+env:
+  global:
     - GANDIVA_TRAVIS_USE_TOOLCHAIN=1
     - GANDIVA_BUILD_WARNING_LEVEL=CHECKIN
-    - CC="clang-6.0"
-    - CXX="clang++-6.0"
+
+matrix:
+  fast_finish: true
+  include:
+  # C++ w/ clang 6.0
+  - compiler: clang
+    os: linux
+    language: cpp
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+          - llvm-toolchain-trusty-6.0
+        packages:
+          - clang-6.0
+    env:
+      - COMPILER="clang++-6.0"
     before_script:
     - ulimit -c unlimited -S
     - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
