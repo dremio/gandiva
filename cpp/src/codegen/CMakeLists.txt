@@ -17,6 +17,8 @@ project(gandiva)
 # Find arrow
 find_package(ARROW)
 
+find_package(Boost REQUIRED)
+
 set(BC_FILE_PATH_CC "${CMAKE_CURRENT_BINARY_DIR}/bc_file_path.cc")
 configure_file(bc_file_path.cc.in ${BC_FILE_PATH_CC})
 
@@ -45,7 +47,7 @@ target_include_directories(gandiva
 )
 
 # ARROW is a public dependancy i.e users of gandiva also will have a dependancy on arrow.
-target_link_libraries(gandiva PUBLIC ARROW::ARROW)
+target_link_libraries(gandiva PUBLIC ARROW::ARROW Boost::boost)
 
 # LLVM is a private dependancy i.e users of gandiva will not need to include llvm headers 
 # or link with llvm libraries.
