@@ -44,20 +44,22 @@ matrix:
       apt:
         sources:
           - ubuntu-toolchain-r-test
-          - llvm-toolchain-trusty-6.0
+          - llvm-toolchain-trusty-5.0
         packages:
-          - clang-6.0
+          - gdb
+          - ccache
+          - clang-5.0
+          - clang-format-5.0
+          - clang-tidy-5.0
+          - llvm-dev-5.0
     env:
-      - COMPILER="clang++-6.0"
+      - COMPILER="clang++-5.0"
     before_script:
     - ulimit -c unlimited -S
-    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_install_clang_tools.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
     - $TRAVIS_BUILD_DIR/ci/travis_lint.sh
     script:
     - $TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh
 
 after_failure:
-- COREFILE=$(find . -maxdepth 2 -name "core*" | head -n 1)
+- COREFILE=$(find . -maxdepth 4 -name "core*" | head -n 1)
 - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt" -ex "set pagination 0" -batch; fi

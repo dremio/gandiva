@@ -14,7 +14,7 @@
 
 project(gandiva)
 
-set(REQD_LLVM_VERSION 6.0)
+set(REQD_LLVM_VERSION 5.0)
 find_package(LLVM ${REQD_LLVM_VERSION} REQUIRED CONFIG HINTS
              /usr/local/opt/llvm
              /usr/share)
