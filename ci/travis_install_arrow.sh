@@ -12,7 +12,7 @@ mkdir $ARROW_SRC_DIR/cpp/build
 
 pushd $ARROW_SRC_DIR/cpp/build
 
-cmake $ARROW_SRC_DIR/cpp
+cmake ..
 
 # Build and install libraries
 $TRAVIS_MAKE -j4
