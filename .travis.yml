@@ -49,9 +49,11 @@ env:
 matrix:
   fast_finish: true
   include:
-  - compiler: gcc
+  - compiler: clang
     os: linux
     language: cpp
+    env:
+    - COMPILER="clang++-6.0"
     before_script:
     - ulimit -c unlimited -S
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
