@@ -15,6 +15,19 @@
 sudo: required
 dist: trusty
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty-6.0
+    packages:
+      - gdb
+      - ccache
+      - clang-6.0
+      - clang-format-6.0
+      - clang-tidy-6.0
+      - llvm-6.0-dev
+
 cache:
   ccache: true
 
@@ -39,18 +52,6 @@ matrix:
   - compiler: gcc
     os: linux
     language: cpp
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-          - llvm-toolchain-trusty-6.0
-        packages:
-          - gdb
-          - ccache
-          - clang-6.0
-          - clang-format-6.0
-          - clang-tidy-6.0
-          - llvm-6.0-dev
     before_script:
     - ulimit -c unlimited -S
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh

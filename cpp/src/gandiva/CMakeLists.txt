@@ -23,7 +23,7 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-find_library(ARROW_LIB NAMES libarrow.a arrow)
+find_library(ARROW_LIB arrow)
 message(STATUS "Found arrow : ${ARROW_LIB}")
 find_path(ARROW_INCLUDE_DIR arrow/type.h)
 message(STATUS "include dir for arrow : ${ARROW_INCLUDE_DIR}")
@@ -34,9 +34,6 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
 
 include_directories(.)
 include_directories(codegen)
@@ -83,7 +80,6 @@ llvm_map_components_to_libnames(llvm_libs core mcjit native ipo bitreader target
 # Link against LLVM libraries
 target_link_libraries(gandiva ${llvm_libs})
 target_link_libraries(gandiva ${ARROW_LIB})
-target_link_libraries(${TEST_NAME} Threads::Threads)
 
 # Test related
 
@@ -98,9 +94,9 @@ function(ADD_GANDIVA_TEST LABEL REL_TEST_NAME)
   if(${REL_TEST_NAME} MATCHES "llvm")
     target_link_libraries(${TEST_NAME} ${llvm_libs})
   endif()
-  target_link_libraries(${TEST_NAME} Threads::Threads)
   target_link_libraries(${TEST_NAME} ${ARROW_LIB})
   target_link_libraries(${TEST_NAME} ${GTEST_BOTH_LIBRARIES})
+  target_link_libraries(${TEST_NAME} Threads::Threads)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS ${LABEL} ${TEST_NAME})
 endfunction()
