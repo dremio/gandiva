@@ -46,13 +46,13 @@ class FunctionSignature {
 
   bool operator == (const FunctionSignature &other) const {
     if (param_types_.size() != other.param_types_.size() ||
-        !DataTypeEquals(ret_type_, other.ret_type_) ||
+        !DataTypeEquals(*ret_type_, *other.ret_type_) ||
         base_name_ != other.base_name_) {
       return false;
     }
 
     for (size_t idx = 0; idx < param_types_.size(); idx++) {
-      if (!DataTypeEquals(param_types_[idx], other.param_types_[idx])) {
+      if (!DataTypeEquals(*param_types_[idx], *other.param_types_[idx])) {
         return false;
       }
     }
@@ -96,8 +96,8 @@ class FunctionSignature {
    * TODO : for some of the types, this shouldn't match type specific data. eg. for
    * decimals, this shouldn't match precision/scale.
    */
-  bool DataTypeEquals(const DataTypePtr left, const DataTypePtr right) const {
-    return left->Equals(right);
+  bool DataTypeEquals(const arrow::DataType &left, const arrow::DataType &right) const {
+    return left.Equals(right);
   }
 
   std::string base_name_;

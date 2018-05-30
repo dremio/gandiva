@@ -35,6 +35,9 @@ include_directories(${GTEST_INCLUDE_DIRS})
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 include_directories(.)
 include_directories(codegen)
 include_directories(codegen/cex)
@@ -80,11 +83,9 @@ llvm_map_components_to_libnames(llvm_libs core mcjit native ipo bitreader target
 # Link against LLVM libraries
 target_link_libraries(gandiva ${llvm_libs})
 target_link_libraries(gandiva ${ARROW_LIB})
+target_link_libraries(${TEST_NAME} Threads::Threads)
 
 # Test related
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
 
 function(ADD_GANDIVA_TEST LABEL REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
@@ -97,9 +98,9 @@ function(ADD_GANDIVA_TEST LABEL REL_TEST_NAME)
   if(${REL_TEST_NAME} MATCHES "llvm")
     target_link_libraries(${TEST_NAME} ${llvm_libs})
   endif()
+  target_link_libraries(${TEST_NAME} Threads::Threads)
   target_link_libraries(${TEST_NAME} ${ARROW_LIB})
   target_link_libraries(${TEST_NAME} ${GTEST_BOTH_LIBRARIES})
-  target_link_libraries(${TEST_NAME} Threads::Threads)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS ${LABEL} ${TEST_NAME})
 endfunction()
