@@ -36,8 +36,7 @@ env:
 matrix:
   fast_finish: true
   include:
-  # C++ w/ clang 6.0
-  - compiler: clang
+  - compiler: gcc
     os: linux
     language: cpp
     addons:
@@ -52,8 +51,6 @@ matrix:
           - clang-format-6.0
           - clang-tidy-6.0
           - llvm-6.0-dev
-    env:
-      - COMPILER="clang++-6.0"
     before_script:
     - ulimit -c unlimited -S
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
