@@ -22,6 +22,6 @@ source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 mkdir $TRAVIS_BUILD_DIR/cpp/lint
 pushd $TRAVIS_BUILD_DIR/cpp/lint
 
-cmake ..
-make lint
+#cmake ..
+#make lint
 popd
