@@ -51,7 +51,7 @@ matrix:
           - clang-5.0
           - clang-format-5.0
           - clang-tidy-5.0
-          - llvm-dev-5.0
+          - llvm-5.0-dev
     env:
       - COMPILER="clang++-5.0"
     before_script:
