@@ -17,6 +17,6 @@
 namespace gandiva {
 
 // Path to the byte-code file.
-extern const char kByteCodeFilePath[] = "${GANDIVA_BC_INSTALL_PATH}";
+extern const char kByteCodeFilePath[] = "${GANDIVA_BC_OUTPUT_PATH}";
 
 } // namespace gandiva
