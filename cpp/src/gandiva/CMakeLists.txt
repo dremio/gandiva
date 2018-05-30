@@ -23,7 +23,7 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-find_library(ARROW_LIB arrow)
+find_library(ARROW_LIB NAMES libarrow.a arrow)
 message(STATUS "Found arrow : ${ARROW_LIB}")
 find_path(ARROW_INCLUDE_DIR arrow/type.h)
 message(STATUS "include dir for arrow : ${ARROW_INCLUDE_DIR}")
