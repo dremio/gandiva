@@ -24,10 +24,10 @@ typedef int64_t (*add_vector_func_t)(int64_t *elements, int nelements);
 
 class TestEngine : public ::testing::Test {
  protected:
-  llvm::Function *BuildVecAdd(Engine * engine, LLVMTypes *types);
+  llvm::Function *BuildVecAdd(Engine *engine, LLVMTypes *types);
 };
 
-llvm::Function *TestEngine::BuildVecAdd(Engine * engine, LLVMTypes *types) {
+llvm::Function *TestEngine::BuildVecAdd(Engine *engine, LLVMTypes *types) {
   llvm::IRBuilder<> &builder = engine->ir_builder();
   llvm::LLVMContext *context = engine->context();
 

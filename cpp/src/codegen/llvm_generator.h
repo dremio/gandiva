@@ -36,7 +36,7 @@ namespace gandiva {
 /// Builds an LLVM module and generates code for the specified set of expressions.
 class LLVMGenerator {
  public:
-  ~LLVMGenerator();
+    ~LLVMGenerator() {}
 
   /// \brief Factory method to initialize the generator.
   static Status Make(std::unique_ptr<LLVMGenerator> * llvmGenerator);
@@ -118,9 +118,9 @@ class LLVMGenerator {
 
   /// Generate code for the value array of one expression.
   Status CodeGenExprValue(DexPtr value_expr,
-                                   FieldDescriptorPtr output,
-                                   int suffix_idx,
-                                   llvm::Function ** fn);
+                          FieldDescriptorPtr output,
+                          int suffix_idx,
+                          llvm::Function ** fn);
 
   /// Generate code to get the bit value at 'position' in the bitmap.
   llvm::Value *GetPackedBitValue(llvm::Value *bitMap, llvm::Value *position);

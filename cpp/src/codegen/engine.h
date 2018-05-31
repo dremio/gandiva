@@ -40,7 +40,7 @@ class Engine {
   /// object.
   ///
   /// @param engine (out) : the created engine.
-  static Status InitializeEngine(std::unique_ptr<Engine>* engine);
+  static Status Make(std::unique_ptr<Engine>* engine);
 
   /// Add the function to the list of IR functions that need to be compiled.
   /// Compiling only the functions that are used by the module saves time.

@@ -31,11 +31,11 @@ LLVMGenerator::LLVMGenerator() :
   enable_ir_traces_(false) {}
 
 Status LLVMGenerator::Make(std::unique_ptr<LLVMGenerator> * llvmGenerator) {
-  LLVMGenerator *llvmGenObj = new LLVMGenerator();
-  Status status = Engine::InitializeEngine(&(llvmGenObj->engine_));
+  std::unique_ptr<LLVMGenerator> llvmGenObj = std::unique_ptr(new LLVMGenerator());
+  Status status = Engine::Make(&(llvmGenObj->engine_));
   GANDIVA_RETURN_NOT_OK(status);
   llvmGenObj->types_ = new LLVMTypes(*(llvmGenObj->engine_)->context());
-  *llvmGenerator = std::unique_ptr<LLVMGenerator>(llvmGenObj);
+  *llvmGenerator = std::move(llvmGenObj);
   return Status::OK();
 }
 
@@ -43,6 +43,7 @@ LLVMGenerator::~LLVMGenerator() {
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); ++it) {
     delete *it;
   }
+  delete types_;
 }
 
 Status LLVMGenerator::Add(const ExpressionPtr expr,
@@ -221,9 +222,9 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr,
   std::string func_name = "expr_" + std::to_string(suffix_idx);
   engine_->AddFunctionToCompile(func_name);
   *fn = llvm::Function::Create(prototype,
-                              llvm::GlobalValue::ExternalLinkage,
-                              func_name,
-                              module());
+                               llvm::GlobalValue::ExternalLinkage,
+                               func_name,
+                               module());
   GANDIVA_RETURN_FAILURE_IF_FALSE((fn != NULL),
                                   Status::CodeGenError("Error creating function."));
   // Name the arguments

@@ -58,10 +58,10 @@ void Engine::InitOnce() {
 }
 
 /// factory method to construct the engine.
-Status Engine::InitializeEngine(std::unique_ptr<Engine>* engine) {
-  Engine * engineObj = new Engine();
+Status Engine::Make(std::unique_ptr<Engine>* engine) {
+  std::unique_ptr<Engine> engineObj = std::unique_ptr(new Engine());
 
-  std::call_once(init_once_flag, engineObj->InitOnce);
+  std::call_once(init_once_flag, [engineObj] {engineObj->InitOnce();});
   engineObj->context_.reset(new llvm::LLVMContext());
   engineObj->ir_builder_.reset(new llvm::IRBuilder<>(*(engineObj->context())));
 
@@ -82,7 +82,7 @@ Status Engine::InitializeEngine(std::unique_ptr<Engine>* engine) {
 
   Status result = engineObj->LoadPreCompiledIRFiles();
   GANDIVA_RETURN_NOT_OK(result);
-  *engine = std::unique_ptr<Engine> (engineObj);
+  *engine = std::move(engineObj);
   return Status::OK();
 }
 

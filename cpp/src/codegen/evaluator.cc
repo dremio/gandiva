@@ -32,9 +32,9 @@ Evaluator::Evaluator(std::unique_ptr<LLVMGenerator> llvm_generator,
     pool_(pool) {}
 
 Status Evaluator::Make(SchemaPtr schema,
-            const ExpressionVector &exprs,
-            arrow::MemoryPool *pool,
-            std::shared_ptr<Evaluator> *evaluator) {
+                       const ExpressionVector &exprs,
+                       arrow::MemoryPool *pool,
+                       std::shared_ptr<Evaluator> *evaluator) {
   // TODO: validate schema
   // TODO : validate expressions (fields, function signatures, output types, ..)
 
@@ -52,9 +52,9 @@ Status Evaluator::Make(SchemaPtr schema,
 
   // Instantiate the evaluator with the completely built llvm generator
   *evaluator = std::shared_ptr<Evaluator>(new Evaluator(std::move(llvm_gen),
-                                                  schema,
-                                                  output_fields,
-                                                  pool));
+                                                        schema,
+                                                        output_fields,
+                                                        pool));
   return Status::OK();
 }
 
