@@ -55,7 +55,6 @@ matrix:
     before_script:
     - ulimit -c unlimited -S
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_lint.sh
     script:
     - $TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh
 
