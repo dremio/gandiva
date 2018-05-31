@@ -208,7 +208,7 @@ llvm::Value *LLVMGenerator::GetDataReference(llvm::Value *arg_addrs,
 Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr,
                                                 FieldDescriptorPtr output,
                                                 int suffix_idx,
-                                                llvm::Function ** fn) {
+                                                llvm::Function **fn) {
   llvm::IRBuilder<> &builder = ir_builder();
 
   // Create fn prototype :

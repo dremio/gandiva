@@ -21,24 +21,24 @@
 #include <string>
 #include <utility>
 
-#define GANDIVA_RETURN_NOT_OK(status)                                                    \
-  do {                                                                                   \
-    Status _status = (status);                                                           \
-    if (!_status.ok()) {                                                                 \
-      std::stringstream ss;                                                              \
+#define GANDIVA_RETURN_NOT_OK(status)                                                         \
+  do {                                                                                        \
+    Status _status = (status);                                                                \
+    if (!_status.ok()) {                                                                      \
+      std::stringstream ss;                                                                   \
       ss << __FILE__ << ":" << __LINE__ << " code: " << #status << "\n" << _status.message(); \
-      return Status(_status.code(), ss.str());                                           \
-    }                                                                                    \
+      return Status(_status.code(), ss.str());                                                \
+    }                                                                                         \
 } while (0)
 
-#define GANDIVA_RETURN_FAILURE_IF_FALSE(condition, status)                             \
-do {                                                                                     \
-  if (!condition) {                                                                      \
-    Status _status = (status);                                                           \
-    std::stringstream ss;                                                                \
-    ss << __FILE__ << ":" << __LINE__ << " code: " << #status << "\n" << _status.message();   \
-    return Status(_status.code(), ss.str());                                             \
-  }                                                                                      \
+#define GANDIVA_RETURN_FAILURE_IF_FALSE(condition, status)                                  \
+do {                                                                                        \
+  if (!condition) {                                                                         \
+    Status _status = (status);                                                              \
+    std::stringstream ss;                                                                   \
+    ss << __FILE__ << ":" << __LINE__ << " code: " << #status << "\n" << _status.message(); \
+    return Status(_status.code(), ss.str());                                                \
+  }                                                                                         \
 } while (0)
 
 namespace gandiva {
