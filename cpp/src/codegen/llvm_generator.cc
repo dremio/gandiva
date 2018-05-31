@@ -31,7 +31,7 @@ LLVMGenerator::LLVMGenerator() :
   optimise_ir_(true),
   enable_ir_traces_(false) {}
 
-Status LLVMGenerator::Make(std::unique_ptr<LLVMGenerator> * llvmGenerator) {
+Status LLVMGenerator::Make(std::unique_ptr<LLVMGenerator> *llvmGenerator) {
   std::unique_ptr<LLVMGenerator> llvmGenObj = std::unique_ptr<LLVMGenerator>(
                                                 new LLVMGenerator());
   Status status = Engine::Make(&(llvmGenObj->engine_));
@@ -49,7 +49,7 @@ LLVMGenerator::~LLVMGenerator() {
 }
 
 Status LLVMGenerator::Add(const ExpressionPtr expr,
-                        const FieldDescriptorPtr output) {
+                          const FieldDescriptorPtr output) {
   int idx = compiled_exprs_.size();
 
   // decompose the expression to separate out value and validities.

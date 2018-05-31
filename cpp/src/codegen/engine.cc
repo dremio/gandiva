@@ -58,7 +58,7 @@ void Engine::InitOnce() {
 }
 
 /// factory method to construct the engine.
-Status Engine::Make(std::unique_ptr<Engine>* engine) {
+Status Engine::Make(std::unique_ptr<Engine> *engine) {
   std::unique_ptr<Engine> engineObj = std::unique_ptr<Engine>(new Engine());
 
   std::call_once(init_once_flag, [&engineObj] {engineObj->InitOnce();});
