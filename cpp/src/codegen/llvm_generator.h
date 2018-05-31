@@ -36,7 +36,7 @@ namespace gandiva {
 /// Builds an LLVM module and generates code for the specified set of expressions.
 class LLVMGenerator {
  public:
-    ~LLVMGenerator() {}
+    ~LLVMGenerator();
 
   /// \brief Factory method to initialize the generator.
   static Status Make(std::unique_ptr<LLVMGenerator> * llvmGenerator);

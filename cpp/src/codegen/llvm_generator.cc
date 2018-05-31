@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <utility>
 #include "gandiva/expression.h"
 #include "codegen/dex.h"
 #include "codegen/function_registry.h"
@@ -31,7 +32,8 @@ LLVMGenerator::LLVMGenerator() :
   enable_ir_traces_(false) {}
 
 Status LLVMGenerator::Make(std::unique_ptr<LLVMGenerator> * llvmGenerator) {
-  std::unique_ptr<LLVMGenerator> llvmGenObj = std::unique_ptr(new LLVMGenerator());
+  std::unique_ptr<LLVMGenerator> llvmGenObj = std::unique_ptr<LLVMGenerator>(
+                                                new LLVMGenerator());
   Status status = Engine::Make(&(llvmGenObj->engine_));
   GANDIVA_RETURN_NOT_OK(status);
   llvmGenObj->types_ = new LLVMTypes(*(llvmGenObj->engine_)->context());

@@ -59,9 +59,9 @@ void Engine::InitOnce() {
 
 /// factory method to construct the engine.
 Status Engine::Make(std::unique_ptr<Engine>* engine) {
-  std::unique_ptr<Engine> engineObj = std::unique_ptr(new Engine());
+  std::unique_ptr<Engine> engineObj = std::unique_ptr<Engine>(new Engine());
 
-  std::call_once(init_once_flag, [engineObj] {engineObj->InitOnce();});
+  std::call_once(init_once_flag, [&engineObj] {engineObj->InitOnce();});
   engineObj->context_.reset(new llvm::LLVMContext());
   engineObj->ir_builder_.reset(new llvm::IRBuilder<>(*(engineObj->context())));
 
