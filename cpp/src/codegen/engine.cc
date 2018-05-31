@@ -194,7 +194,6 @@ Status Engine::FinalizeModule(bool optimise_ir, bool dump_ir) {
 
 void *Engine::CompiledFunction(llvm::Function *irFunction) {
   DCHECK(module_finalized_);
-  std::cout << "test \n";
   return execution_engine_->getPointerToFunction(irFunction);
 }
 

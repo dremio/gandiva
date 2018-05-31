@@ -97,11 +97,8 @@ TEST_F(TestLLVMGenerator, TestAdd) {
   status = generator->CodeGenExprValue(func_dex, desc_sum, 0, &ir_func);
   ASSERT_TRUE(status.ok());
 
-  std::cout<< "hello1 \n";
   generator->engine_->AddFunctionToCompile("eval_0");
-  std::cout<< "hello2 \n";
   generator->engine_->FinalizeModule(true, false);
-  std::cout<< "hello3 \n";
   EvalFunc eval_func = (EvalFunc)generator->engine_->CompiledFunction(ir_func);
 
   int num_records = 4;
@@ -120,9 +117,7 @@ TEST_F(TestLLVMGenerator, TestAdd) {
     reinterpret_cast<uint8_t *>(out),
     reinterpret_cast<uint8_t *>(&out_bitmap),
   };
-  std::cout<< "hello4 \n";
   eval_func(addrs, num_records);
-  std::cout<< "hello5 \n";
   uint32_t expected[] = { 6, 8, 10, 12 };
   for (int i = 0; i  < num_records; i++) {
     EXPECT_EQ(expected[i], out[i]);
