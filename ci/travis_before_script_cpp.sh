@@ -44,6 +44,8 @@ if [ "$GANDIVA_TRAVIS_USE_TOOLCHAIN" == "1" ]; then
   CMAKE_COMMON_FLAGS="${CMAKE_COMMON_FLAGS}"
 fi
 
+#source $TRAVIS_BUILD_DIR/ci/travis_install_arrow.sh
+
 mkdir -p $GANDIVA_CPP_BUILD_DIR
 pushd $GANDIVA_CPP_BUILD_DIR
 
@@ -69,6 +71,9 @@ else
           -DBUILD_WARNING_LEVEL=$GANDIVA_BUILD_WARNING_LEVEL \
           $GANDIVA_CPP_DIR
 fi
+
+# run lint
+$TRAVIS_MAKE lint
 
 # Build and install libraries
 $TRAVIS_MAKE -j4

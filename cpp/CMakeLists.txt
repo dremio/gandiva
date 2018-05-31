@@ -34,7 +34,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Select compiler flags.
-add_compile_options(-Wall -Werror)
+add_compile_options(-Wall -Werror -stdlib=libstdc++)
 
 # set the build-support dir.
 set(BUILD_SUPPORT_DIR "${CMAKE_SOURCE_DIR}/build-support")
