@@ -15,6 +15,19 @@
 sudo: required
 dist: trusty
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty-6.0
+    packages:
+      - gdb
+      - ccache
+      - clang-6.0
+      - clang-format-6.0
+      - clang-tidy-6.0
+      - llvm-6.0-dev
+
 cache:
   ccache: true
 
@@ -32,19 +45,15 @@ matrix:
   fast_finish: true
   allow_failures:
   include:
-  # C++ & Python w/ clang 6.0
-  - language: cpp
-    os: linux
-    group: deprecated
+  - os: linux
+    language: cpp
+    compiler:
+    - gcc
     env:
     - GANDIVA_TRAVIS_USE_TOOLCHAIN=1
     - GANDIVA_BUILD_WARNING_LEVEL=CHECKIN
-    - CC="clang-6.0"
-    - CXX="clang++-6.0"
     before_script:
     - ulimit -c unlimited -S
-    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_install_clang_tools.sh
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
     - $TRAVIS_BUILD_DIR/ci/travis_lint.sh
     script:
