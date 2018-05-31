@@ -34,7 +34,6 @@
 #include <string>
 #include <unordered_set>
 #include <utility>
-#include "codegen/codegen_exception.h"
 #include "codegen/engine.h"
 
 namespace gandiva {
@@ -58,33 +57,39 @@ void Engine::InitOnce() {
   init_once_done_ = true;
 }
 
-Engine::Engine()
-    : module_finalized_(false) {
-  std::call_once(init_once_flag, InitOnce);
-  context_.reset(new llvm::LLVMContext());
-  ir_builder_.reset(new llvm::IRBuilder<>(*context()));
+/// factory method to construct the engine.
+Status Engine::InitializeEngine(std::unique_ptr<Engine>* engine) {
+  Engine * engineObj = new Engine();
+
+  std::call_once(init_once_flag, engineObj->InitOnce);
+  engineObj->context_.reset(new llvm::LLVMContext());
+  engineObj->ir_builder_.reset(new llvm::IRBuilder<>(*(engineObj->context())));
 
   /* Create the execution engine */
-  std::unique_ptr<llvm::Module> cg_module(new llvm::Module("codegen", *context()));
-  module_ = cg_module.get();
+  std::unique_ptr<llvm::Module> cg_module(new llvm::Module("codegen",
+                                          *(engineObj->context())));
+  engineObj->module_ = cg_module.get();
 
   llvm::EngineBuilder engineBuilder(std::move(cg_module));
   engineBuilder.setEngineKind(llvm::EngineKind::JIT);
   engineBuilder.setOptLevel(llvm::CodeGenOpt::Aggressive);
-  engineBuilder.setErrorStr(&llvm_error_);
-  execution_engine_.reset(engineBuilder.create());
-  if (execution_engine_ == NULL) {
-    module_ = NULL;
-    throw CodeGenException(llvm_error_);
+  engineBuilder.setErrorStr(&(engineObj->llvm_error_));
+  engineObj->execution_engine_.reset(engineBuilder.create());
+  if (engineObj->execution_engine_ == NULL) {
+    engineObj->module_ = NULL;
+    return Status::CodeGenError(engineObj->llvm_error_);
   }
 
-  LoadPreCompiledIRFiles();
+  Status result = engineObj->LoadPreCompiledIRFiles();
+  GANDIVA_RETURN_NOT_OK(result);
+  *engine = std::unique_ptr<Engine> (engineObj);
+  return Status::OK();
 }
 
 /*
  * Handling for pre-compiled IR libraries.
  */
-void Engine::LoadPreCompiledIRFiles() {
+Status Engine::LoadPreCompiledIRFiles() {
   /// Read from file into memory buffer.
   llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer_or_error =
       llvm::MemoryBuffer::getFile(kByteCodeFilePath);
@@ -92,7 +97,7 @@ void Engine::LoadPreCompiledIRFiles() {
     std::stringstream ss;
     ss << "Could not load module from IR " << kByteCodeFilePath << ": " <<
           buffer_or_error.getError().message();
-    throw CodeGenException(ss.str());
+    return Status::CodeGenError(ss.str());
   }
   std::unique_ptr<llvm::MemoryBuffer> buffer = move(buffer_or_error.get());
 
@@ -104,26 +109,26 @@ void Engine::LoadPreCompiledIRFiles() {
     llvm::handleAllErrors(module_or_error.takeError(), [&](llvm::ErrorInfoBase &eib) {
       error_string = eib.message();
     });
-    throw CodeGenException(error_string);
+    return Status::CodeGenError(error_string);
   }
   std::unique_ptr<llvm::Module> ir_module = move(module_or_error.get());
 
   /// Verify the IR module
   if (llvm::verifyModule(*ir_module.get(), &llvm::errs())) {
-    throw CodeGenException("verify of IR Module failed");
+    return Status::CodeGenError("verify of IR Module failed");
   }
 
   // Link this to the primary module.
   if (llvm::Linker::linkModules(*module_, move(ir_module))) {
-    throw CodeGenException("failed to link IR Modules");
+    return Status::CodeGenError("failed to link IR Modules");
   }
+  return Status::OK();
 }
 
 /*
  * Optimise and compile the module.
  */
-void
-Engine::FinalizeModule(bool optimise_ir, bool dump_ir) {
+Status Engine::FinalizeModule(bool optimise_ir, bool dump_ir) {
   if (dump_ir) {
     DumpIR("Before optimise");
   }
@@ -178,16 +183,18 @@ Engine::FinalizeModule(bool optimise_ir, bool dump_ir) {
   }
 
   if (llvm::verifyModule(*module_, &llvm::errs())) {
-    throw CodeGenException("verify of module failed after optimisation passes");
+    return Status::CodeGenError("verify of module failed after optimisation passes");
   }
 
   // do the compilation
   execution_engine_->finalizeObject();
   module_finalized_ = true;
+  return Status::OK();
 }
 
 void *Engine::CompiledFunction(llvm::Function *irFunction) {
-  assert(module_finalized_);
+  DCHECK(module_finalized_);
+  std::cout << "test \n";
   return execution_engine_->getPointerToFunction(irFunction);
 }
 

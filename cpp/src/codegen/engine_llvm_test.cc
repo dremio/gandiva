@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 #include "codegen/engine.h"
 #include "codegen/llvm_types.h"
-#include "codegen/codegen_exception.h"
 
 namespace gandiva {
 
@@ -25,10 +24,10 @@ typedef int64_t (*add_vector_func_t)(int64_t *elements, int nelements);
 
 class TestEngine : public ::testing::Test {
  protected:
-  llvm::Function *BuildVecAdd(Engine *engine, LLVMTypes *types);
+  llvm::Function *BuildVecAdd(Engine * engine, LLVMTypes *types);
 };
 
-llvm::Function *TestEngine::BuildVecAdd(Engine *engine, LLVMTypes *types) {
+llvm::Function *TestEngine::BuildVecAdd(Engine * engine, LLVMTypes *types) {
   llvm::IRBuilder<> &builder = engine->ir_builder();
   llvm::LLVMContext *context = engine->context();
 
@@ -103,26 +102,28 @@ llvm::Function *TestEngine::BuildVecAdd(Engine *engine, LLVMTypes *types) {
 }
 
 TEST_F(TestEngine, TestAddUnoptimised) {
-  Engine engine;
-  LLVMTypes types(*engine.context());
-  llvm::Function *ir_func = BuildVecAdd(&engine, &types);
-  engine.FinalizeModule(false, false);
+  std::unique_ptr<Engine> engine;
+  Engine::InitializeEngine(&engine);
+  LLVMTypes types(*engine->context());
+  llvm::Function *ir_func = BuildVecAdd(engine.get(), &types);
+  engine->FinalizeModule(false, false);
 
   add_vector_func_t add_func =
-      reinterpret_cast<add_vector_func_t>(engine.CompiledFunction(ir_func));
+      reinterpret_cast<add_vector_func_t>(engine->CompiledFunction(ir_func));
 
   int64_t my_array[] = {1, 3, -5, 8, 10};
   EXPECT_EQ(add_func(my_array, 5), 17);
 }
 
 TEST_F(TestEngine, TestAddOptimised) {
-  Engine engine;
-  LLVMTypes types(*engine.context());
-  llvm::Function *ir_func = BuildVecAdd(&engine, &types);
-  engine.FinalizeModule(true, false);
+  std::unique_ptr<Engine> engine;
+  Engine::InitializeEngine(&engine);
+  LLVMTypes types(*engine->context());
+  llvm::Function *ir_func = BuildVecAdd(engine.get(), &types);
+  engine->FinalizeModule(true, false);
 
   add_vector_func_t add_func =
-      reinterpret_cast<add_vector_func_t>(engine.CompiledFunction(ir_func));
+      reinterpret_cast<add_vector_func_t>(engine->CompiledFunction(ir_func));
 
   int64_t my_array[] = {1, 3, -5, 8, 10};
   EXPECT_EQ(add_func(my_array, 5), 17);
