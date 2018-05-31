@@ -59,30 +59,30 @@ void Engine::InitOnce() {
 
 /// factory method to construct the engine.
 Status Engine::Make(std::unique_ptr<Engine> *engine) {
-  std::unique_ptr<Engine> engineObj = std::unique_ptr<Engine>(new Engine());
+  std::unique_ptr<Engine> engine_obj(new Engine());
 
-  std::call_once(init_once_flag, [&engineObj] {engineObj->InitOnce();});
-  engineObj->context_.reset(new llvm::LLVMContext());
-  engineObj->ir_builder_.reset(new llvm::IRBuilder<>(*(engineObj->context())));
+  std::call_once(init_once_flag, [&engine_obj] {engine_obj->InitOnce();});
+  engine_obj->context_.reset(new llvm::LLVMContext());
+  engine_obj->ir_builder_.reset(new llvm::IRBuilder<>(*(engine_obj->context())));
 
   /* Create the execution engine */
   std::unique_ptr<llvm::Module> cg_module(new llvm::Module("codegen",
-                                          *(engineObj->context())));
-  engineObj->module_ = cg_module.get();
+                                          *(engine_obj->context())));
+  engine_obj->module_ = cg_module.get();
 
   llvm::EngineBuilder engineBuilder(std::move(cg_module));
   engineBuilder.setEngineKind(llvm::EngineKind::JIT);
   engineBuilder.setOptLevel(llvm::CodeGenOpt::Aggressive);
-  engineBuilder.setErrorStr(&(engineObj->llvm_error_));
-  engineObj->execution_engine_.reset(engineBuilder.create());
-  if (engineObj->execution_engine_ == NULL) {
-    engineObj->module_ = NULL;
-    return Status::CodeGenError(engineObj->llvm_error_);
+  engineBuilder.setErrorStr(&(engine_obj->llvm_error_));
+  engine_obj->execution_engine_.reset(engineBuilder.create());
+  if (engine_obj->execution_engine_ == NULL) {
+    engine_obj->module_ = NULL;
+    return Status::CodeGenError(engine_obj->llvm_error_);
   }
 
-  Status result = engineObj->LoadPreCompiledIRFiles();
+  Status result = engine_obj->LoadPreCompiledIRFiles();
   GANDIVA_RETURN_NOT_OK(result);
-  *engine = std::move(engineObj);
+  *engine = std::move(engine_obj);
   return Status::OK();
 }
 

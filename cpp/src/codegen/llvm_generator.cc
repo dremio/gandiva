@@ -31,13 +31,12 @@ LLVMGenerator::LLVMGenerator() :
   optimise_ir_(true),
   enable_ir_traces_(false) {}
 
-Status LLVMGenerator::Make(std::unique_ptr<LLVMGenerator> *llvmGenerator) {
-  std::unique_ptr<LLVMGenerator> llvmGenObj = std::unique_ptr<LLVMGenerator>(
-                                                new LLVMGenerator());
-  Status status = Engine::Make(&(llvmGenObj->engine_));
+Status LLVMGenerator::Make(std::unique_ptr<LLVMGenerator> *llvm_generator) {
+  std::unique_ptr<LLVMGenerator> llvmgen_obj(new LLVMGenerator());
+  Status status = Engine::Make(&(llvmgen_obj->engine_));
   GANDIVA_RETURN_NOT_OK(status);
-  llvmGenObj->types_ = new LLVMTypes(*(llvmGenObj->engine_)->context());
-  *llvmGenerator = std::move(llvmGenObj);
+  llvmgen_obj->types_ = new LLVMTypes(*(llvmgen_obj->engine_)->context());
+  *llvm_generator = std::move(llvmgen_obj);
   return Status::OK();
 }
 
@@ -98,7 +97,7 @@ Status LLVMGenerator::Build(const ExpressionVector &exprs) {
 /*
  * Execute the compiled module against the provided vectors.
  */
-int LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
+Status LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
                            const arrow::ArrayVector &outputs) {
   DCHECK_GT(record_batch.num_rows(), 0);
 
@@ -117,7 +116,7 @@ int LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
     ComputeBitMapsForExpr(compiled_expr, eval_batch->buffers(), eval_batch->num_buffers(),
                           record_batch.num_rows());
   }
-  return 0;
+  return Status::OK();
 }
 
 llvm::Value *LLVMGenerator::LoadVectorAtIndex(llvm::Value *arg_addrs,
@@ -206,9 +205,9 @@ llvm::Value *LLVMGenerator::GetDataReference(llvm::Value *arg_addrs,
  *
  */
 Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr,
-                                                FieldDescriptorPtr output,
-                                                int suffix_idx,
-                                                llvm::Function **fn) {
+                                       FieldDescriptorPtr output,
+                                       int suffix_idx,
+                                       llvm::Function **fn) {
   llvm::IRBuilder<> &builder = ir_builder();
 
   // Create fn prototype :
