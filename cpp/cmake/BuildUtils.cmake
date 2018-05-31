@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Add a unittest executable, with it's dependancies.
+# Add a unittest executable, with its dependencies.
 function(add_gandiva_unit_test REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
 
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
   if(${REL_TEST_NAME} MATCHES "llvm")
-    # if the unit test has llvm in it's name, include llvm.
+    # If the unit test has llvm in its name, include llvm.
     target_link_llvm(${TEST_NAME} PRIVATE)
   endif()
 
@@ -33,7 +33,7 @@ function(add_gandiva_unit_test REL_TEST_NAME)
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
 endfunction(add_gandiva_unit_test REL_TEST_NAME)
 
-# Add an integ executable, with it's dependancies.
+# Add an integ executable, with its dependencies.
 function(add_gandiva_integ_test REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
 

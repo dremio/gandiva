@@ -46,10 +46,14 @@ target_include_directories(gandiva
     ${CMAKE_SOURCE_DIR}/src
 )
 
-# ARROW is a public dependancy i.e users of gandiva also will have a dependancy on arrow.
-target_link_libraries(gandiva PUBLIC ARROW::ARROW Boost::boost)
+# ARROW is a public dependency i.e users of gandiva also will have a dependency on arrow.
+target_link_libraries(gandiva
+  PUBLIC
+    ARROW::ARROW
+  PRIVATE
+    Boost::boost)
 
-# LLVM is a private dependancy i.e users of gandiva will not need to include llvm headers 
+# LLVM is a private dependency i.e users of gandiva will not need to include llvm headers
 # or link with llvm libraries.
 target_link_llvm(gandiva PRIVATE)
 
