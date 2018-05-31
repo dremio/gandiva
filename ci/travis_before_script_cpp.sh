@@ -70,6 +70,9 @@ else
           $GANDIVA_CPP_DIR
 fi
 
+# Do the lint checks
+$TRAVIS_MAKE lint
+
 # Build and install libraries
 $TRAVIS_MAKE -j4
 
