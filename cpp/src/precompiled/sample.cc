@@ -21,7 +21,6 @@ extern "C" {
 // Dummy function to test NULL_INTERNAL (most valid ones need varchar).
 
 // If input is valid and a multiple of 2, return half the value. else, null.
-__attribute__((always_inline))
 int half_or_null_int32(int32 val, bool in_valid, bool *out_valid) {
   if (in_valid && (val % 2 == 0)) {
     // output is valid.
