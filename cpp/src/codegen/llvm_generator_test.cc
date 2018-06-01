@@ -158,7 +158,7 @@ TEST_F(TestLLVMGenerator, TestNullInternal) {
   status = generator->CodeGenExprValue(func_dex, desc_result, 0, &ir_func);
   ASSERT_TRUE(status.ok());
 
-  generator->engine_->FinalizeModule(true /*optimise_ir*/, true /*dump_ir*/);
+  generator->engine_->FinalizeModule(true /*optimise_ir*/, false /*dump_ir*/);
 
   EvalFunc eval_func = (EvalFunc)generator->engine_->CompiledFunction(ir_func);
 
