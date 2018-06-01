@@ -27,6 +27,11 @@
 
 namespace gandiva {
 
+#define ADD_TRACE(...)     \
+  if (enable_ir_traces_) {      \
+    AddTrace(__VA_ARGS__); \
+  }
+
 LLVMGenerator::LLVMGenerator() :
   in_replay_(false),
   optimise_ir_(true),
@@ -74,9 +79,7 @@ Status LLVMGenerator::Add(const ExpressionPtr expr,
  * Build and optimise module for projection expression.
  */
 Status LLVMGenerator::Build(const ExpressionVector &exprs) {
-  for (auto it = exprs.begin(); it != exprs.end(); it++) {
-    ExpressionPtr expr = *it;
-
+  for (auto &expr : exprs) {
     auto output = annotator_.AddOutputFieldDescriptor(expr->result());
     Add(expr, output);
   }
@@ -86,8 +89,7 @@ Status LLVMGenerator::Build(const ExpressionVector &exprs) {
   GANDIVA_RETURN_NOT_OK(result);
 
   // setup the jit functions for each expression.
-  for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
-    CompiledExpr *compiled_expr = *it;
+  for (auto compiled_expr : compiled_exprs_) {
     llvm::Function *ir_func = compiled_expr->ir_function();
     EvalFunc fn = reinterpret_cast<EvalFunc>(engine_->CompiledFunction(ir_func));
     compiled_expr->set_jit_function(fn);
@@ -106,9 +108,7 @@ Status LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
   DCHECK_GT(eval_batch->num_buffers(), 0);
 
   // generate bitmap vectors, by doing an intersection.
-  for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); it++) {
-    CompiledExpr *compiled_expr = *it;
-
+  for (auto compiled_expr : compiled_exprs_) {
     // generate data/offset vectors.
     EvalFunc jit_function = compiled_expr->jit_function();
     jit_function(eval_batch->buffers(),
@@ -164,57 +164,55 @@ llvm::Value *LLVMGenerator::GetLocalBitMapReference(llvm::Value *arg_bitmaps,
                                      std::to_string(idx) + "_lbmap");
 }
 
-/*
- * Generate code for one expression.
- *
- * Sample IR code for "c1:int + c2:int"
- *
- * The C-code equivalent is :
- * ------------------------------
- * int expr_0(long *addrs, int nrecords) {
- *   int *outVec = (int *) addrs[5];
- *   int *c0Vec = (int *) addrs[1];
- *   int *c1Vec = (int *) addrs[3];
- *   for (int loop_var = 0; loop_var < nrecords; ++loop_var) {
- *     int c0 = c0Vec[loop_var];
- *     int c1 = c1Vec[loop_var];
- *     int out = c0 + c1;
- *     outVec[loop_var] = out;
- *   }
- * }
- *
- * IR Code
- * --------
- *
- * define i32 @expr_0(i64* %args, i64* %local_bitmaps, i32 %nrecords) {
- * entry:
- *   %outmemAddr = getelementptr i64, i64* %args, i32 5
- *   %outmem = load i64, i64* %outmemAddr
- *   %outVec = inttoptr i64 %outmem to i32*
- *   %c0memAddr = getelementptr i64, i64* %args, i32 1
- *   %c0mem = load i64, i64* %c0memAddr
- *   %c0Vec = inttoptr i64 %c0mem to i32*
- *   %c1memAddr = getelementptr i64, i64* %args, i32 3
- *   %c1mem = load i64, i64* %c1memAddr
- *   %c1Vec = inttoptr i64 %c1mem to i32*
- *   br label %loop
- * loop:                                             ; preds = %loop, %entry
- *   %loop_var = phi i32 [ 0, %entry ], [ %"loop_var+1", %loop ]
- *   %"loop_var+1" = add i32 %loop_var, 1
- *   %0 = getelementptr i32, i32* %c0Vec, i32 %loop_var
- *   %c0 = load i32, i32* %0
- *   %1 = getelementptr i32, i32* %c1Vec, i32 %loop_var
- *   %c1 = load i32, i32* %1
- *   %add_int_int = call i32 @add_int_int(i32 %c0, i32 %c1)
- *   %2 = getelementptr i32, i32* %outVec, i32 %loop_var
- *   store i32 %add_int_int, i32* %2
- *   %"loop_var < nrec" = icmp slt i32 %"loop_var+1", %nrecords
- *   br i1 %"loop_var < nrec", label %loop, label %exit
- * exit:                                             ; preds = %loop
- *   ret i32 0
- * }
- *
- */
+/// \brief Generate code for one expression.
+
+// Sample IR code for "c1:int + c2:int"
+//
+// The C-code equivalent is :
+// ------------------------------
+// int expr_0(int64_t *addrs, int64_t *local_bitmaps, int nrecords) {
+//   int *outVec = (int *) addrs[5];
+//   int *c0Vec = (int *) addrs[1];
+//   int *c1Vec = (int *) addrs[3];
+//   for (int loop_var = 0; loop_var < nrecords; ++loop_var) {
+//     int c0 = c0Vec[loop_var];
+//     int c1 = c1Vec[loop_var];
+//     int out = c0 + c1;
+//     outVec[loop_var] = out;
+//   }
+// }
+//
+// IR Code
+// --------
+//
+// define i32 @expr_0(i64* %args, i64* %local_bitmaps, i32 %nrecords) {
+// entry:
+//   %outmemAddr = getelementptr i64, i64* %args, i32 5
+//   %outmem = load i64, i64* %outmemAddr
+//   %outVec = inttoptr i64 %outmem to i32*
+//   %c0memAddr = getelementptr i64, i64* %args, i32 1
+//   %c0mem = load i64, i64* %c0memAddr
+//   %c0Vec = inttoptr i64 %c0mem to i32*
+//   %c1memAddr = getelementptr i64, i64* %args, i32 3
+//   %c1mem = load i64, i64* %c1memAddr
+//   %c1Vec = inttoptr i64 %c1mem to i32*
+//   br label %loop
+// loop:                                             ; preds = %loop, %entry
+//   %loop_var = phi i32 [ 0, %entry ], [ %"loop_var+1", %loop ]
+//   %"loop_var+1" = add i32 %loop_var, 1
+//   %0 = getelementptr i32, i32* %c0Vec, i32 %loop_var
+//   %c0 = load i32, i32* %0
+//   %1 = getelementptr i32, i32* %c1Vec, i32 %loop_var
+//   %c1 = load i32, i32* %1
+//   %add_int_int = call i32 @add_int_int(i32 %c0, i32 %c1)
+//   %2 = getelementptr i32, i32* %outVec, i32 %loop_var
+//   store i32 %add_int_int, i32* %2
+//   %"loop_var < nrec" = icmp slt i32 %"loop_var+1", %nrecords
+//   br i1 %"loop_var < nrec", label %loop, label %exit
+// exit:                                             ; preds = %loop
+//   ret i32 0
+// }
+
 Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr,
                                        FieldDescriptorPtr output,
                                        int suffix_idx,
@@ -276,7 +274,7 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr,
   // The visitor can add code to both the entry/loop blocks.
   Visitor visitor(this, *fn, loop_entry, loop_body,
                   arg_addrs, arg_local_bitmaps, loop_var);
-  value_expr->Accept(&visitor);
+  value_expr->Accept(visitor);
   LValuePtr output_value = visitor.result();
 
   // add jump to "loop block" at the end of the "setup block".
@@ -292,7 +290,7 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr,
     llvm::Value *slot_offset = builder.CreateGEP(output_ref, loop_var);
     builder.CreateStore(output_value->data(), slot_offset);
   }
-  AddTrace("saving result " + output->Name() + " value %T", output_value->data());
+  ADD_TRACE("saving result " + output->Name() + " value %T", output_value->data());
 
   // check loop_var
   llvm::Value *loop_var_check = builder.CreateICmpSLT(loop_update,
@@ -311,7 +309,7 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr,
  */
 llvm::Value *LLVMGenerator::GetPackedBitValue(llvm::Value *bitmap,
                                               llvm::Value *position) {
-  AddTrace("fetch bit at position %T", position);
+  ADD_TRACE("fetch bit at position %T", position);
 
   llvm::Value *bitmap8 = ir_builder().CreateBitCast(bitmap,
                                                     types_->ptr_type(types_->i8_type()),
@@ -325,8 +323,8 @@ llvm::Value *LLVMGenerator::GetPackedBitValue(llvm::Value *bitmap,
 void LLVMGenerator::SetPackedBitValue(llvm::Value *bitmap,
                                       llvm::Value *position,
                                       llvm::Value *value) {
-  AddTrace("set bit at position %T", position);
-  AddTrace("  to value %T ", value);
+  ADD_TRACE("set bit at position %T", position);
+  ADD_TRACE("  to value %T ", value);
 
   llvm::Value *bitmap8 = ir_builder().CreateBitCast(bitmap,
                                                     types_->ptr_type(types_->i8_type()),
@@ -338,8 +336,8 @@ void LLVMGenerator::SetPackedBitValue(llvm::Value *bitmap,
 void LLVMGenerator::ClearPackedBitValueIfFalse(llvm::Value *bitmap,
                                                llvm::Value *position,
                                                llvm::Value *value) {
-  AddTrace("ClearIfFalse bit at position %T", position);
-  AddTrace("   value %T ", value);
+  ADD_TRACE("ClearIfFalse bit at position %T", position);
+  ADD_TRACE("   value %T ", value);
 
   llvm::Value *bitmap8 = ir_builder().CreateBitCast(bitmap,
                                                     types_->ptr_type(types_->i8_type()),
@@ -359,10 +357,8 @@ void LLVMGenerator::ComputeBitMapsForExpr(const CompiledExpr &compiled_expr,
 
   // Extract all the source bitmap addresses.
   std::vector<uint8_t *> src_bitmaps;
-  for (auto it = validities.begin(); it != validities.end(); it++) {
-    Dex *validity_dex = (*it).get();
-
-    validity_dex->Accept(&dex_visitor);
+  for (auto &validity_dex : validities) {
+    validity_dex->Accept(dex_visitor);
 
     DCHECK_NE(dex_visitor.bitmap(), nullptr);
     src_bitmaps.push_back(dex_visitor.bitmap());
@@ -441,7 +437,7 @@ llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
       full_name.compare("printf") &&
       full_name.compare("printff")) {
     // Trace for debugging
-    AddTrace("invoke native fn " + full_name);
+    ADD_TRACE("invoke native fn " + full_name);
   }
 
   // build a call to the llvm function.
@@ -454,6 +450,11 @@ llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
     return value;
   }
 }
+
+#define ADD_VISITOR_TRACE(...)         \
+  if (generator_->enable_ir_traces_) {      \
+    generator_->AddTrace(__VA_ARGS__); \
+  }
 
 // Visitor for generating the code for a decomposed expression.
 LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator,
@@ -470,7 +471,7 @@ LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator,
       arg_local_bitmaps_(arg_local_bitmaps),
       loop_var_(loop_var) {
 
-  AddTrace("Iteration %T", loop_var);
+  ADD_VISITOR_TRACE("Iteration %T", loop_var);
 }
 
 void LLVMGenerator::Visitor::Visit(const VectorReadValueDex &dex) {
@@ -490,7 +491,7 @@ void LLVMGenerator::Visitor::Visit(const VectorReadValueDex &dex) {
     slot_value = builder.CreateLoad(slot_offset, dex.FieldName());
   }
 
-  AddTrace("visit data vector " + dex.FieldName() + " value %T", slot_value);
+  ADD_VISITOR_TRACE("visit data vector " + dex.FieldName() + " value %T", slot_value);
   result_.reset(new LValue(slot_value));
 }
 
@@ -504,7 +505,7 @@ void LLVMGenerator::Visitor::Visit(const VectorReadValidityDex &dex) {
 
   builder.SetInsertPoint(loop_block_);
   llvm::Value *validity = generator_->GetPackedBitValue(slot_ref, loop_var_);
-  AddTrace("visit validity vector " + dex.FieldName() + " value %T", validity);
+  ADD_VISITOR_TRACE("visit validity vector " + dex.FieldName() + " value %T", validity);
   result_.reset(new LValue(validity));
 }
 
@@ -517,8 +518,8 @@ void LLVMGenerator::Visitor::Visit(const LocalBitMapValidityDex &dex) {
 
   builder.SetInsertPoint(loop_block_);
   llvm::Value *validity = generator_->GetPackedBitValue(slot_ref, loop_var_);
-  AddTrace("visit local bitmap " + std::to_string(dex.local_bitmap_idx()) + " value %T",
-           validity);
+  ADD_VISITOR_TRACE("visit local bitmap " +
+                    std::to_string(dex.local_bitmap_idx()) + " value %T", validity);
   result_.reset(new LValue(validity));
 }
 
@@ -532,12 +533,10 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
 
   // build the function params, along with the validities.
   std::vector<llvm::Value *> params;
-  for (auto it = args.begin(); it != args.end(); it++) {
-    ValueValidityPairPtr pair = *it;
-
+  for (auto &pair : args) {
     // build value.
     DexPtr value_expr = pair->value_expr();
-    value_expr->Accept(this);
+    value_expr->Accept(*this);
     params.push_back(result()->data());
 
     // build validity.
@@ -550,7 +549,8 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
 }
 
 void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
-  AddTrace("visit NonNullableFunc base function " + dex.func_descriptor()->name());
+  ADD_VISITOR_TRACE("visit NonNullableFunc base function " +
+                    dex.func_descriptor()->name());
   LLVMTypes *types = generator_->types_;
 
   // build the function params (ignore validity).
@@ -565,7 +565,7 @@ void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
 }
 
 void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
-  AddTrace("visit NullableNever base function " + dex.func_descriptor()->name());
+  ADD_VISITOR_TRACE("visit NullableNever base function " + dex.func_descriptor()->name());
   LLVMTypes *types = generator_->types_;
 
   // build function params along with validity.
@@ -580,7 +580,8 @@ void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
 }
 
 void LLVMGenerator::Visitor::Visit(const NullableInternalFuncDex &dex) {
-  AddTrace("visit NullableInternal base function " + dex.func_descriptor()->name());
+  ADD_VISITOR_TRACE("visit NullableInternal base function " +
+                    dex.func_descriptor()->name());
   llvm::IRBuilder<> &builder = ir_builder();
   LLVMTypes *types = generator_->types_;
 
@@ -630,11 +631,11 @@ llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(const DexVector &vali
   LLVMTypes *types = generator_->types_;
 
   llvm::Value *isValid = types->true_constant();
-  for (auto it = validities.begin(); it != validities.end(); it++) {
-    (*it)->Accept(this);
+  for (auto &dex : validities) {
+    dex->Accept(*this);
     isValid = builder.CreateAnd(isValid, result()->data(), "validityBitAnd");
   }
-  AddTrace("combined validity is %T", isValid);
+  ADD_VISITOR_TRACE("combined validity is %T", isValid);
   return isValid;
 }
 

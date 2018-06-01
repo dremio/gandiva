@@ -97,10 +97,6 @@ class LLVMGenerator {
     // Clear the bit in the local bitmap, if is_valid is 'false'
     void ClearLocalBitMapIfNotValid(int local_bitmap_idx, llvm::Value *is_valid);
 
-    void AddTrace(const std::string &msg, llvm::Value *value = nullptr) {
-      generator_->AddTrace(msg, value);
-    }
-
     LLVMGenerator *generator_;
     LValuePtr result_;
     llvm::BasicBlock *entry_block_;

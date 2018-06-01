@@ -31,7 +31,7 @@ namespace gandiva {
 class Dex {
  public:
   /// Derived classes should simply invoke the Visit api of the visitor.
-  virtual void Accept(DexVisitor *visitor) = 0;
+  virtual void Accept(DexVisitor &visitor) = 0;
   virtual ~Dex() = default;
 };
 
@@ -67,8 +67,8 @@ class VectorReadValidityDex : public VectorReadBaseDex {
     return field_desc_->validity_idx();
   }
 
-  void Accept(DexVisitor *visitor) override {
-    visitor->Visit(*this);
+  void Accept(DexVisitor &visitor) override {
+    visitor.Visit(*this);
   }
 };
 
@@ -86,8 +86,8 @@ class VectorReadValueDex : public VectorReadBaseDex {
     return field_desc_->offsets_idx();
   }
 
-  void Accept(DexVisitor *visitor) override {
-    visitor->Visit(*this);
+  void Accept(DexVisitor &visitor) override {
+    visitor.Visit(*this);
   }
 };
 
@@ -101,8 +101,8 @@ class LocalBitMapValidityDex : public Dex {
     return local_bitmap_idx_;
   }
 
-  void Accept(DexVisitor *visitor) override {
-    visitor->Visit(*this);
+  void Accept(DexVisitor &visitor) override {
+    visitor.Visit(*this);
   }
 
  private:
@@ -141,8 +141,8 @@ class NonNullableFuncDex : public FuncDex {
                      const ValueValidityPairVector &args)
     : FuncDex(func_descriptor, native_function, args) {}
 
-  void Accept(DexVisitor *visitor) override {
-    visitor->Visit(*this);
+  void Accept(DexVisitor &visitor) override {
+    visitor.Visit(*this);
   }
 };
 
@@ -155,8 +155,8 @@ class NullableNeverFuncDex : public FuncDex {
                        const ValueValidityPairVector &args)
     : FuncDex(func_descriptor, native_function, args) {}
 
-  void Accept(DexVisitor *visitor) override {
-    visitor->Visit(*this);
+  void Accept(DexVisitor &visitor) override {
+    visitor.Visit(*this);
   }
 };
 
@@ -171,8 +171,8 @@ class NullableInternalFuncDex : public FuncDex {
     : FuncDex(func_descriptor, native_function, args),
       local_bitmap_idx_(local_bitmap_idx) {}
 
-  void Accept(DexVisitor *visitor) override {
-    visitor->Visit(*this);
+  void Accept(DexVisitor &visitor) override {
+    visitor.Visit(*this);
   }
 
   // The validity of the function result is saved in this bitmap.
@@ -192,8 +192,8 @@ class LiteralDex : public Dex {
     return type_;
   }
 
-  void Accept(DexVisitor *visitor) override {
-    visitor->Visit(*this);
+  void Accept(DexVisitor &visitor) override {
+    visitor.Visit(*this);
   }
 
  private:

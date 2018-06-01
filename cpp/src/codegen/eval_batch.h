@@ -81,7 +81,7 @@ class EvalBatch {
   uint8_t **buffers_;
   int num_buffers_;
 
-  /// An array of 'local_bitmaps_', each sized to accomadate 'num_records'.
+  /// An array of 'local_bitmaps_', each sized to accomodate 'num_records'.
   uint8_t **local_bitmaps_;
   int num_local_bitmaps_;
 };

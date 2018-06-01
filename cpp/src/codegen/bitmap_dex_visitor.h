@@ -22,7 +22,7 @@
 
 namespace gandiva {
 
-/// \brief Extract bitamp buffer from either the input/buffer vectors or the
+/// \brief Extract bitmap buffer from either the input/buffer vectors or the
 /// local validity bitmap.
 class BitMapDexVisitor : public DexDefaultVisitor {
  public:
