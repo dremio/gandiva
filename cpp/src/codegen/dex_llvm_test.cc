@@ -26,8 +26,10 @@ class TestDex : public ::testing::Test {
   void SetUp() {
     name_map_[&typeid(VectorReadValidityDex)] = "VectorReadValidityDex";
     name_map_[&typeid(VectorReadValueDex)] = "VectorReadValueDex";
+    name_map_[&typeid(LocalBitMapValidityDex)] = "LocalBitMapValidityDex";
     name_map_[&typeid(NonNullableFuncDex)] = "NonNullableFuncDex";
     name_map_[&typeid(NullableNeverFuncDex)] = "NullableNeverFuncDex";
+    name_map_[&typeid(NullableInternalFuncDex)] = "NullableInternalFuncDex";
     name_map_[&typeid(LiteralDex)] = "LiteralDex";
   }
 
@@ -50,6 +52,10 @@ TEST_F(TestDex, TestVisitor) {
       *result_ = (*map_)[&typeid(dex)];
     }
 
+    void Visit(const LocalBitMapValidityDex &dex) override {
+      *result_ = (*map_)[&typeid(dex)];
+    }
+
     void Visit(const LiteralDex &dex) override {
       *result_ = (*map_)[&typeid(dex)];
     }
@@ -59,6 +65,10 @@ TEST_F(TestDex, TestVisitor) {
     }
 
     void Visit(const NullableNeverFuncDex &dex) override {
+      *result_ = (*map_)[&typeid(dex)];
+    }
+
+    void Visit(const NullableInternalFuncDex &dex) override {
       *result_ = (*map_)[&typeid(dex)];
     }
 
@@ -80,6 +90,10 @@ TEST_F(TestDex, TestVisitor) {
   vd_dex.Accept(&visitor);
   EXPECT_EQ(desc, name_map_[&typeid(VectorReadValueDex)]);
 
+  LocalBitMapValidityDex local_bitmap_dex(0);
+  local_bitmap_dex.Accept(&visitor);
+  EXPECT_EQ(desc, name_map_[&typeid(LocalBitMapValidityDex)]);
+
   std::vector<DataTypePtr> params{arrow::int32()};
   FuncDescriptorPtr my_func =
       std::make_shared<FuncDescriptor>("abc", params, arrow::boolean());
@@ -91,6 +105,10 @@ TEST_F(TestDex, TestVisitor) {
   NullableNeverFuncDex nullable_func(my_func, NULL, {NULL});
   nullable_func.Accept(&visitor);
   EXPECT_EQ(desc, name_map_[&typeid(NullableNeverFuncDex)]);
+
+  NullableInternalFuncDex nullable_internal_func(my_func, NULL, {NULL}, 0);
+  nullable_internal_func.Accept(&visitor);
+  EXPECT_EQ(desc, name_map_[&typeid(NullableInternalFuncDex)]);
 }
 
 int main(int argc, char **argv) {
