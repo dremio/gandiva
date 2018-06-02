@@ -33,6 +33,16 @@ function(add_gandiva_unit_test REL_TEST_NAME)
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
 endfunction(add_gandiva_unit_test REL_TEST_NAME)
 
+# Add a unittest executable for a precompiled file (used to generate IR)
+function(add_precompiled_unit_test REL_TEST_NAME)
+  get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
+
+  add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
+  target_link_libraries(${TEST_NAME} PRIVATE gtest_main)
+  add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
+  set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
+endfunction(add_precompiled_unit_test REL_TEST_NAME)
+
 # Add an integ executable, with its dependencies.
 function(add_gandiva_integ_test REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
