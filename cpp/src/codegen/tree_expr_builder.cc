@@ -22,10 +22,10 @@ NodePtr TreeExprBuilder::MakeField(FieldPtr field) {
   return NodePtr(new FieldNode(field));
 }
 
-NodePtr TreeExprBuilder::MakeFunction(const std::string &function,
+NodePtr TreeExprBuilder::MakeFunction(const std::string &name,
                                       const NodeVector &params,
                                       DataTypePtr result) {
-  return FunctionNode::MakeFunction(function, params, result);
+  return FunctionNode::MakeFunction(name, params, result);
 }
 
 ExpressionPtr TreeExprBuilder::MakeExpression(NodePtr root_node,

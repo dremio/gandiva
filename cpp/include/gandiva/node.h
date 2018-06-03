@@ -27,6 +27,7 @@ class FunctionRegistry;
 class Annotator;
 
 /// \brief Represents a node in the expression tree. Validity and value are
+/// in a joined state.
 class Node {
  public:
   explicit Node(DataTypePtr return_type)
