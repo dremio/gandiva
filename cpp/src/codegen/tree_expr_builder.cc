@@ -35,10 +35,7 @@ NodePtr TreeExprBuilder::MakeIf(NodePtr condition,
                                 NodePtr this_node,
                                 NodePtr else_node,
                                 DataTypePtr result_type) {
-  return std::shared_ptr<IfNode>::make_shared(condition,
-                                              this_node,
-                                              else_node,
-                                              result_type);
+  return std::make_shared<IfNode>(condition, this_node, else_node, result_type);
 }
 
 ExpressionPtr TreeExprBuilder::MakeExpression(NodePtr root_node,
