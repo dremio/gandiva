@@ -37,7 +37,7 @@ class Projector {
   static Status Make(SchemaPtr schema,
                      const ExpressionVector &exprs,
                      arrow::MemoryPool *pool,
-                     std::shared_ptr<Projector> *project);
+                     std::shared_ptr<Projector> *projector);
 
   /// Evaluate the specified record batch, and fill the output vectors.
   /// TODO : need a zero-copy variant if the caller can alloc the output vectors.

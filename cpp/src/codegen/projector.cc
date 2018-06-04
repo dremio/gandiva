@@ -34,7 +34,7 @@ Projector::Projector(std::unique_ptr<LLVMGenerator> llvm_generator,
 Status Projector::Make(SchemaPtr schema,
                        const ExpressionVector &exprs,
                        arrow::MemoryPool *pool,
-                       std::shared_ptr<Projector> *project) {
+                       std::shared_ptr<Projector> *projector) {
   // TODO: validate schema
   // TODO : validate expressions (fields, function signatures, output types, ..)
 
@@ -50,11 +50,11 @@ Status Projector::Make(SchemaPtr schema,
     output_fields.push_back(expr->result());
   }
 
-  // Instantiate the project with the completely built llvm generator
-  *project = std::shared_ptr<Projector>(new Projector(std::move(llvm_gen),
-                                                      schema,
-                                                      output_fields,
-                                                      pool));
+  // Instantiate the projector with the completely built llvm generator
+  *projector = std::shared_ptr<Projector>(new Projector(std::move(llvm_gen),
+                                                        schema,
+                                                        output_fields,
+                                                        pool));
   return Status::OK();
 }
 
