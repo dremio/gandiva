@@ -85,12 +85,12 @@ class FunctionNode : public Node {
 class IfNode : public Node {
  public:
   IfNode(NodePtr condition,
-         NodePtr this_node,
+         NodePtr then_node,
          NodePtr else_node,
          DataTypePtr result_type)
     : Node(result_type),
       condition_(condition),
-      this_node_(this_node),
+      then_node_(then_node),
       else_node_(else_node) {}
 
   ValueValidityPairPtr Decompose(const FunctionRegistry &registry,
@@ -98,7 +98,7 @@ class IfNode : public Node {
 
  private:
   NodePtr condition_;
-  NodePtr this_node_;
+  NodePtr then_node_;
   NodePtr else_node_;
 };
 

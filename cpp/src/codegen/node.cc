@@ -103,10 +103,10 @@ ValueValidityPairPtr IfNode::Decompose(const FunctionRegistry &registry,
   auto validity_dex = std::make_shared<LocalBitMapValidityDex>(local_bitmap_idx);
 
   auto condition_vv = condition_->Decompose(registry, annotator);
-  auto this_vv = this_node_->Decompose(registry, annotator);
+  auto then_vv = then_node_->Decompose(registry, annotator);
   auto else_vv = else_node_->Decompose(registry, annotator);
   auto value_dex = std::make_shared<IfDex>(condition_vv,
-                                           this_vv,
+                                           then_vv,
                                            else_vv,
                                            return_type_,
                                            local_bitmap_idx);

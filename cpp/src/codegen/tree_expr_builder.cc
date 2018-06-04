@@ -32,10 +32,10 @@ NodePtr TreeExprBuilder::MakeFunction(const std::string &name,
 
 
 NodePtr TreeExprBuilder::MakeIf(NodePtr condition,
-                                NodePtr this_node,
+                                NodePtr then_node,
                                 NodePtr else_node,
                                 DataTypePtr result_type) {
-  return std::make_shared<IfNode>(condition, this_node, else_node, result_type);
+  return std::make_shared<IfNode>(condition, then_node, else_node, result_type);
 }
 
 ExpressionPtr TreeExprBuilder::MakeExpression(NodePtr root_node,
