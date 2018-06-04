@@ -16,6 +16,8 @@
 #ifndef GANDIVA_EXPR_DECOMPOSER_H
 #define GANDIVA_EXPR_DECOMPOSER_H
 
+#include <utility>
+
 #include "gandiva/expression.h"
 #include "codegen/node_visitor.h"
 #include "codegen/node.h"
