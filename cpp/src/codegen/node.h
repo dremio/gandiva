@@ -22,8 +22,11 @@
 #include "gandiva/gandiva_aliases.h"
 #include "codegen/node_visitor.h"
 #include "codegen/func_descriptor.h"
+#include "codegen/literal_holder.h"
 
 namespace gandiva {
+
+using LiteralHolder = boost::variant<bool, int32_t, int64_t, float, double>;
 
 /// \brief Represents a node in the expression tree. Validity and value are
 /// in a joined state.
@@ -41,6 +44,22 @@ class Node {
   DataTypePtr return_type_;
 };
 
+/// \brief Node in the expression tree, representing a literal.
+class LiteralNode : public Node {
+ public:
+  LiteralNode(DataTypePtr type, const LiteralHolder &holder)
+    : Node(type),
+      holder_(holder) {}
+
+  void Accept(NodeVisitor &visitor) const override {
+    visitor.Visit(*this);
+  }
+
+  const LiteralHolder &holder() const { return holder_; }
+
+ private:
+  LiteralHolder holder_;
+};
 
 /// \brief Node in the expression tree, representing an arrow field.
 class FieldNode : public Node {
