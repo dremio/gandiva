@@ -1,0 +1,127 @@
+/*
+ * Copyright (C) 2017-2018 Dremio Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto2";
+package types;
+
+option java_package = "org.apache.arrow.gandiva.ipc";
+option java_outer_classname = "GandivaTypes";
+option optimize_for = SPEED;
+
+enum GandivaType {
+  NONE = 0;     // arrow::Type::NA
+  BOOL = 1;     // arrow::Type::BOOL
+  UINT8 = 2;    // arrow::Type::UINT8
+  INT8 = 3;     // arrow::Type::INT8
+  UINT16 = 4;   // represents arrow::Type fields in src/arrow/type.h
+  INT16 = 5;
+  UINT32 = 6;
+  INT32 = 7;
+  UINT64 = 8;
+  INT64 = 9;
+  HALF_FLOAT = 10;
+  FLOAT = 11;
+  DOUBLE = 12;
+  STRING = 13;
+  BINARY = 14;
+  FIXED_SIZE_BINARY = 15;
+  DATE32 = 16;
+  DATE64 = 17;
+  TIMESTAMP = 18;
+  TIME32 = 19;
+  TIME64 = 20;
+  INTERVAL = 21;
+  DECIMAL = 22;
+  LIST = 23;
+  STRUCT = 24;
+  UNION = 25;
+  DICTIONARY = 26;
+  MAP = 27;
+}
+
+enum DataMode {
+  NULLABLE = 0;
+  NON_NULLABLE = 1;
+}
+
+enum DateUnit {
+  DAY = 0;
+  MILLI = 1;
+}
+
+enum TimeUnit {
+  SEC = 0;
+  MILLISEC = 1;
+  MICROSEC = 2;
+  NANOSEC = 3;
+}
+
+message ExtGandivaType {
+  optional GandivaType type = 1;
+  optional DataMode mode = 2;
+  optional uint32 width = 3;  // used by FIXED_SIZE_BINARY
+  optional int32 precision = 4; // used by DECIMAL
+  optional int32 scale = 5; // used by DECIMAL
+  optional DateUnit dateUnit = 6;  // used by DATE32/DATE64
+  optional TimeUnit timeUnit = 7;  // used by TIME32/TIME64
+  optional string timeZone = 8; // used by TIMESTAMP
+}
+
+message Field {
+  // name of the field
+  optional string name = 1;
+  optional ExtGandivaType type = 2;
+  // for complex data types like structs, unions
+  repeated Field children = 3;
+}
+
+message FieldNode {
+  required Field field = 1;
+}
+
+message FunctionNode {
+  optional string functionName = 1;
+  repeated TreeNode inArgs = 2;
+  optional ExtGandivaType returnType = 3;
+}
+
+message IfNode {
+  optional TreeNode cond = 1;
+  optional TreeNode ifNode = 2;
+  optional TreeNode andNode = 3;
+  optional ExtGandivaType returnType = 4;
+}
+
+message TreeNode {
+  oneof nodeType {
+    FieldNode fieldNode = 1;
+    FunctionNode fnNode = 2;
+    IfNode ifNode = 3;
+  }
+}
+
+message ExpressionRoot {
+  optional TreeNode root = 1;
+  optional Field resultType = 2;
+}
+
+message ExpressionList {
+  repeated ExpressionRoot exprs = 2;
+}
+
+message Schema {
+  repeated Field columns = 1;
+}
