@@ -26,8 +26,6 @@
 
 namespace gandiva {
 
-using LiteralHolder = boost::variant<bool, int32_t, int64_t, float, double>;
-
 /// \brief Represents a node in the expression tree. Validity and value are
 /// in a joined state.
 class Node {
