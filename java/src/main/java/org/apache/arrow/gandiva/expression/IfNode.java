@@ -21,7 +21,7 @@ package org.apache.arrow.gandiva.expression;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 
-public class IfNode implements TreeNode {
+class IfNode implements TreeNode {
     IfNode(TreeNode condition, TreeNode thenNode, TreeNode elseNode, ArrowType retType) {
         this.condition = condition;
         this.thenNode = thenNode;

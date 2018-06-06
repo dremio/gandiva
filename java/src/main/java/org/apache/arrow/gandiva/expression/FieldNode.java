@@ -24,7 +24,7 @@ import org.apache.arrow.vector.types.pojo.Field;
 /**
  * Opaque class that captures the C++ node
  */
-public class FieldNode implements TreeNode {
+class FieldNode implements TreeNode {
     FieldNode(Field field) {
         this.field = field;
     }
