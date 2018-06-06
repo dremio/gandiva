@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.arrow.gandiva.codegen;
+package org.apache.arrow.gandiva.evaluator;
 
 /**
  * This class is implemented in JNI. This provides the Java interface
  * to invoke functions in JNI
  */
-public class NativeBuilder {
+ class NativeBuilder {
     private final  static String LIBRARY_NAME = "JniGandiva";
 
     static {
@@ -34,11 +34,11 @@ public class NativeBuilder {
         }
     }
 
-    public static native long BuildNativeCode(byte[] schemaBuf, byte[] exprListBuf);
+    static native long BuildNativeCode(byte[] schemaBuf, byte[] exprListBuf);
 
-    public static native void Evaluate(long moduleID,
-                                       byte[] recordBatchBuf, int recordBatchOffset,
-                                       long[] inputBufAddrs,
-                                       long[] outValidityAddrs, long[] outValueAddrs);
+    static native void Evaluate(long moduleID,
+                                byte[] recordBatchBuf, int recordBatchOffset,
+                                long[] inputBufAddrs,
+                                long[] outValidityAddrs, long[] outValueAddrs);
 
 }

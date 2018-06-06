@@ -24,8 +24,6 @@ import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 
-import java.util.ListIterator;
-
 public class ArrowTypeHelper {
     private static void InitArrowTypeInt(ArrowType.Int intType, GandivaTypes.ExtGandivaType.Builder builder) {
         int width = intType.getBitWidth();
@@ -189,10 +187,7 @@ public class ArrowTypeHelper {
         builder.setType(ArrowTypeHelper.ArrowTypeToProtobuf(field.getType()));
         builder.setNullable(field.isNullable());
 
-        ListIterator<Field> it = field.getChildren().listIterator();
-        while (it.hasNext()) {
-            Field child = it.next();
-
+        for(Field child : field.getChildren()) {
             builder.addChildren(ArrowTypeHelper.ArrowFieldToProtobuf(child));
         }
 
@@ -202,9 +197,7 @@ public class ArrowTypeHelper {
     public static GandivaTypes.Schema ArrowSchemaToProtobuf(Schema schema) throws Exception {
         GandivaTypes.Schema.Builder builder = GandivaTypes.Schema.newBuilder();
 
-        ListIterator<Field> it = schema.getFields().listIterator();
-        while (it.hasNext()) {
-            Field field = it.next();
+        for(Field field : schema.getFields()) {
             builder.addColumns(ArrowTypeHelper.ArrowFieldToProtobuf(field));
         }
 

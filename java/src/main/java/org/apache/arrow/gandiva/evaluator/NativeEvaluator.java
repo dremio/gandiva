@@ -18,7 +18,6 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
-import org.apache.arrow.gandiva.codegen.NativeBuilder;
 import org.apache.arrow.gandiva.expression.ArrowTypeHelper;
 import org.apache.arrow.gandiva.expression.ExpressionTree;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
