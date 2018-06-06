@@ -12,6 +12,7 @@ Build Gandiva requires:
 * LLVM
 * Arrow
 * Boost
+* Protobuf
 
 On macOS, you can use [Homebrew][1]:
 
