@@ -654,7 +654,7 @@ void LLVMGenerator::Visitor::Visit(const IfDex &dex) {
   } else {
     ADD_VISITOR_TRACE("branch to non-terminal else block");
 
-    // this is a non-ternimal else. let the child (nested if/else handle validity).
+    // this is a non-terminal else. let the child (nested if/else) handle validity.
     auto value_expr = dex.else_vv().value_expr();
     value_expr->Accept(*this);
     else_lvalue = std::make_shared<LValue>(result()->data());
