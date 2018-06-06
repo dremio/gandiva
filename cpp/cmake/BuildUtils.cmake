@@ -49,7 +49,7 @@ function(add_gandiva_integ_test REL_TEST_NAME)
 
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
   target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
-  target_link_libraries(${TEST_NAME} PRIVATE gandiva_codegen gtest_main)
+  target_link_libraries(${TEST_NAME} PRIVATE gandiva gtest_main)
 
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS integ ${TEST_NAME})
