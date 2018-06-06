@@ -34,18 +34,7 @@ public class NativeBuilder {
         }
     }
 
-    public static native long MakeField(byte[] fieldBuf, int offset);
-
-    public static native long MakeFunction(String function,
-                                           long[] children, int numChildren,
-                                           byte flatBufType,
-                                           byte[] retTypeBuf, int offset);
-
-    public static native long MakeExpression(long node,
-                                             byte[] resultFieldBuf, int offset);
-
-    public static native long BuildNativeCode(byte[] schemaBuf, int offset,
-                                              long[] exprPtrs);
+    public static native long BuildNativeCode(byte[] schemaBuf, byte[] exprListBuf);
 
     public static native void evaluate(long moduleID,
                                        byte[] recordBatchBuf, int recordBatchOffset,

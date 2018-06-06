@@ -18,6 +18,7 @@
 
 package org.apache.arrow.gandiva.expression;
 
+import org.apache.arrow.gandiva.ipc.GandivaTypes;
 import org.apache.arrow.vector.types.pojo.Field;
 
 /**
@@ -27,6 +28,13 @@ public class ExpressionTree {
     ExpressionTree(TreeNode root, Field result_field) {
         this.root = root;
         this.result_field = result_field;
+    }
+
+    GandivaTypes.ExpressionRoot toProtobuf() throws Exception {
+        GandivaTypes.ExpressionRoot.Builder builder = GandivaTypes.ExpressionRoot.newBuilder();
+        builder.setRoot(root.toProtobuf());
+        builder.setResultType(ArrowTypeHelper.ArrowFieldToProtobuf(result_field));
+        return builder.build();
     }
 
     private TreeNode root;

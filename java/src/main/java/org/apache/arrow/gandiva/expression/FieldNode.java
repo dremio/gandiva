@@ -18,6 +18,7 @@
 
 package org.apache.arrow.gandiva.expression;
 
+import org.apache.arrow.gandiva.ipc.GandivaTypes;
 import org.apache.arrow.vector.types.pojo.Field;
 
 /**
@@ -26,6 +27,16 @@ import org.apache.arrow.vector.types.pojo.Field;
 public class FieldNode implements TreeNode {
     FieldNode(Field field) {
         this.field = field;
+    }
+
+    @Override
+    public GandivaTypes.TreeNode toProtobuf() throws Exception {
+        GandivaTypes.FieldNode.Builder fieldNode = GandivaTypes.FieldNode.newBuilder();
+        fieldNode.setField(ArrowTypeHelper.ArrowFieldToProtobuf(field));
+
+        GandivaTypes.TreeNode.Builder builder = GandivaTypes.TreeNode.newBuilder();
+        builder.setFieldNode(fieldNode.build());
+        return builder.build();
     }
 
     private Field field;

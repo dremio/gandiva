@@ -18,7 +18,9 @@
 
 package org.apache.arrow.gandiva.expression;
 
+import org.apache.arrow.gandiva.codegen.NativeBuilder;
 import org.apache.arrow.gandiva.evaluator.NativeEvaluator;
+import org.apache.arrow.gandiva.ipc.GandivaTypes;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -116,10 +119,20 @@ public class TreeBuilder {
      * @return A native evaluator object that can be used to invoke these expressions on a RecordBatch
      */
     public static NativeEvaluator BuildNativeEvaluator(Schema schema, List<ExpressionTree> exprs)
+    throws Exception
     {
         // serialize the schema and the list of expressions as a protobuf
+        GandivaTypes.ExpressionList.Builder builder = GandivaTypes.ExpressionList.newBuilder();
+        Iterator<ExpressionTree> it = exprs.listIterator();
+        while (it.hasNext()) {
+            ExpressionTree expr = it.next();
+
+            builder.addExprs(expr.toProtobuf());
+        }
+
         // Invoke the JNI layer to create the LLVM module representing the expressions
-        long moduleID = 0L;
+        GandivaTypes.Schema schemaBuf = ArrowTypeHelper.ArrowSchemaToProtobuf(schema);
+        long moduleID = NativeBuilder.BuildNativeCode(schemaBuf.toByteArray(), builder.build().toByteArray());
         return new NativeEvaluator(moduleID, schema);
     }
 }

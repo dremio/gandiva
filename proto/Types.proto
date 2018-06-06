@@ -35,7 +35,7 @@ enum GandivaType {
   HALF_FLOAT = 10;
   FLOAT = 11;
   DOUBLE = 12;
-  STRING = 13;
+  UTF8 = 13;
   BINARY = 14;
   FIXED_SIZE_BINARY = 15;
   DATE32 = 16;
@@ -52,11 +52,6 @@ enum GandivaType {
   MAP = 27;
 }
 
-enum DataMode {
-  NULLABLE = 0;
-  NON_NULLABLE = 1;
-}
-
 enum DateUnit {
   DAY = 0;
   MILLI = 1;
@@ -71,21 +66,21 @@ enum TimeUnit {
 
 message ExtGandivaType {
   optional GandivaType type = 1;
-  optional DataMode mode = 2;
-  optional uint32 width = 3;  // used by FIXED_SIZE_BINARY
-  optional int32 precision = 4; // used by DECIMAL
-  optional int32 scale = 5; // used by DECIMAL
-  optional DateUnit dateUnit = 6;  // used by DATE32/DATE64
-  optional TimeUnit timeUnit = 7;  // used by TIME32/TIME64
-  optional string timeZone = 8; // used by TIMESTAMP
+  optional uint32 width = 2;  // used by FIXED_SIZE_BINARY
+  optional int32 precision = 3; // used by DECIMAL
+  optional int32 scale = 4; // used by DECIMAL
+  optional DateUnit dateUnit = 5;  // used by DATE32/DATE64
+  optional TimeUnit timeUnit = 6;  // used by TIME32/TIME64
+  optional string timeZone = 7; // used by TIMESTAMP
 }
 
 message Field {
   // name of the field
   optional string name = 1;
   optional ExtGandivaType type = 2;
+  optional bool nullable = 3;
   // for complex data types like structs, unions
-  repeated Field children = 3;
+  repeated Field children = 4;
 }
 
 message FieldNode {
@@ -101,7 +96,7 @@ message FunctionNode {
 message IfNode {
   optional TreeNode cond = 1;
   optional TreeNode ifNode = 2;
-  optional TreeNode andNode = 3;
+  optional TreeNode elseNode = 3;
   optional ExtGandivaType returnType = 4;
 }
 
