@@ -30,7 +30,7 @@ public class ExpressionTree {
         this.result_field = result_field;
     }
 
-    GandivaTypes.ExpressionRoot toProtobuf() throws Exception {
+    public GandivaTypes.ExpressionRoot toProtobuf() throws Exception {
         GandivaTypes.ExpressionRoot.Builder builder = GandivaTypes.ExpressionRoot.newBuilder();
         builder.setRoot(root.toProtobuf());
         builder.setResultType(ArrowTypeHelper.ArrowFieldToProtobuf(result_field));

@@ -18,19 +18,13 @@
 
 package org.apache.arrow.gandiva.expression;
 
-import org.apache.arrow.gandiva.codegen.NativeBuilder;
-import org.apache.arrow.gandiva.evaluator.NativeEvaluator;
-import org.apache.arrow.gandiva.ipc.GandivaTypes;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
-import org.apache.arrow.vector.types.pojo.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 public class TreeBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(TreeBuilder.class);
@@ -63,16 +57,16 @@ public class TreeBuilder {
      * Invoke this function to create a node representing an if-clause
      *
      * @param condition Node representing the condition
-     * @param ifNode Node representing the if-block
+     * @param thenNode Node representing the if-block
      * @param elseNode Node representing the else-block
      * @param retType Return type of the node
      * @return Node representing an if-clause
      */
     public static TreeNode MakeIf(TreeNode condition,
-                                  TreeNode ifNode,
+                                  TreeNode thenNode,
                                   TreeNode elseNode,
                                   ArrowType retType) {
-        return new IfNode(condition, ifNode, elseNode, retType);
+        return new IfNode(condition, thenNode, elseNode, retType);
     }
 
     /**
@@ -98,9 +92,7 @@ public class TreeBuilder {
                                                 List<Field> in_fields,
                                                 Field result_field) {
         List<TreeNode> children = new ArrayList<TreeNode>(in_fields.size());
-        ListIterator<Field> it = in_fields.listIterator();
-        while (it.hasNext()) {
-            Field field = it.next();
+        for(Field field : in_fields) {
             children.add(MakeField(field));
         }
 
@@ -108,31 +100,4 @@ public class TreeBuilder {
         return MakeExpression(n, result_field);
     }
 
-    /**
-     * Invoke this function to generate LLVM code to evaluate the list of expressions
-     * Invoke NativeEvaluator::Evalute() against a RecordBatch to evaluate the record batch
-     * against these expressions
-     *
-     * @param schema Table schema. The field names in the schema should match the fields used
-     *               to create the TreeNodes
-     * @param exprs List of expressions to be evaluated against data
-     * @return A native evaluator object that can be used to invoke these expressions on a RecordBatch
-     */
-    public static NativeEvaluator BuildNativeEvaluator(Schema schema, List<ExpressionTree> exprs)
-    throws Exception
-    {
-        // serialize the schema and the list of expressions as a protobuf
-        GandivaTypes.ExpressionList.Builder builder = GandivaTypes.ExpressionList.newBuilder();
-        Iterator<ExpressionTree> it = exprs.listIterator();
-        while (it.hasNext()) {
-            ExpressionTree expr = it.next();
-
-            builder.addExprs(expr.toProtobuf());
-        }
-
-        // Invoke the JNI layer to create the LLVM module representing the expressions
-        GandivaTypes.Schema schemaBuf = ArrowTypeHelper.ArrowSchemaToProtobuf(schema);
-        long moduleID = NativeBuilder.BuildNativeCode(schemaBuf.toByteArray(), builder.build().toByteArray());
-        return new NativeEvaluator(moduleID, schema);
-    }
 }

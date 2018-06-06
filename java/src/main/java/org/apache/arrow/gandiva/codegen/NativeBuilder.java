@@ -36,7 +36,7 @@ public class NativeBuilder {
 
     public static native long BuildNativeCode(byte[] schemaBuf, byte[] exprListBuf);
 
-    public static native void evaluate(long moduleID,
+    public static native void Evaluate(long moduleID,
                                        byte[] recordBatchBuf, int recordBatchOffset,
                                        long[] inputBufAddrs,
                                        long[] outValidityAddrs, long[] outValueAddrs);

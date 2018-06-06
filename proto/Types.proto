@@ -95,7 +95,7 @@ message FunctionNode {
 
 message IfNode {
   optional TreeNode cond = 1;
-  optional TreeNode ifNode = 2;
+  optional TreeNode thenNode = 2;
   optional TreeNode elseNode = 3;
   optional ExtGandivaType returnType = 4;
 }

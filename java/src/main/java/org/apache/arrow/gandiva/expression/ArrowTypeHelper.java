@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.arrow.gandiva.expression;
 
 import org.apache.arrow.flatbuf.Type;
@@ -86,7 +104,7 @@ public class ArrowTypeHelper {
         builder.setType(GandivaTypes.GandivaType.DECIMAL);
     }
 
-    static GandivaTypes.ExtGandivaType ArrowTypeToProtobuf(ArrowType arrowType) throws Exception {
+    public static GandivaTypes.ExtGandivaType ArrowTypeToProtobuf(ArrowType arrowType) throws Exception {
         GandivaTypes.ExtGandivaType.Builder builder = GandivaTypes.ExtGandivaType.newBuilder();
 
         byte typeId = arrowType.getTypeID().getFlatbufID();
@@ -164,7 +182,7 @@ public class ArrowTypeHelper {
         return builder.build();
     }
 
-    static GandivaTypes.Field ArrowFieldToProtobuf(Field field) throws Exception {
+    public static GandivaTypes.Field ArrowFieldToProtobuf(Field field) throws Exception {
         GandivaTypes.Field.Builder builder = GandivaTypes.Field.newBuilder();
 
         builder.setName(field.getName());
@@ -181,7 +199,7 @@ public class ArrowTypeHelper {
         return builder.build();
     }
 
-    static GandivaTypes.Schema ArrowSchemaToProtobuf(Schema schema) throws Exception {
+    public static GandivaTypes.Schema ArrowSchemaToProtobuf(Schema schema) throws Exception {
         GandivaTypes.Schema.Builder builder = GandivaTypes.Schema.newBuilder();
 
         ListIterator<Field> it = schema.getFields().listIterator();
