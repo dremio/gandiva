@@ -61,7 +61,7 @@ matrix:
   - language: java
     os: linux
     jdk: openjdk8
-    script: mvn clean install
+    script: mvn -f $TRAVIS_BUILD_DIR/java clean install
 after_failure:
 - COREFILE=$(find . -maxdepth 2 -name "core*" | head -n 1)
 - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
