@@ -19,6 +19,7 @@
 package org.apache.arrow.gandiva.evaluator;
 
 import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.gandiva.exceptions.EvaluatorClosedException;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.expression.ArrowTypeHelper;
 import org.apache.arrow.gandiva.expression.ExpressionTree;
@@ -33,10 +34,12 @@ import java.util.List;
 public class NativeEvaluator {
     private final long moduleID;
     private final Schema schema;
+    private boolean closed;
 
     private NativeEvaluator(long moduleID, Schema schema) {
         this.moduleID = moduleID;
         this.schema = schema;
+        this.closed = false;
     }
 
     /**
@@ -71,6 +74,10 @@ public class NativeEvaluator {
      * @throws Exception
      */
     public void evaluate(ArrowRecordBatch recordBatch, List<ValueVector> out_columns) throws Exception {
+        if (this.closed) {
+            throw new EvaluatorClosedException();
+        }
+
         List<ArrowBuf> buffers = recordBatch.getBuffers();
         List<ArrowBuffer> buffersLayout = recordBatch.getBuffersLayout();
 
@@ -96,5 +103,14 @@ public class NativeEvaluator {
         }
 
         NativeBuilder.evaluate(this.moduleID, bufAddrs, bufSizes, outValidityAddrs, outValueAddrs);
+    }
+
+    public void close() throws GandivaException {
+        if (this.closed) {
+            throw new EvaluatorClosedException();
+        }
+
+        NativeBuilder.close(this.moduleID);
+        this.closed = true;
     }
 }

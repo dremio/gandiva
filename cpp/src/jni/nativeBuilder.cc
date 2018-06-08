@@ -234,8 +234,9 @@ bool ParseProtobuf(uint8_t *buf, int bufLen, google::protobuf::Message *msg) {
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_apache_arrow_gandiva_codegen_NativeBuilder_BuildNativeCode
+Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   (JNIEnv *env, jclass cls, jbyteArray schemaArr, jbyteArray exprsArr) {
+  std::cout << "In buildNativeCode\n";
   jlong moduleID = 0LL;
   std::shared_ptr<Projector> projector;
   std::shared_ptr<ProjectorHolder> holder;
@@ -253,11 +254,13 @@ Java_org_apache_arrow_gandiva_codegen_NativeBuilder_BuildNativeCode
   FieldVector retTypes;
   gandiva::Status status;
 
+  std::cout << "Parsing schema protobuf\n";
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(schemaBytes), schemaLen, &schema)) {
     env->ReleaseByteArrayElements(schemaArr, schemaBytes, JNI_ABORT);
     goto out;
   }
 
+  std::cout << "Parsing exprs protobuf\n";
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(exprsBytes), exprsLen, &exprs)) {
     env->ReleaseByteArrayElements(schemaArr, schemaBytes, JNI_ABORT);
     env->ReleaseByteArrayElements(exprsArr, exprsBytes, JNI_ABORT);
@@ -353,4 +356,19 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
 
   env->ReleaseLongArrayElements(bufAddrs, inBufAddrs, JNI_ABORT);
   env->ReleaseLongArrayElements(bufSizes, inBufSizes, JNI_ABORT);
+}
+
+JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_close
+  (JNIEnv *env, jclass cls, jlong moduleID) {
+  std::map<jlong, std::shared_ptr<ProjectorHolder>>::iterator it;
+
+  it = projectorModulesMap_.find(moduleID);
+  if (it == projectorModulesMap_.end()) {
+    // TODO: Closing an already closed module
+    // throw an exception
+    return;
+  }
+
+  // remove holder from the map
+  projectorModulesMap_.erase(moduleID);
 }
