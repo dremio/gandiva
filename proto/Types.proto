@@ -100,10 +100,35 @@ message IfNode {
   required ExtGandivaType returnType = 4;
 }
 
+message IntNode {
+  required int32 value = 1;
+}
+
+message FloatNode {
+  required float value = 1;
+}
+
+message DoubleNode {
+  required double value = 1;
+}
+
+message BooleanNode {
+  required bool value = 1;
+}
+
+message LongNode {
+  required int64 value = 1;
+}
+
 message TreeNode {
   optional FieldNode fieldNode = 1;
   optional FunctionNode fnNode = 2;
   optional IfNode ifNode = 3;
+  optional IntNode intNode = 4;
+  optional FloatNode floatNode = 5;
+  optional LongNode longNode = 6;
+  optional BooleanNode booleanNode = 7;
+  optional DoubleNode doubleNode = 8;
 }
 
 message ExpressionRoot {

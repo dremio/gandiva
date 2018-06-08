@@ -23,7 +23,7 @@ package org.apache.arrow.gandiva.evaluator;
  * to invoke functions in JNI
  */
  class NativeBuilder {
-    private final static String LIBRARY_NAME = "gandiva";
+    private final static String LIBRARY_NAME = "gandiva_jni";
 
     static {
         try {

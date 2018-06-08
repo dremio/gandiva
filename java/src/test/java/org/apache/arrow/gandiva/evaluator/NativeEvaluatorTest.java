@@ -18,6 +18,7 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
+import com.google.common.collect.Lists;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.expression.ExpressionTree;
 import org.apache.arrow.gandiva.expression.TreeBuilder;
@@ -25,6 +26,7 @@ import org.apache.arrow.gandiva.expression.TreeNode;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -36,18 +38,13 @@ public class NativeEvaluatorTest {
 
     @Test
     public void makeProjector() throws GandivaException {
-        Field a = Field.nullable("a", new ArrowType.Int(64, false));
-        Field b = Field.nullable("b", new ArrowType.Int(64, false));
+        Field a = Field.nullable("a", new ArrowType.Int(64, true));
+        Field b = Field.nullable("b", new ArrowType.Int(64, true));
         TreeNode aNode = TreeBuilder.makeField(a);
         TreeNode bNode = TreeBuilder.makeField(b);
-        List<TreeNode> args = new ArrayList<TreeNode>(2);
-        args.add(aNode);
-        args.add(bNode);
+        List<TreeNode> args = Lists.newArrayList(aNode, bNode);
 
-        List<Field> cols = new ArrayList<Field>();
-        cols.add(a);
-        cols.add(b);
-
+        List<Field> cols = Lists.newArrayList(a, b);
         Schema schema = new Schema(cols);
 
         ArrowType retType = new ArrowType.Bool();
@@ -55,9 +52,7 @@ public class NativeEvaluatorTest {
         TreeNode ifNode = TreeBuilder.makeIf(cond, aNode, bNode, retType);
 
         ExpressionTree expr = TreeBuilder.makeExpression(ifNode, Field.nullable("c", retType));
-
-        List<ExpressionTree> exprs = new ArrayList<ExpressionTree>();
-        exprs.add(expr);
+        List<ExpressionTree> exprs = Lists.newArrayList(expr);
 
         NativeEvaluator evaluator1 = NativeEvaluator.makeProjector(schema, exprs);
         NativeEvaluator evaluator2 = NativeEvaluator.makeProjector(schema, exprs);

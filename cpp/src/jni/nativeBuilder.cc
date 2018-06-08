@@ -236,7 +236,6 @@ bool ParseProtobuf(uint8_t *buf, int bufLen, google::protobuf::Message *msg) {
 JNIEXPORT jlong JNICALL
 Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   (JNIEnv *env, jclass cls, jbyteArray schemaArr, jbyteArray exprsArr) {
-  std::cout << "In buildNativeCode\n";
   jlong moduleID = 0LL;
   std::shared_ptr<Projector> projector;
   std::shared_ptr<ProjectorHolder> holder;
@@ -254,13 +253,11 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   FieldVector retTypes;
   gandiva::Status status;
 
-  std::cout << "Parsing schema protobuf\n";
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(schemaBytes), schemaLen, &schema)) {
     env->ReleaseByteArrayElements(schemaArr, schemaBytes, JNI_ABORT);
     goto out;
   }
 
-  std::cout << "Parsing exprs protobuf\n";
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(exprsBytes), exprsLen, &exprs)) {
     env->ReleaseByteArrayElements(schemaArr, schemaBytes, JNI_ABORT);
     env->ReleaseByteArrayElements(exprsArr, exprsBytes, JNI_ABORT);

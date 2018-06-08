@@ -26,7 +26,9 @@
         <arrow.version>0.9.0</arrow.version>
         <protobuf.version>2.5.0</protobuf.version>
         <cpp.dir>{$project.basedir}/</cpp.dir>
-        <cpp.dir>../cpp/src/jni</cpp.dir>
+        <cpp.dir>../cpp/include/jni</cpp.dir>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -66,11 +68,11 @@
                 <version>1.5.0.Final</version>
             </extension>
         </extensions>
-
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>native-maven-plugin</artifactId>
+                <version>1.0-alpha-9</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>

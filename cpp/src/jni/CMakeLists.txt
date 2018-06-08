@@ -15,7 +15,7 @@
 project(gandiva_jni)
 
 # Find protobuf
-set(Protobuf_USE_STATIC_LIBS, ON)
+#set(Protobuf_USE_STATIC_LIBS, ON)
 find_package(Protobuf REQUIRED)
 
 # Find JNI
@@ -24,7 +24,7 @@ find_package(JNI REQUIRED)
 # generate the protobuf files from the proto definition.
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/../proto/Types.proto)
 
-add_library(gandiva_jni STATIC
+add_library(gandiva_jni SHARED
   nativeBuilder.cc
   ${PROTO_SRCS}
   ${PROTO_HDRS})
@@ -46,6 +46,5 @@ target_include_directories(gandiva_jni
 
 # ARROW is a public dependency i.e users of gandiva also will have a dependency on arrow.
 target_link_libraries(gandiva_jni
-  PRIVATE
-    protobuf::libprotobuf
+  PRIVATE protobuf::libprotobuf gandiva
 )

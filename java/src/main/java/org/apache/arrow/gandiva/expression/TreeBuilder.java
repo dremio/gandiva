@@ -25,6 +25,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TreeBuilder {
+
+    /**
+     * Helper functions to create literal constants.
+     */
+    public static TreeNode makeBooleanConstant(Boolean booleanConstant) {
+        return new BooleanNode(booleanConstant);
+    }
+
+    public static TreeNode makeFloatConstant(Float floatConstant) {
+        return new FloatNode(floatConstant);
+    }
+
+    public static TreeNode makeDoubleConstant(Double doubleConstant) {
+        return new DoubleNode(doubleConstant);
+    }
+
+    public static TreeNode makeIntConstant(Integer integerConstant) {
+        return new IntNode(integerConstant);
+    }
+
+    public static TreeNode makeLongConstant(Long longConstant) {
+        return new LongNode(longConstant);
+    }
+
     /**
      * Invoke this function to create a node representing a field, e.g. a column name
      *
