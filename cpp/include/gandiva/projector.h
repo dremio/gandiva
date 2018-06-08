@@ -75,8 +75,8 @@ class Projector {
 
   /// Validate that the ArrayData has sufficient capacity to accomodate 'num_records'.
   Status ValidateArrayDataCapacity(const arrow::ArrayData &array_data,
-                                 const arrow::Field &field,
-                                 int num_records);
+                                   const arrow::Field &field,
+                                   int num_records);
 
   /// Validate the common args for Evaluate() APIs.
   Status ValidateEvaluateArgsCommon(const arrow::RecordBatch &batch);

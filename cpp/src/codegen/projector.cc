@@ -93,7 +93,7 @@ Status Projector::Evaluate(const arrow::RecordBatch &batch,
   GANDIVA_RETURN_NOT_OK(status);
 
   if (output == nullptr) {
-    return Status::Invalid("outmpt must be non-null.");
+    return Status::Invalid("output must be non-null.");
   }
 
   // Allocate the output data vecs.
