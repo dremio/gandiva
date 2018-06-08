@@ -23,22 +23,22 @@ package org.apache.arrow.gandiva.evaluator;
  * to invoke functions in JNI
  */
  class NativeBuilder {
-    private final  static String LIBRARY_NAME = "JniGandiva";
+    private final static String LIBRARY_NAME = "libgandiva";
 
     static {
         try {
             System.loadLibrary(LIBRARY_NAME);
         } catch (UnsatisfiedLinkError e) {
             System.err.println("Native code library failed to load.\n" + e);
+            // TODO: Need to handle this better. Gandiva cannot exit in case of a failure
             System.exit(1);
         }
     }
 
-    static native long BuildNativeCode(byte[] schemaBuf, byte[] exprListBuf);
+    static native long buildNativeCode(byte[] schemaBuf, byte[] exprListBuf);
 
-    static native void Evaluate(long moduleID,
-                                byte[] recordBatchBuf, int recordBatchOffset,
-                                long[] inputBufAddrs,
+    static native void evaluate(long moduleID,
+                                long[] bufAddrs, long[] bufSizes,
                                 long[] outValidityAddrs, long[] outValueAddrs);
 
 }

@@ -18,11 +18,14 @@ project(gandiva_jni)
 set(Protobuf_USE_STATIC_LIBS, ON)
 find_package(Protobuf REQUIRED)
 
+# Find JNI
+find_package(JNI REQUIRED)
+
 # generate the protobuf files from the proto definition.
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/../proto/Types.proto)
 
 add_library(gandiva_jni STATIC
-  #jni.cc
+  nativeBuilder.cc
   ${PROTO_SRCS}
   ${PROTO_HDRS})
 
@@ -36,6 +39,8 @@ target_include_directories(gandiva_jni
     $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
   PRIVATE
+    ${JNI_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_SOURCE_DIR}/src
 )
 

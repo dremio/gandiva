@@ -18,28 +18,38 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
+import io.netty.buffer.ArrowBuf;
+import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.expression.ArrowTypeHelper;
 import org.apache.arrow.gandiva.expression.ExpressionTree;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
 import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.ipc.message.ArrowBuffer;
 import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import java.util.List;
 
 public class NativeEvaluator {
+    private final long moduleID;
+    private final Schema schema;
+
+    private NativeEvaluator(long moduleID, Schema schema) {
+        this.moduleID = moduleID;
+        this.schema = schema;
+    }
 
     /**
      * Invoke this function to generate LLVM code to evaluate the list of expressions
      * Invoke NativeEvaluator::Evalute() against a RecordBatch to evaluate the record batch
-     * against these expressions
+     * against these projections
      *
      * @param schema Table schema. The field names in the schema should match the fields used
      *               to create the TreeNodes
      * @param exprs List of expressions to be evaluated against data
-     * @return A native evaluator object that can be used to invoke these expressions on a RecordBatch
+     * @return A native evaluator object that can be used to invoke these projections on a RecordBatch
      */
-    public static NativeEvaluator MakeProjector(Schema schema, List<ExpressionTree> exprs) throws Exception
+    public static NativeEvaluator makeProjector(Schema schema, List<ExpressionTree> exprs) throws GandivaException
     {
         // serialize the schema and the list of expressions as a protobuf
         GandivaTypes.ExpressionList.Builder builder = GandivaTypes.ExpressionList.newBuilder();
@@ -48,19 +58,43 @@ public class NativeEvaluator {
         }
 
         // Invoke the JNI layer to create the LLVM module representing the expressions
-        GandivaTypes.Schema schemaBuf = ArrowTypeHelper.ArrowSchemaToProtobuf(schema);
-        long moduleID = NativeBuilder.BuildNativeCode(schemaBuf.toByteArray(), builder.build().toByteArray());
+        GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
+        long moduleID = NativeBuilder.buildNativeCode(schemaBuf.toByteArray(), builder.build().toByteArray());
         return new NativeEvaluator(moduleID, schema);
     }
 
-    private NativeEvaluator(long moduleID, Schema schema) {
-        this.moduleID = moduleID;
-        this.schema = schema;
-    }
+    /**
+     * Invoke this function to invoke the projection against the recordBatch.
+     *
+     * @param recordBatch Record batch including the data
+     * @param out_columns Result of applying the project on the data
+     * @throws Exception
+     */
+    public void evaluate(ArrowRecordBatch recordBatch, List<ValueVector> out_columns) throws Exception {
+        List<ArrowBuf> buffers = recordBatch.getBuffers();
+        List<ArrowBuffer> buffersLayout = recordBatch.getBuffersLayout();
 
-    public void Evaluate(ArrowRecordBatch recordBatch, List<ValueVector> out_columns) throws Exception {
-    }
+        long[] bufAddrs = new long[buffers.size()];
+        long[] bufSizes = new long[buffers.size()];
 
-    private long moduleID;
-    private Schema schema;
+        int idx = 0;
+        for(ArrowBuf buf : buffers) {
+            bufAddrs[idx++] = buf.memoryAddress();
+        }
+
+        idx = 0;
+        for(ArrowBuffer bufLayout : buffersLayout) {
+            bufSizes[idx++] = bufLayout.getSize();
+        }
+
+        long[] outValidityAddrs = new long[out_columns.size()];
+        long[] outValueAddrs = new long[out_columns.size()];
+        idx = 0;
+        for(ValueVector valueVector : out_columns) {
+            outValidityAddrs[idx] = valueVector.getValidityBuffer().memoryAddress();
+            outValueAddrs[idx] = valueVector.getDataBuffer().memoryAddress();
+        }
+
+        NativeBuilder.evaluate(this.moduleID, bufAddrs, bufSizes, outValidityAddrs, outValueAddrs);
+    }
 }
