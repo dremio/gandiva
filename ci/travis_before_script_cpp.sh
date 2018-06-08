@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Adapted from Apache Arrow
+
 set -ex
 
 source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
