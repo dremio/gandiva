@@ -1,18 +1,16 @@
-/*
- * Copyright (C) 2017-2018 Dremio Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (C) 2017-2018 Dremio Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include <gtest/gtest.h>
 #include "arrow/memory_pool.h"
@@ -75,7 +73,9 @@ TEST_F(TestIfExpr, TestSimple) {
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
   // Evaluate expression
-  auto outputs = projector->Evaluate(*in_batch);
+  arrow::ArrayVector outputs;
+  status = projector->Evaluate(*in_batch, &outputs);
+  EXPECT_TRUE(status.ok());
 
   // Validate results
   EXPECT_ARROW_ARRAY_EQUALS(exp, outputs.at(0));
@@ -123,7 +123,9 @@ TEST_F(TestIfExpr, TestSimpleArithmetic) {
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
   // Evaluate expression
-  auto outputs = projector->Evaluate(*in_batch);
+  arrow::ArrayVector outputs;
+  status = projector->Evaluate(*in_batch, &outputs);
+  EXPECT_TRUE(status.ok());
 
   // Validate results
   EXPECT_ARROW_ARRAY_EQUALS(exp, outputs.at(0));
@@ -178,7 +180,9 @@ TEST_F(TestIfExpr, TestNested) {
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
   // Evaluate expression
-  auto outputs = projector->Evaluate(*in_batch);
+  arrow::ArrayVector outputs;
+  status = projector->Evaluate(*in_batch, &outputs);
+  EXPECT_TRUE(status.ok());
 
   // Validate results
   EXPECT_ARROW_ARRAY_EQUALS(exp, outputs.at(0));
@@ -247,7 +251,9 @@ TEST_F(TestIfExpr, TestNestedInIf) {
                                            {array_a, array_b, array_c});
 
   // Evaluate expression
-  auto outputs = projector->Evaluate(*in_batch);
+  arrow::ArrayVector outputs;
+  status = projector->Evaluate(*in_batch, &outputs);
+  EXPECT_TRUE(status.ok());
 
   // Validate results
   EXPECT_ARROW_ARRAY_EQUALS(exp, outputs.at(0));
@@ -300,7 +306,9 @@ TEST_F(TestIfExpr, TestBigNested) {
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0});
 
   // Evaluate expression
-  auto outputs = projector->Evaluate(*in_batch);
+  arrow::ArrayVector outputs;
+  status = projector->Evaluate(*in_batch, &outputs);
+  EXPECT_TRUE(status.ok());
 
   // Validate results
   EXPECT_ARROW_ARRAY_EQUALS(exp, outputs.at(0));

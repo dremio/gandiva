@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-  
+
 # Copyright (C) 2017-2018 Dremio Corporation
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Adapted from Apache Arrow
 
 source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
