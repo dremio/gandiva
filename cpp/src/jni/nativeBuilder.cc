@@ -48,6 +48,7 @@ using gandiva::ExpressionVector;
 using gandiva::TreeExprBuilder;
 using gandiva::Projector;
 
+using gandiva::ArrayDataVector;
 using gandiva::ProjectorHolder;
 
 // forward declarations
@@ -71,6 +72,31 @@ void InitPool() {
 
 void InitMemoryPool() {
   std::call_once(onceMtx_, InitPool);
+}
+
+int GetDataSizeForType(const arrow::Type::type type) {
+  switch (type) {
+    case arrow::Type::UINT8:
+    case arrow::Type::INT8:
+      return 1;
+    case arrow::Type::UINT16:
+    case arrow::Type::INT16:
+      return 2;
+    case arrow::Type::UINT32:
+    case arrow::Type::INT32:
+      return 4;
+    case arrow::Type::UINT64:
+    case arrow::Type::INT64:
+      return 8;
+    case arrow::Type::HALF_FLOAT:
+      return 2;
+    case arrow::Type::FLOAT:
+      return 4;
+    case arrow::Type::DOUBLE:
+      return 8;
+    default:
+      return 0;
+  }
 }
 
 DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& extType) {
@@ -202,9 +228,9 @@ NodePtr ProtoTypeToNode(const types::TreeNode& node) {
   return NULL;
 }
 
-ExpressionPtr ProtoTypeToExpression(const types::ExpressionRoot& root, FieldPtr field) {
+ExpressionPtr ProtoTypeToExpression(const types::ExpressionRoot& root) {
   NodePtr rootNode = ProtoTypeToNode(root.root());
-  field = ProtoTypeToField(root.resulttype());
+  FieldPtr field = ProtoTypeToField(root.resulttype());
 
   if ((rootNode == NULL) || (field == NULL)) {
     return NULL;
@@ -274,8 +300,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
 
   // create Expression out of the list of exprs
   for (int i = 0; i < exprs.exprs_size(); i++) {
-    FieldPtr retType;
-    ExpressionPtr root = ProtoTypeToExpression(exprs.exprs(i), retType);
+    ExpressionPtr root = ProtoTypeToExpression(exprs.exprs(i));
 
     if (root == NULL) {
       env->ReleaseByteArrayElements(schemaArr, schemaBytes, JNI_ABORT);
@@ -284,7 +309,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
     }
 
     exprVector.push_back(root);
-    retTypes.push_back(retType);
+    retTypes.push_back(root->result());
   }
 
   InitMemoryPool();
@@ -312,7 +337,7 @@ out:
 
 JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate
   (JNIEnv *env, jclass cls,
-   jlong moduleID,
+   jlong moduleID, jint num_rows,
    jlongArray bufAddrs, jlongArray bufSizes,
    jlongArray outValidityAddrs, jlongArray outValueAddrs) {
   std::map<jlong, std::shared_ptr<ProjectorHolder>>::iterator it;
@@ -323,9 +348,11 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
     return;
   }
 
-  jsize num_rows = env->GetArrayLength(bufAddrs);
-  jlong *inBufAddrs = env->GetLongArrayElements(bufAddrs, 0);
-  jlong *inBufSizes = env->GetLongArrayElements(bufSizes, 0);
+  jlong *in_buf_addrs = env->GetLongArrayElements(bufAddrs, 0);
+  jlong *in_buf_sizes = env->GetLongArrayElements(bufSizes, 0);
+
+  jlong *out_validity_bufs = env->GetLongArrayElements(outValidityAddrs, 0);
+  jlong *out_value_bufs = env->GetLongArrayElements(outValueAddrs, 0);
 
   std::shared_ptr<ProjectorHolder> holder = it->second;
   auto schema = holder->schema();
@@ -336,23 +363,50 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
 
   for (int i = 0; i < numFields; i++) {
     auto field = schema->field(i);
-    auto buf_addr = reinterpret_cast<uint8_t *>(inBufAddrs[memBufIdx++]);
-    auto validity_addr = reinterpret_cast<uint8_t *>(inBufAddrs[memBufIdx++]);
+    jlong validity_addr = in_buf_addrs[memBufIdx++];
+    jlong value_addr = in_buf_addrs[memBufIdx++];
+
+    jlong validity_size = in_buf_sizes[memSzIdx++];
+    jlong value_size = in_buf_sizes[memSzIdx++];
 
     auto validity = std::shared_ptr<arrow::Buffer>(
-      new arrow::Buffer(buf_addr, inBufSizes[memSzIdx++]));
+      new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
     auto data = std::shared_ptr<arrow::Buffer>(
-      new arrow::Buffer(validity_addr, inBufSizes[memSzIdx++]));
+      new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
 
     auto arrayData = arrow::ArrayData::Make(field->type(), num_rows, {validity, data});
     columns.push_back(arrayData);
   }
 
-  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
-  auto outputs = holder->projector()->Evaluate(*in_batch);
+  // the size of the bitmap is same for all output expressions
+  int64_t bitmap_sz = arrow::BitUtil::BytesForBits(num_rows);
+  auto retTypes = holder->retTypes();
+  ArrayDataVector output;
+  int idx = 0;
+  for (FieldPtr field : retTypes) {
+    int64_t data_sz = GetDataSizeForType(field->type()->id()) * num_rows;
+    uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_validity_bufs[idx]);
+    uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_value_bufs[idx]);
 
-  env->ReleaseLongArrayElements(bufAddrs, inBufAddrs, JNI_ABORT);
-  env->ReleaseLongArrayElements(bufSizes, inBufSizes, JNI_ABORT);
+    std::shared_ptr<arrow::MutableBuffer> bitmap_buf =
+      std::make_shared<arrow::MutableBuffer>(validity_buf, bitmap_sz);
+    std::shared_ptr<arrow::MutableBuffer> data_buf =
+      std::make_shared<arrow::MutableBuffer>(value_buf, data_sz);
+
+    auto array_data = arrow::ArrayData::Make(field->type(),
+                                             num_rows,
+                                             {bitmap_buf, data_buf});
+    output.push_back(array_data);
+    idx++;
+  }
+
+  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
+  gandiva::Status status = holder->projector()->Evaluate(*in_batch, output);
+
+  env->ReleaseLongArrayElements(bufAddrs, in_buf_addrs, JNI_ABORT);
+  env->ReleaseLongArrayElements(bufSizes, in_buf_sizes, JNI_ABORT);
+  env->ReleaseLongArrayElements(outValidityAddrs, out_validity_bufs, JNI_ABORT);
+  env->ReleaseLongArrayElements(outValueAddrs, out_value_bufs, JNI_ABORT);
 }
 
 JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_close

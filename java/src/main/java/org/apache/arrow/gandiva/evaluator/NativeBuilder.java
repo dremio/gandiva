@@ -37,7 +37,7 @@ package org.apache.arrow.gandiva.evaluator;
 
     static native long buildNativeCode(byte[] schemaBuf, byte[] exprListBuf);
 
-    static native void evaluate(long moduleID,
+    static native void evaluate(long moduleID, int num_rows,
                                 long[] bufAddrs, long[] bufSizes,
                                 long[] outValidityAddrs, long[] outValueAddrs);
 

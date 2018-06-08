@@ -100,9 +100,10 @@ public class NativeEvaluator {
         for(ValueVector valueVector : out_columns) {
             outValidityAddrs[idx] = valueVector.getValidityBuffer().memoryAddress();
             outValueAddrs[idx] = valueVector.getDataBuffer().memoryAddress();
+            idx++;
         }
 
-        NativeBuilder.evaluate(this.moduleID, bufAddrs, bufSizes, outValidityAddrs, outValueAddrs);
+        NativeBuilder.evaluate(this.moduleID, recordBatch.getLength(), bufAddrs, bufSizes, outValidityAddrs, outValueAddrs);
     }
 
     public void close() throws GandivaException {
