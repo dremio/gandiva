@@ -35,12 +35,16 @@ The [Apache Arrow project](https://github.com/apache/arrow/) implements a column
 
 SQL support a wide range of datatypes and operators. There are multiple ways to evaluate an expression :
 
- 1. Using an interpreter<br>
+ 1. Using an interpreter
+ 
 When processing huge amounts of data, the interpreter becomes an overhead and affects the performance. This technique causes a lot of branching and conditional checks during runtime, which makes it unsuitable to take full advantage of the pipelining and SIMD capabilities of modern CPUs.
 
-  2.  Using runtime code generation<br>
-In this method, the code for the SQL expression is generated at runtime and compiled using a JIT compiler. And, the generated code is then used to evaluate the expressions. The performance of expression evaluation is significantly higher in this mode compared to using an interpreter.<br>
-Code generation can be done to a higher level language like Java and the the resulting code could be compiled using JIT techniques. However, this involves is an intermediate step of Java byte-code generation which makes it harder for using SIMD optimisations. Also, the limitations on byte-code means that the code generation cannot use wider registers that are common in modern hardware to implement data types like decimals.<br>
+  2.  Using runtime code generation
+  
+In this method, the code for the SQL expression is generated at runtime and compiled using a JIT compiler. And, the generated code is then used to evaluate the expressions. The performance of expression evaluation is significantly higher in this mode compared to using an interpreter.
+
+Code generation can be done to a higher level language like Java and the the resulting code could be compiled using JIT techniques. However, this involves is an intermediate step of Java byte-code generation which makes it harder for using SIMD optimisations. Also, the limitations on byte-code means that the code generation cannot use wider registers that are common in modern hardware to implement data types like decimals.
+
 Gandiva uses [LLVM](http://llvm.org/) tools to generate IR code and compile it at run-time to take maximum advantage of the hardware capabilities on the target machine. LLVM supports a wide variety of optimizations on the IR code like function inlining, loop vectorization and  instruction combining. Further, it supports the addition of custom optimization passes.
 
   
