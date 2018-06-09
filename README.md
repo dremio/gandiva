@@ -29,11 +29,15 @@ under the License.
 
 ### Efficient expression evaluation
 
-Gandiva is a toolset for compiling and evaluating expressions on arrow data. It uses LLVM for doing just-in-time compilation of the expressions.
+Gandiva is a toolset for compiling and evaluating expressions on arrow data. It uses LLVM for doing just-in-time 
+compilation of the expressions.
 
 #### Processing Arrow data
 
-The [Apache Arrow project](https://github.com/apache/arrow/) implements a columnar format for the representation and processing of big-data. It supports both flat and nested types, and has interfaces for memory sharing and transfer to disk/network. Gandiva provides the libraries to process data in arrow format with SQL-like expressions (project, filter and aggregate).
+The [Apache Arrow project](https://github.com/apache/arrow/) implements a columnar format for the representation 
+and processing of big-data. It supports both flat and nested types, and has interfaces for memory sharing and 
+transfer to disk/network. Gandiva provides the libraries to process data in arrow format with SQL-like expressions 
+(project, filter and aggregate).
 
 #### Run-time code generation
 
@@ -91,9 +95,11 @@ and value portions so that the two can be computed independently. Eg. consider t
             A (validity bit) & B (validity bit) & C (validity bit)
     This part is working only on bitmaps - hence, the result bitmap can be computed efficiently using 64-bit arithmetic.
     
-This technique eliminates the validity checks during evaluation and so, is significantly more efficient since it allows for better pipelining of instructions on the CPU.
+This technique eliminates the validity checks during evaluation and so, is significantly more efficient since it allows 
+for better pipelining of instructions on the CPU.
   
- Similar optimizations can be done for the other operators and expressions to take the advantage of the vector structure of array data, and the techniques available for optimizing LLVM IR.
+ Similar optimizations can be done for the other operators and expressions to take the advantage of the vector structure 
+ of array data, and the techniques available for optimizing LLVM IR.
 
 #### Runtime IR and Pre-compiled IR
 
@@ -104,26 +110,34 @@ LLVM IR can be generated in two ways :
     
 2.  Runtime IR generation using IR builder
     
-Gandiva uses both of these mechanisms. It uses clang to build a registry of pre-compiled IR modules, called “function registry” The registry has IR code for a lot of known functions eg. extractYear(), isnumeric() etc. 
+Gandiva uses both of these mechanisms. It uses clang to build a registry of pre-compiled IR modules, called 
+“function registry” The registry has IR code for a lot of known functions eg. extractYear(), isnumeric() etc. 
 
 It also uses the IR builder at runtime to create glue functions that :
 
 -  Loops over the elements in the data vector
 -  Embeds code from the corresponding functions in the registry based on the SQL expression
-- Implements control statements that are independent of functions like case-statements, if-else statements, boolean-expressions and in-expressions.
+- Implements control statements that are independent of functions like case-statements, if-else statements, 
+boolean-expressions and in-expressions.
     
 
- The IR code for a set of expressions are generated in an LLVM module, which includes both the glue code generated at runtime and the pre-compiled IR functions. The combined module is then compiled together to allow efficient inlining and cross-optimizations between the runtime IR and pre-compiled functions. The resulting machine code is then used to efficiently evaluate any number of record batches.
+ The IR code for a set of expressions are generated in an LLVM module, which includes both the glue code generated at 
+ runtime and the pre-compiled IR functions. The combined module is then compiled together to allow efficient inlining 
+ and cross-optimizations between the runtime IR and pre-compiled functions. The resulting machine code is then used to
+ efficiently evaluate any number of record batches.
 
 ### Terminology
 
 #### Expression builder
 
-Gandiva supports a simple tree-based expression builder, that defines the operator, the input types and the output type at each level in the tree. In the future, this can be extended to support other alternatives for building  expressions eg. sql-like statements, post-fix notation, ..
+Gandiva supports a simple tree-based expression builder, that defines the operator, the input types and the output type 
+at each level in the tree. In the future, this can be extended to support other alternatives for building  expressions 
+eg. sql-like statements, post-fix notation, ..
 
 #### Projector
 
-The projector is first instantiated using a vector of expressions built with the expression builder. At this point, the LLVM module is generated, and the generated IR code is optimized and compiled.
+The projector is first instantiated using a vector of expressions built with the expression builder. At this point, the 
+LLVM module is generated, and the generated IR code is optimized and compiled.
 
 Once instantiated, the projector can be used to evaluate any number of incoming record batches.
 
@@ -162,7 +176,8 @@ Here’s the sample C++ code to generate the sum of two integer arrow arrays.
 ### Multi-threading
  Once a projector is built, it can be shared between threads to evaluate record batches in parallel.
 
-However, the actual division of work and queuing work to multiple threads must be managed by the callers. Gandiva does not attempt to solve this.
+However, the actual division of work and queuing work to multiple threads must be managed by the callers. Gandiva does 
+not attempt to solve this.
 
 ### Language Support
 
@@ -170,9 +185,11 @@ The core functionality of Gandiva is implemented in C++. Language bindings are p
 
 ### Performance
 
-To validate the techniques, we did a performance test with DremIO software using two alternative techniques of code generation : using Java code generation vs gandiva.
+To validate the techniques, we did a performance test with DremIO software using two alternative techniques of code 
+generation : using Java code generation vs gandiva.
 
-Two simple expressions were selected and the expression evaluation time alone was compared to process a json file having a 100 million records.
+Two simple expressions were selected and the expression evaluation time alone was compared to process a json file having a 
+100 million records.
 
 
 #### Sum
