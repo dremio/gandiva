@@ -29,34 +29,47 @@ Gandiva is a toolset for compiling and evaluating expressions on arrow data. It 
 
 #### Processing Arrow data
 
-The [Apache Arrow project](https://github.com/apache/arrow/) implements a columnar format for the representation and processing of big-data. It supports both flat and nested types, and has interfaces for memory sharing and transfer to disk/network. Gandiva provides the libraries to process data in arrow format using SQL-like expressions (project, filter and aggregate).
+The [Apache Arrow project](https://github.com/apache/arrow/) implements a columnar format for the representation and processing of big-data. It supports both flat and nested types, and has interfaces for memory sharing and transfer to disk/network. Gandiva provides the libraries to process data in arrow format with SQL-like expressions (project, filter and aggregate).
 
 #### Run-time code generation
 
-SQL support a wide range of datatypes and operators. There are multiple ways to evaluate an expression :
+SQL support a wide range of datatypes and operators. There are multiple ways to evaluate an expression at runtime :
 
- 1. Using an interpreter
+1. Using an interpreter
  
-When processing huge amounts of data, the interpreter becomes an overhead and affects the performance. This technique causes a lot of branching and conditional checks during runtime, which makes it unsuitable to take full advantage of the pipelining and SIMD capabilities of modern CPUs.
+    When processing huge amounts of data, the interpreter becomes an overhead and degrades the performance. This technique
+    causes a lot of branching and conditional checks during runtime, which makes it unsuitable to take full advantage of 
+    the pipelining and SIMD capabilities of modern CPUs.
 
-  2.  Using runtime code generation
+2.  Using runtime code generation
   
-In this method, the code for the SQL expression is generated at runtime and compiled using a JIT compiler. And, the generated code is then used to evaluate the expressions. The performance of expression evaluation is significantly higher in this mode compared to using an interpreter.
+    In this method, the code for the SQL expression is generated at runtime and compiled using a JIT compiler. And, 
+    the generated code is then used to evaluate the expressions. The performance of expression evaluation is significantly
+    higher in this mode compared to using an interpreter.
 
-Code generation can be done to a higher level language like Java and the the resulting code could be compiled using JIT techniques. However, this involves is an intermediate step of Java byte-code generation which makes it harder for using SIMD optimisations. Also, the limitations on byte-code means that the code generation cannot use wider registers that are common in modern hardware to implement data types like decimals.
+Code generation can be done to a higher level language like Java and the the resulting code can be compiled using JIT 
+techniques. However, this involves an intermediate step of Java byte-code generation which makes it harder for using
+SIMD optimisations. Also, the limitations on byte-code means that the code generation cannot use wider registers that 
+are common in modern hardware to implement data types like decimals.
 
-Gandiva uses [LLVM](http://llvm.org/) tools to generate IR code and compile it at run-time to take maximum advantage of the hardware capabilities on the target machine. LLVM supports a wide variety of optimizations on the IR code like function inlining, loop vectorization and  instruction combining. Further, it supports the addition of custom optimization passes.
+Gandiva uses [LLVM](http://llvm.org/) tools to generate IR code and compile it at run-time to take maximum advantage of
+the hardware capabilities on the target machine. LLVM supports a wide variety of optimizations on the IR code like function 
+inlining, loop vectorization and  instruction combining. Further, it supports the addition of custom optimization passes.
 
   
 #### Code Generation for processing Arrow data
 
-Almost all arrow arrays have two components - a data vector and a bitmap vector. The bitmap vector encodes the validity of the corresponding cell in the data vector. The result of an expression is dependent on the validity of the inputs.
+Almost all arrow arrays have two components - a data vector and a bitmap vector. The bitmap vector encodes the validity of 
+the corresponding cell in the data vector. The result of an expression is dependent on the validity of the inputs.
 
- Consider a simple expression *c = *a + b**. For any given cell, the value of c is *null* if either a is *null* or b is *null*.
+ Consider a simple expression *c = *a + b**. For any given cell, the value of c is *null* if either a is *null* or b 
+ is *null*.
 
-  The repeated checking of the validity bit for each input element and for each intermediate output in an expression tree has a deteriorating effect on performance (prevents pipelining).
+  The repeated checking of the validity bit for each input element and for each intermediate output in an expression tree 
+  has a deteriorating effect on performance (prevents pipelining).
   
-Gandiva takes a novel approach to solving this problem. Wherever possible, it decomposes the computation of the validity and value portions so that the two can be computed independently. Eg. consider the expression :
+Gandiva takes a novel approach to solving this problem. Wherever possible, it decomposes the computation of the validity 
+and value portions so that the two can be computed independently. Eg. consider the expression :
 
                          R = A + B - C
 
@@ -65,12 +78,13 @@ Gandiva takes a novel approach to solving this problem. Wherever possible, it de
 1.  Value portion 
 
             A (data) + B (data) - C (data)
-    This part is computed ignoring the validity of the components. This can be implemented as a simple for loop acting on three input vectors. Further, the loop can further be optimized to use SIMD operations.
+    This part is computed ignoring the validity of the components. This can be implemented as a simple for loop acting 
+    on three input vectors. Further, the loop can further be optimized to use SIMD operations.
     
 
 2.  Validity portion : 
 
-            A(validity bit) & B(validity bit) & C (validity bit)
+            A (validity bit) & B (validity bit) & C (validity bit)
     This part is working only on bitmaps - hence, the result bitmap can be computed efficiently using 64-bit arithmetic.
     
 This technique eliminates the validity checks during evaluation and so, is significantly more efficient since it allows for better pipelining of instructions on the CPU.
