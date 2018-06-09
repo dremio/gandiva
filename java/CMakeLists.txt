@@ -1,5 +1,5 @@
 # Copyright (C) 2017-2018 Dremio Corporation
-#
+# 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,20 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.10)
+project(gandiva_java)
 
-project(gandiva)
+# Find java/jni
+include(FindJava)
+include(UseJava)
+include(FindJNI)
 
-# LLVM/Clang is required by multiple subdirs.
-find_package(LLVM)
-
-# Set the path where the byte-code files will be installed.
-set(GANDIVA_BC_FILE_NAME irhelpers.bc)
-set(GANDIVA_BC_INSTALL_DIR
-  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/gandiva)
-set(GANDIVA_BC_INSTALL_PATH ${GANDIVA_BC_INSTALL_DIR}/${GANDIVA_BC_FILE_NAME})
-set(GANDIVA_BC_OUTPUT_PATH ${CMAKE_BINARY_DIR}/irhelpers.bc)
-
-add_subdirectory(codegen)
-add_subdirectory(jni)
-add_subdirectory(precompiled)
+add_jar(
+  gandiva_java
+    src/main/java/org/apache/arrow/gandiva/evaluator/NativeBuilder.java
+  GENERATE_NATIVE_HEADERS gandivajni_headers
+    DESTINATION ${JNI_HEADERS_DIR}/jni
+)

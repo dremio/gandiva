@@ -15,13 +15,17 @@
 project(gandiva_jni)
 
 # Find protobuf
-set(Protobuf_USE_STATIC_LIBS, ON)
+#set(Protobuf_USE_STATIC_LIBS, ON)
 find_package(Protobuf REQUIRED)
+
+# Create the jni header file (from the java class).
+set(JNI_HEADERS_DIR "${CMAKE_CURRENT_BINARY_DIR}/javah")
+add_subdirectory(../../../java ./java)
 
 # generate the protobuf files from the proto definition.
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/../proto/Types.proto)
 
-add_library(gandiva_jni STATIC
+add_library(gandiva_jni SHARED
   #jni.cc
   ${PROTO_SRCS}
   ${PROTO_HDRS})
@@ -35,6 +39,7 @@ target_include_directories(gandiva_jni
   PUBLIC
     $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    ${JNI_HEADERS_DIR}
   PRIVATE
     ${CMAKE_SOURCE_DIR}/src
 )
@@ -43,4 +48,5 @@ target_include_directories(gandiva_jni
 target_link_libraries(gandiva_jni
   PRIVATE
     protobuf::libprotobuf
+    gandiva
 )
