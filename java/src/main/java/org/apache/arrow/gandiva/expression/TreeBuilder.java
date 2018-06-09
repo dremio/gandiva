@@ -62,7 +62,7 @@ public class TreeBuilder {
     /**
      * Invoke this function to create a node representing a function
      *
-     * @param function Name of the binary operator, e.g. add
+     * @param function Name of the function, e.g. add
      * @param children The arguments to the function
      * @param retType The type of the return value of the operator
      * @return Node representing a function

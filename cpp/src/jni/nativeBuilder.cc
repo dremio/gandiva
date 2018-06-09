@@ -225,6 +225,26 @@ NodePtr ProtoTypeToNode(const types::TreeNode& node) {
     return ProtoTypeToIfNode(node.ifnode());
   }
 
+  if (node.has_intnode()) {
+    return TreeExprBuilder::MakeLiteral(node.intnode().value());
+  }
+
+  if (node.has_floatnode()) {
+    return TreeExprBuilder::MakeLiteral(node.floatnode().value());
+  }
+
+  if (node.has_longnode()) {
+    return TreeExprBuilder::MakeLiteral(node.longnode().value());
+  }
+
+  if (node.has_booleannode()) {
+    return TreeExprBuilder::MakeLiteral(node.booleannode().value());
+  }
+
+  if (node.has_doublenode()) {
+    return TreeExprBuilder::MakeLiteral(node.doublenode().value());
+  }
+
   return NULL;
 }
 

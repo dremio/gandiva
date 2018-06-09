@@ -34,11 +34,13 @@ import java.util.List;
 public class NativeEvaluator {
     private final long moduleID;
     private final Schema schema;
+    private final int numExprs;
     private boolean closed;
 
-    private NativeEvaluator(long moduleID, Schema schema) {
+    private NativeEvaluator(long moduleID, Schema schema, int numExprs) {
         this.moduleID = moduleID;
         this.schema = schema;
+        this.numExprs = numExprs;
         this.closed = false;
     }
 
@@ -63,7 +65,11 @@ public class NativeEvaluator {
         // Invoke the JNI layer to create the LLVM module representing the expressions
         GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
         long moduleID = NativeBuilder.buildNativeCode(schemaBuf.toByteArray(), builder.build().toByteArray());
-        return new NativeEvaluator(moduleID, schema);
+        if (moduleID == 0L) {
+            throw new GandivaException("Unable to create native module for the given expressions");
+        }
+
+        return new NativeEvaluator(moduleID, schema, exprs.size());
     }
 
     /**
@@ -73,9 +79,13 @@ public class NativeEvaluator {
      * @param out_columns Result of applying the project on the data
      * @throws Exception
      */
-    public void evaluate(ArrowRecordBatch recordBatch, List<ValueVector> out_columns) throws Exception {
+    public void evaluate(ArrowRecordBatch recordBatch, List<ValueVector> out_columns) throws GandivaException, Exception {
         if (this.closed) {
             throw new EvaluatorClosedException();
+        }
+
+        if (numExprs != out_columns.size()) {
+            throw new GandivaException("Incorrect number of columns for the output vector");
         }
 
         List<ArrowBuf> buffers = recordBatch.getBuffers();
