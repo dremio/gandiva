@@ -185,7 +185,7 @@ The core functionality of Gandiva is implemented in C++. Language bindings are p
 
 ### Performance
 
-To validate the techniques, we did a performance test with DremIO software using two alternative techniques of code 
+To validate the techniques, we did a performance test with Dremio software using two alternative techniques of code 
 generation : using Java code generation vs gandiva.
 
 Two simple expressions were selected and the expression evaluation time alone was compared to process a json file having a 
@@ -212,6 +212,10 @@ Two simple expressions were selected and the expression evaluation time alone wa
      else 10
      end)
      FROM testJson."100M.json"
+
+#### CASE-100
+
+     Similar to case-10 but with 100 cases.
 
 #### Results
 
@@ -262,22 +266,7 @@ Two simple expressions were selected and the expression evaluation time alone wa
   </tr>
     <tr>
     <td>
-       CASE-20
-    </td>
-    <td>
-       TODO
-    </td>
-    <td>
-        TODO
-     </td>
-     <td>
-        TODO
-     </td>
-  </tr>
-  </tr>
-    <tr>
-    <td>
-       CASE-40
+       CASE-100
     </td>
     <td>
        TODO
