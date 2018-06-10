@@ -18,9 +18,15 @@ extern "C" {
 
 // Expand inner macro for all numeric types.
 #define NUMERIC_TYPES(INNER, NAME, OP) \
-  INNER(NAME, int32, OP) \
-  INNER(NAME, int64, OP) \
-  INNER(NAME, float32, OP) \
+  INNER(NAME, int8, OP)   \
+  INNER(NAME, int16, OP)  \
+  INNER(NAME, int32, OP)  \
+  INNER(NAME, int64, OP)  \
+  INNER(NAME, uint8, OP)  \
+  INNER(NAME, uint16, OP) \
+  INNER(NAME, uint32, OP) \
+  INNER(NAME, uint64, OP) \
+  INNER(NAME, float32, OP)\
   INNER(NAME, float64, OP)
 
 #define NUMERIC_AND_BOOL_TYPES(INNER, NAME, OP) \

@@ -24,7 +24,7 @@ extern "C" {
 #define DATE_TYPES(INNER) \
   INNER(date) \
   INNER(time64) \
-  INNER(timestamp64)
+  INNER(timestamp)
 
 
 // Extract  year.
