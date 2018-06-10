@@ -74,26 +74,28 @@ void InitMemoryPool() {
   std::call_once(onceMtx_, InitPool);
 }
 
-int GetDataSizeForType(const arrow::Type::type type) {
+int GetDataSizeForType(const arrow::Type::type type, int num_rows) {
   switch (type) {
+    case arrow::Type::BOOL:
+      return arrow::BitUtil::BytesForBits(num_rows);
     case arrow::Type::UINT8:
     case arrow::Type::INT8:
-      return 1;
+      return 1 * num_rows;
     case arrow::Type::UINT16:
     case arrow::Type::INT16:
-      return 2;
+      return 2 * num_rows;
     case arrow::Type::UINT32:
     case arrow::Type::INT32:
-      return 4;
+      return 4 * num_rows;
     case arrow::Type::UINT64:
     case arrow::Type::INT64:
-      return 8;
+      return 8 * num_rows;
     case arrow::Type::HALF_FLOAT:
-      return 2;
+      return 2 * num_rows;
     case arrow::Type::FLOAT:
-      return 4;
+      return 4 * num_rows;
     case arrow::Type::DOUBLE:
-      return 8;
+      return 8 * num_rows;
     default:
       return 0;
   }
@@ -404,7 +406,7 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
   ArrayDataVector output;
   int idx = 0;
   for (FieldPtr field : retTypes) {
-    int64_t data_sz = GetDataSizeForType(field->type()->id()) * num_rows;
+    int64_t data_sz = GetDataSizeForType(field->type()->id(), num_rows);
     uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_validity_bufs[idx]);
     uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_value_bufs[idx]);
 
