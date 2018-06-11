@@ -25,8 +25,6 @@
     <properties>
         <arrow.version>0.9.0</arrow.version>
         <protobuf.version>2.5.0</protobuf.version>
-        <cpp.dir>{$project.basedir}/</cpp.dir>
-        <cpp.dir>../cpp/include/jni</cpp.dir>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
@@ -69,28 +67,6 @@
             </extension>
         </extensions>
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>native-maven-plugin</artifactId>
-                <version>1.0-alpha-9</version>
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <id>javah</id>
-                        <phase>process-classes</phase>
-                        <configuration>
-                            <javahOutputDirectory>${cpp.dir}</javahOutputDirectory>
-                            <javahOutputFileName>nativeBuilder.h</javahOutputFileName>
-                            <javahClassNames>
-                                <javahClassName>org.apache.arrow.gandiva.evaluator.NativeBuilder</javahClassName>
-                            </javahClassNames>
-                        </configuration>
-                        <goals>
-                            <goal>javah</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>

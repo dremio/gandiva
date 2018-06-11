@@ -30,7 +30,7 @@
 
 #include <google/protobuf/io/coded_stream.h>
 
-#include "jni/nativeBuilder.h"
+#include "jni/org_apache_arrow_gandiva_evaluator_NativeBuilder.h"
 #include "jni/module_holder.h"
 #include "Types.pb.h"
 #include "gandiva/tree_expr_builder.h"
@@ -151,6 +151,7 @@ DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& extType) {
     case types::UNION:
     case types::DICTIONARY:
     case types::MAP:
+    default:
       return NULL;
   }
 }
