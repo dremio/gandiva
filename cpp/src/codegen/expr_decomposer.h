@@ -15,10 +15,10 @@
 #ifndef GANDIVA_EXPR_DECOMPOSER_H
 #define GANDIVA_EXPR_DECOMPOSER_H
 
+#include <gtest/gtest_prod.h>
 #include <stack>
 #include <memory>
 #include <utility>
-#include <gtest/gtest_prod.h>
 
 #include "gandiva/expression.h"
 #include "codegen/node_visitor.h"

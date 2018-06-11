@@ -13,11 +13,12 @@
 // limitations under the License.
 
 // Adapted from Apache Arrow Status.
-#include <sstream>
-
-#include <gtest/gtest.h>
 
 #include "gandiva/status.h"
+
+#include <gtest/gtest.h>
+#include <sstream>
+
 
 namespace gandiva {
 

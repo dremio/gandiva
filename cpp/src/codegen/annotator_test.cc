@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
+#include "codegen/annotator.h"
+
 #include <gtest/gtest.h>
 #include <arrow/memory_pool.h>
-#include "codegen/annotator.h"
+#include <memory>
+
 #include "codegen/field_descriptor.h"
 
 namespace gandiva {

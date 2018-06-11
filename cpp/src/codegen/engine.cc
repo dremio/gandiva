@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "codegen/engine.h"
+
 #include <llvm/Analysis/Passes.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/Bitcode/BitcodeReader.h>
-#include "llvm/ExecutionEngine/MCJIT.h"
+#include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
@@ -33,7 +35,6 @@
 #include <string>
 #include <unordered_set>
 #include <utility>
-#include "codegen/engine.h"
 
 namespace gandiva {
 

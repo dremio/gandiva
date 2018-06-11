@@ -15,11 +15,12 @@
 #ifndef GANDIVA_LLVMGENERATOR_H
 #define GANDIVA_LLVMGENERATOR_H
 
+#include <gtest/gtest_prod.h>
 #include <memory>
 #include <string>
 #include <vector>
 #include <cstdint>
-#include <gtest/gtest_prod.h>
+
 #include "gandiva/gandiva_aliases.h"
 #include "codegen/dex_visitor.h"
 #include "codegen/compiled_expr.h"

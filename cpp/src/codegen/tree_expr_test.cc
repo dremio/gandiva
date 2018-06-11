@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "gandiva/tree_expr_builder.h"
+
 #include <gtest/gtest.h>
 #include "gandiva/gandiva_aliases.h"
-#include "gandiva/tree_expr_builder.h"
 #include "codegen/annotator.h"
 #include "codegen/dex.h"
 #include "codegen/expr_decomposer.h"

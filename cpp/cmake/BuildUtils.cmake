@@ -101,7 +101,7 @@ function(add_lint)
     ${CPPLINT_BIN}
     --verbose=2
     --linelength=90
-    --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references,-build/include_order
+    --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references
     )
   endif (UNIX)
 endfunction(add_lint)
