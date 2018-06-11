@@ -20,12 +20,12 @@
 #include <vector>
 #include <utility>
 
-#include "gandiva/expression.h"
 #include "codegen/bitmap_dex_visitor.h"
 #include "codegen/dex.h"
 #include "codegen/expr_decomposer.h"
 #include "codegen/function_registry.h"
 #include "codegen/lvalue.h"
+#include "gandiva/expression.h"
 
 namespace gandiva {
 

@@ -4636,6 +4636,11 @@ def _ClassifyInclude(fileinfo, include, is_system):
   if is_system and os.path.splitext(include)[1] in ['.hpp', '.hxx', '.h++']:
       is_system = False
 
+  # Arrow and LLVM do not export .hpp headers, forcing to recognize
+  # that these are not c system headers.
+  if is_system and include.split('/')[0] in ['arrow', 'llvm', 'gtest']:
+      is_system = False
+
   if is_system:
     if is_cpp_h:
       return _CPP_SYS_HEADER

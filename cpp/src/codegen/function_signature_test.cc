@@ -14,8 +14,9 @@
 
 #include "codegen/function_signature.h"
 
-#include <gtest/gtest.h>
 #include <memory>
+
+#include <gtest/gtest.h>
 
 namespace gandiva {
 

@@ -15,14 +15,14 @@
 #ifndef GANDIVA_EXPR_DECOMPOSER_H
 #define GANDIVA_EXPR_DECOMPOSER_H
 
-#include <gtest/gtest_prod.h>
 #include <stack>
 #include <memory>
 #include <utility>
 
-#include "gandiva/expression.h"
+#include <gtest/gtest_prod.h>
 #include "codegen/node_visitor.h"
 #include "codegen/node.h"
+#include "gandiva/expression.h"
 
 namespace gandiva {
 

@@ -14,10 +14,10 @@
 
 #include "codegen/dex.h"
 
-#include <gtest/gtest.h>
 #include <map>
-
 #include <typeinfo>
+
+#include <gtest/gtest.h>
 
 namespace gandiva {
 

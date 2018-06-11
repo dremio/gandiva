@@ -14,10 +14,10 @@
 
 #include "codegen/annotator.h"
 
-#include <gtest/gtest.h>
-#include <arrow/memory_pool.h>
 #include <memory>
 
+#include <arrow/memory_pool.h>
+#include <gtest/gtest.h>
 #include "codegen/field_descriptor.h"
 
 namespace gandiva {

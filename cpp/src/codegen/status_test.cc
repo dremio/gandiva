@@ -16,9 +16,9 @@
 
 #include "gandiva/status.h"
 
-#include <gtest/gtest.h>
 #include <sstream>
 
+#include <gtest/gtest.h>
 
 namespace gandiva {
 

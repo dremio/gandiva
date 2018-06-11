@@ -14,14 +14,14 @@
 
 #include "codegen/llvm_generator.h"
 
-#include <gtest/gtest.h>
 #include <memory>
 #include <vector>
 
-#include "gandiva/expression.h"
+#include <gtest/gtest.h>
 #include "codegen/dex.h"
 #include "codegen/func_descriptor.h"
 #include "codegen/function_registry.h"
+#include "gandiva/expression.h"
 
 namespace gandiva {
 

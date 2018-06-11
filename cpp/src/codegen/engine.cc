@@ -14,6 +14,12 @@
 
 #include "codegen/engine.h"
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <unordered_set>
+#include <utility>
+
 #include <llvm/Analysis/Passes.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/Bitcode/BitcodeReader.h>
@@ -30,11 +36,6 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Vectorize.h>
 #include <llvm/Transforms/Scalar/GVN.h>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <unordered_set>
-#include <utility>
 
 namespace gandiva {
 
