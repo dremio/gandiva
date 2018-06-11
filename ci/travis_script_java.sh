@@ -20,8 +20,8 @@ source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
 pushd $CPP_BUILD_DIR
 
-//ignoring the file until other PR is resolved
-//cp $CPP_BUILD_DIR/src/jni/lingandiva_jni.so $JAVA_BUILD_DIR/lingandiva_jni.so
+# ignoring the file until other PR is resolved
+# cp $CPP_BUILD_DIR/src/jni/lingandiva_jni.so $JAVA_BUILD_DIR/lingandiva_jni.so
 
 mvn clean install -f $JAVA_BUILD_DIR/pom.xml
 
