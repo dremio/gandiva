@@ -118,7 +118,7 @@ public class NativeEvaluator {
 
     public void close() throws GandivaException {
         if (this.closed) {
-            throw new EvaluatorClosedException();
+            return;
         }
 
         NativeBuilder.close(this.moduleID);
