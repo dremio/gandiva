@@ -65,7 +65,7 @@ enum TimeUnit {
 }
 
 message ExtGandivaType {
-  optional GandivaType type = 1;
+  required GandivaType type = 1;
   optional uint32 width = 2;  // used by FIXED_SIZE_BINARY
   optional int32 precision = 3; // used by DECIMAL
   optional int32 scale = 4; // used by DECIMAL
@@ -76,8 +76,8 @@ message ExtGandivaType {
 
 message Field {
   // name of the field
-  optional string name = 1;
-  optional ExtGandivaType type = 2;
+  required string name = 1;
+  required ExtGandivaType type = 2;
   optional bool nullable = 3;
   // for complex data types like structs, unions
   repeated Field children = 4;
@@ -88,29 +88,52 @@ message FieldNode {
 }
 
 message FunctionNode {
-  optional string functionName = 1;
+  required string functionName = 1;
   repeated TreeNode inArgs = 2;
-  optional ExtGandivaType returnType = 3;
+  required ExtGandivaType returnType = 3;
 }
 
 message IfNode {
-  optional TreeNode cond = 1;
-  optional TreeNode thenNode = 2;
-  optional TreeNode elseNode = 3;
-  optional ExtGandivaType returnType = 4;
+  required TreeNode cond = 1;
+  required TreeNode thenNode = 2;
+  required TreeNode elseNode = 3;
+  required ExtGandivaType returnType = 4;
+}
+
+message IntNode {
+  required int32 value = 1;
+}
+
+message FloatNode {
+  required float value = 1;
+}
+
+message DoubleNode {
+  required double value = 1;
+}
+
+message BooleanNode {
+  required bool value = 1;
+}
+
+message LongNode {
+  required int64 value = 1;
 }
 
 message TreeNode {
-  oneof nodeType {
-    FieldNode fieldNode = 1;
-    FunctionNode fnNode = 2;
-    IfNode ifNode = 3;
-  }
+  optional FieldNode fieldNode = 1;
+  optional FunctionNode fnNode = 2;
+  optional IfNode ifNode = 3;
+  optional IntNode intNode = 4;
+  optional FloatNode floatNode = 5;
+  optional LongNode longNode = 6;
+  optional BooleanNode booleanNode = 7;
+  optional DoubleNode doubleNode = 8;
 }
 
 message ExpressionRoot {
-  optional TreeNode root = 1;
-  optional Field resultType = 2;
+  required TreeNode root = 1;
+  required Field resultType = 2;
 }
 
 message ExpressionList {

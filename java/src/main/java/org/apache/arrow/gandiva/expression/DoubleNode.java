@@ -21,15 +21,20 @@ package org.apache.arrow.gandiva.expression;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
 
-/**
- * Defines an internal node in the expression tree
- */
-public interface TreeNode {
-    /**
-     * Converts a TreeNode into a protobuf
-     *
-     * @return A treenode protobuf
-     * @throws GandivaException in case the TreeNode cannot be processed
-     */
-    GandivaTypes.TreeNode toProtobuf() throws GandivaException;
+class DoubleNode implements TreeNode {
+    private final Double value;
+
+    DoubleNode(Double value) {
+        this.value = value;
+    }
+
+    @Override
+    public GandivaTypes.TreeNode toProtobuf() throws GandivaException {
+        GandivaTypes.DoubleNode.Builder doubleBuilder = GandivaTypes.DoubleNode.newBuilder();
+        doubleBuilder.setValue(value.doubleValue());
+
+        GandivaTypes.TreeNode.Builder builder = GandivaTypes.TreeNode.newBuilder();
+        builder.setDoubleNode(doubleBuilder.build());
+        return builder.build();
+    }
 }
