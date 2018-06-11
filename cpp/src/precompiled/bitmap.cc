@@ -24,14 +24,12 @@ extern "C" {
 #define POS_TO_BYTE_INDEX(p) (p / 8)
 #define POS_TO_BIT_INDEX(p) (p % 8)
 
-__attribute__((always_inline))
 bool bitMapGetBit(const unsigned char *bmap, int position) {
   int byteIdx = POS_TO_BYTE_INDEX(position);
   int bitIdx = POS_TO_BIT_INDEX(position);
   return ((bmap[byteIdx] & (1 << bitIdx)) > 0);
 }
 
-__attribute__((always_inline))
 void bitMapSetBit(unsigned char *bmap, int position, bool value) {
   int byteIdx = POS_TO_BYTE_INDEX(position);
   int bitIdx = POS_TO_BIT_INDEX(position);
@@ -43,7 +41,6 @@ void bitMapSetBit(unsigned char *bmap, int position, bool value) {
 }
 
 // Clear the bit if value = false. Does nothing if value = true.
-__attribute__((always_inline))
 void bitMapClearBitIfFalse(unsigned char *bmap, int position, bool value) {
   if (!value) {
     int byteIdx = POS_TO_BYTE_INDEX(position);
