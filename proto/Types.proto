@@ -65,7 +65,7 @@ enum TimeUnit {
 }
 
 message ExtGandivaType {
-  required GandivaType type = 1;
+  optional GandivaType type = 1;
   optional uint32 width = 2;  // used by FIXED_SIZE_BINARY
   optional int32 precision = 3; // used by DECIMAL
   optional int32 scale = 4; // used by DECIMAL
@@ -76,48 +76,48 @@ message ExtGandivaType {
 
 message Field {
   // name of the field
-  required string name = 1;
-  required ExtGandivaType type = 2;
+  optional string name = 1;
+  optional ExtGandivaType type = 2;
   optional bool nullable = 3;
   // for complex data types like structs, unions
   repeated Field children = 4;
 }
 
 message FieldNode {
-  required Field field = 1;
+  optional Field field = 1;
 }
 
 message FunctionNode {
-  required string functionName = 1;
+  optional string functionName = 1;
   repeated TreeNode inArgs = 2;
-  required ExtGandivaType returnType = 3;
+  optional ExtGandivaType returnType = 3;
 }
 
 message IfNode {
-  required TreeNode cond = 1;
-  required TreeNode thenNode = 2;
-  required TreeNode elseNode = 3;
-  required ExtGandivaType returnType = 4;
+  optional TreeNode cond = 1;
+  optional TreeNode thenNode = 2;
+  optional TreeNode elseNode = 3;
+  optional ExtGandivaType returnType = 4;
 }
 
 message IntNode {
-  required int32 value = 1;
+  optional int32 value = 1;
 }
 
 message FloatNode {
-  required float value = 1;
+  optional float value = 1;
 }
 
 message DoubleNode {
-  required double value = 1;
+  optional double value = 1;
 }
 
 message BooleanNode {
-  required bool value = 1;
+  optional bool value = 1;
 }
 
 message LongNode {
-  required int64 value = 1;
+  optional int64 value = 1;
 }
 
 message TreeNode {
@@ -132,8 +132,8 @@ message TreeNode {
 }
 
 message ExpressionRoot {
-  required TreeNode root = 1;
-  required Field resultType = 2;
+  optional TreeNode root = 1;
+  optional Field resultType = 2;
 }
 
 message ExpressionList {

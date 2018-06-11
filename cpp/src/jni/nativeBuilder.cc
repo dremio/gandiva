@@ -17,7 +17,6 @@
  */
 
 #include <mutex>
-#include <atomic>
 #include <string>
 #include <utility>
 #include <vector>
@@ -61,10 +60,11 @@ std::once_flag onceMtx_;
 arrow::MemoryPool* pool_;
 
 // map from module ids returned to Java and module pointers
-std::map<jlong, std::shared_ptr<ProjectorHolder>> projectorModulesMap_;
+std::unordered_map<jlong, std::shared_ptr<ProjectorHolder>> projectorModulesMap_;
+std::mutex g_mtx_;
 
 // atomic counter for projector module ids
-std::atomic<jlong> projectorModuleId_(INIT_MODULE_ID);
+jlong projectorModuleId_(INIT_MODULE_ID);
 
 void InitPool() {
   pool_ = arrow::default_memory_pool();
@@ -72,6 +72,41 @@ void InitPool() {
 
 void InitMemoryPool() {
   std::call_once(onceMtx_, InitPool);
+}
+
+jlong MapInsert(std::shared_ptr<ProjectorHolder> holder) {
+  g_mtx_.lock();
+
+  jlong result = projectorModuleId_++;
+  projectorModulesMap_.insert(
+    std::pair<jlong, std::shared_ptr<ProjectorHolder>>(result, holder));
+
+  g_mtx_.unlock();
+
+  return result;
+}
+
+void MapErase(jlong moduleID) {
+  g_mtx_.lock();
+  projectorModulesMap_.erase(moduleID);
+  g_mtx_.unlock();
+}
+
+std::shared_ptr<ProjectorHolder> MapLookup(jlong moduleID) {
+  std::shared_ptr<ProjectorHolder> result = NULL;
+
+  g_mtx_.lock();
+
+  std::unordered_map<jlong, std::shared_ptr<ProjectorHolder>>::iterator it;
+
+  it = projectorModulesMap_.find(moduleID);
+  if (it != projectorModulesMap_.end()) {
+    result = it->second;
+  }
+
+  g_mtx_.unlock();
+
+  return result;
 }
 
 int GetDataSizeForType(const arrow::Type::type type, int num_rows) {
@@ -345,15 +380,13 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   }
 
   // store the result in a map
-  moduleID = projectorModuleId_++;
   holder = std::shared_ptr<ProjectorHolder>(new ProjectorHolder(schemaPtr,
                                                                 retTypes,
                                                                 std::move(projector)));
-  projectorModulesMap_.insert(
-    std::pair<jlong, std::shared_ptr<ProjectorHolder>>(moduleID, holder));
-
+  moduleID = MapInsert(holder);
   env->ReleaseByteArrayElements(schemaArr, schemaBytes, JNI_ABORT);
   env->ReleaseByteArrayElements(exprsArr, exprsBytes, JNI_ABORT);
+
 out:
   return moduleID;
 }
@@ -362,22 +395,18 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
   (JNIEnv *env, jclass cls,
    jlong moduleID, jint num_rows,
    jlongArray bufAddrs, jlongArray bufSizes,
-   jlongArray outValidityAddrs, jlongArray outValueAddrs) {
-  std::map<jlong, std::shared_ptr<ProjectorHolder>>::iterator it;
-
-  it = projectorModulesMap_.find(moduleID);
-  if (it == projectorModulesMap_.end()) {
-    // TODO: Need to handle this. Invalid module id
+   jlongArray outBufAddrs) {
+  std::shared_ptr<ProjectorHolder> holder = MapLookup(moduleID);
+  if (holder == NULL) {
+    // TODO: Unknown moduleID, throw an exception
     return;
   }
 
   jlong *in_buf_addrs = env->GetLongArrayElements(bufAddrs, 0);
   jlong *in_buf_sizes = env->GetLongArrayElements(bufSizes, 0);
 
-  jlong *out_validity_bufs = env->GetLongArrayElements(outValidityAddrs, 0);
-  jlong *out_value_bufs = env->GetLongArrayElements(outValueAddrs, 0);
+  jlong *out_bufs = env->GetLongArrayElements(outBufAddrs, 0);
 
-  std::shared_ptr<ProjectorHolder> holder = it->second;
   auto schema = holder->schema();
   std::vector<std::shared_ptr<arrow::ArrayData>> columns;
   auto numFields = schema->num_fields();
@@ -408,8 +437,16 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
   int idx = 0;
   for (FieldPtr field : retTypes) {
     int64_t data_sz = GetDataSizeForType(field->type()->id(), num_rows);
-    uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_validity_bufs[idx]);
-    uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_value_bufs[idx]);
+    if (data_sz == 0) {
+      // TODO: Throw an exception
+      env->ReleaseLongArrayElements(bufAddrs, in_buf_addrs, JNI_ABORT);
+      env->ReleaseLongArrayElements(bufSizes, in_buf_sizes, JNI_ABORT);
+      env->ReleaseLongArrayElements(outBufAddrs, out_bufs, JNI_ABORT);
+      return;
+    }
+
+    uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_bufs[idx++]);
+    uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_bufs[idx++]);
 
     std::shared_ptr<arrow::MutableBuffer> bitmap_buf =
       std::make_shared<arrow::MutableBuffer>(validity_buf, bitmap_sz);
@@ -420,7 +457,6 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
                                              num_rows,
                                              {bitmap_buf, data_buf});
     output.push_back(array_data);
-    idx++;
   }
 
   auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
@@ -428,21 +464,10 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
 
   env->ReleaseLongArrayElements(bufAddrs, in_buf_addrs, JNI_ABORT);
   env->ReleaseLongArrayElements(bufSizes, in_buf_sizes, JNI_ABORT);
-  env->ReleaseLongArrayElements(outValidityAddrs, out_validity_bufs, JNI_ABORT);
-  env->ReleaseLongArrayElements(outValueAddrs, out_value_bufs, JNI_ABORT);
+  env->ReleaseLongArrayElements(outBufAddrs, out_bufs, JNI_ABORT);
 }
 
 JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_close
   (JNIEnv *env, jclass cls, jlong moduleID) {
-  std::map<jlong, std::shared_ptr<ProjectorHolder>>::iterator it;
-
-  it = projectorModulesMap_.find(moduleID);
-  if (it == projectorModulesMap_.end()) {
-    // TODO: Closing an already closed module
-    // throw an exception
-    return;
-  }
-
-  // remove holder from the map
-  projectorModulesMap_.erase(moduleID);
+  MapErase(moduleID);
 }

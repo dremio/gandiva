@@ -87,7 +87,7 @@ public class NativeEvaluatorTest {
     }
 
     @Test
-    public void makeProjector() throws GandivaException {
+    public void testMakeProjector() throws GandivaException {
         Field a = Field.nullable("a", new ArrowType.Int(64, true));
         Field b = Field.nullable("b", new ArrowType.Int(64, true));
         TreeNode aNode = TreeBuilder.makeField(a);
@@ -216,16 +216,16 @@ public class NativeEvaluatorTest {
         eval.close();
     }
 
-    private TreeNode makeIntLessThanCond(TreeNode arg, long value, ArrowType type) {
+    private TreeNode makeLongLessThanCond(TreeNode arg, long value, ArrowType type) {
         return TreeBuilder.makeFunction("less_than",
-                Lists.newArrayList(arg, TreeBuilder.makeLongConstant(value)),
+                Lists.newArrayList(arg, TreeBuilder.makeLiteral(value)),
                 type);
     }
 
-    private TreeNode ifIntLessThanElse(TreeNode arg, long value, long then_value, TreeNode elseNode, ArrowType type) {
+    private TreeNode ifLongLessThanElse(TreeNode arg, long value, long then_value, TreeNode elseNode, ArrowType type) {
         return TreeBuilder.makeIf(
-                makeIntLessThanCond(arg, value, boolType),
-                TreeBuilder.makeLongConstant(then_value),
+                makeLongLessThanCond(arg, value, boolType),
+                TreeBuilder.makeLiteral(then_value),
                 elseNode,
                 type);
     }
@@ -251,25 +251,25 @@ public class NativeEvaluatorTest {
         TreeNode x_node = TreeBuilder.makeField(x);
 
         // if (x < 100) then 9 else 10
-        TreeNode ifLess100 = ifIntLessThanElse(x_node, 100L, 9L, TreeBuilder.makeLongConstant(10L), int64);
+        TreeNode ifLess100 = ifLongLessThanElse(x_node, 100L, 9L, TreeBuilder.makeLiteral(10L), int64);
         // if (x < 90) then 8 else ifLess100
-        TreeNode ifLess90 = ifIntLessThanElse(x_node, 90L, 8L, ifLess100, int64);
+        TreeNode ifLess90 = ifLongLessThanElse(x_node, 90L, 8L, ifLess100, int64);
         // if (x < 80) then 7 else ifLess90
-        TreeNode ifLess80 = ifIntLessThanElse(x_node, 80L, 7L, ifLess90, int64);
+        TreeNode ifLess80 = ifLongLessThanElse(x_node, 80L, 7L, ifLess90, int64);
         // if (x < 70) then 6 else ifLess80
-        TreeNode ifLess70 = ifIntLessThanElse(x_node, 70L, 6L, ifLess80, int64);
+        TreeNode ifLess70 = ifLongLessThanElse(x_node, 70L, 6L, ifLess80, int64);
         // if (x < 60) then 5 else ifLess70
-        TreeNode ifLess60 = ifIntLessThanElse(x_node, 60L, 5L, ifLess70, int64);
+        TreeNode ifLess60 = ifLongLessThanElse(x_node, 60L, 5L, ifLess70, int64);
         // if (x < 50) then 4 else ifLess60
-        TreeNode ifLess50 = ifIntLessThanElse(x_node, 50L, 4L, ifLess60, int64);
+        TreeNode ifLess50 = ifLongLessThanElse(x_node, 50L, 4L, ifLess60, int64);
         // if (x < 40) then 3 else ifLess50
-        TreeNode ifLess40 = ifIntLessThanElse(x_node, 40L, 3L, ifLess50, int64);
+        TreeNode ifLess40 = ifLongLessThanElse(x_node, 40L, 3L, ifLess50, int64);
         // if (x < 30) then 2 else ifLess40
-        TreeNode ifLess30 = ifIntLessThanElse(x_node, 30L, 2L, ifLess40, int64);
+        TreeNode ifLess30 = ifLongLessThanElse(x_node, 30L, 2L, ifLess40, int64);
         // if (x < 20) then 1 else ifLess30
-        TreeNode ifLess20 = ifIntLessThanElse(x_node, 20L, 1L, ifLess30, int64);
+        TreeNode ifLess20 = ifLongLessThanElse(x_node, 20L, 1L, ifLess30, int64);
         // if (x < 10) then 0 else ifLess20
-        TreeNode ifLess10 = ifIntLessThanElse(x_node, 10L, 0L, ifLess20, int64);
+        TreeNode ifLess10 = ifLongLessThanElse(x_node, 10L, 0L, ifLess20, int64);
 
         ExpressionTree expr = TreeBuilder.makeExpression(ifLess10, x);
         Schema schema = new Schema(Lists.newArrayList(x));
@@ -289,16 +289,16 @@ public class NativeEvaluatorTest {
                 Lists.newArrayList(fieldNode),
                 Lists.newArrayList(validity_buf, data_x));
 
-        BigIntVector bitIntVector = new BigIntVector(EMPTY_SCHEMA_PATH, allocator);
-        bitIntVector.allocateNew(numRows);
+        BigIntVector bigIntVector = new BigIntVector(EMPTY_SCHEMA_PATH, allocator);
+        bigIntVector.allocateNew(numRows);
 
         List<ValueVector> output = new ArrayList<ValueVector>();
-        output.add(bitIntVector);
+        output.add(bigIntVector);
         eval.evaluate(batch, output);
 
         for(int i = 0; i < numRows; i++) {
-            assertFalse(bitIntVector.isNull(i));
-            assertEquals(expected[i], bitIntVector.get(i));
+            assertFalse(bigIntVector.isNull(i));
+            assertEquals(expected[i], bigIntVector.get(i));
         }
 
         eval.close();

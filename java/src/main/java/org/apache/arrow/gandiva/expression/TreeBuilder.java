@@ -29,23 +29,23 @@ public class TreeBuilder {
     /**
      * Helper functions to create literal constants.
      */
-    public static TreeNode makeBooleanConstant(Boolean booleanConstant) {
+    public static TreeNode makeLiteral(Boolean booleanConstant) {
         return new BooleanNode(booleanConstant);
     }
 
-    public static TreeNode makeFloatConstant(Float floatConstant) {
+    public static TreeNode makeLiteral(Float floatConstant) {
         return new FloatNode(floatConstant);
     }
 
-    public static TreeNode makeDoubleConstant(Double doubleConstant) {
+    public static TreeNode makeLiteral(Double doubleConstant) {
         return new DoubleNode(doubleConstant);
     }
 
-    public static TreeNode makeIntConstant(Integer integerConstant) {
+    public static TreeNode makeLiteral(Integer integerConstant) {
         return new IntNode(integerConstant);
     }
 
-    public static TreeNode makeLongConstant(Long longConstant) {
+    public static TreeNode makeLiteral(Long longConstant) {
         return new LongNode(longConstant);
     }
 

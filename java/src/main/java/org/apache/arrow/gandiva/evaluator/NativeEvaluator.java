@@ -104,16 +104,14 @@ public class NativeEvaluator {
             bufSizes[idx++] = bufLayout.getSize();
         }
 
-        long[] outValidityAddrs = new long[out_columns.size()];
-        long[] outValueAddrs = new long[out_columns.size()];
+        long[] outAddrs = new long[2 * out_columns.size()];
         idx = 0;
         for(ValueVector valueVector : out_columns) {
-            outValidityAddrs[idx] = valueVector.getValidityBuffer().memoryAddress();
-            outValueAddrs[idx] = valueVector.getDataBuffer().memoryAddress();
-            idx++;
+            outAddrs[idx++] = valueVector.getValidityBuffer().memoryAddress();
+            outAddrs[idx++] = valueVector.getDataBuffer().memoryAddress();
         }
 
-        NativeBuilder.evaluate(this.moduleID, recordBatch.getLength(), bufAddrs, bufSizes, outValidityAddrs, outValueAddrs);
+        NativeBuilder.evaluate(this.moduleID, recordBatch.getLength(), bufAddrs, bufSizes, outAddrs);
     }
 
     public void close() throws GandivaException {

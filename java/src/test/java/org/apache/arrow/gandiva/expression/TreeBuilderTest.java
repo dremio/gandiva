@@ -33,26 +33,26 @@ public class TreeBuilderTest {
 
     @Test
     public void testMakeLiteral() throws GandivaException {
-        TreeNode n = TreeBuilder.makeBooleanConstant(Boolean.TRUE);
+        TreeNode n = TreeBuilder.makeLiteral(Boolean.TRUE);
         GandivaTypes.TreeNode node = n.toProtobuf();
 
         assertEquals(true, node.getBooleanNode().getValue());
 
-        n = TreeBuilder.makeIntConstant(new Integer(10));
+        n = TreeBuilder.makeLiteral(new Integer(10));
         node = n.toProtobuf();
         assertEquals(10, node.getIntNode().getValue());
 
-        n = TreeBuilder.makeLongConstant(new Long(50));
+        n = TreeBuilder.makeLiteral(new Long(50));
         node = n.toProtobuf();
         assertEquals(50, node.getLongNode().getValue());
 
         Float f = new Float(2.5);
-        n = TreeBuilder.makeFloatConstant(f);
+        n = TreeBuilder.makeLiteral(f);
         node = n.toProtobuf();
         assertEquals(f.floatValue(), node.getFloatNode().getValue(), 0.1);
 
         Double d = new Double(3.3);
-        n = TreeBuilder.makeDoubleConstant(d);
+        n = TreeBuilder.makeLiteral(d);
         node = n.toProtobuf();
         assertEquals(d.doubleValue(), node.getDoubleNode().getValue(), 0.1);
     }

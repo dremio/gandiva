@@ -50,7 +50,7 @@ target_include_directories(gandiva_jni
     ${CMAKE_SOURCE_DIR}/src
 )
 
-# ARROW is a public dependency i.e users of gandiva also will have a dependency on arrow.
+# PROTOBUF is a public dependency i.e users of gandiva also will have a dependency on arrow.
 target_link_libraries(gandiva_jni
   PRIVATE
     protobuf::libprotobuf

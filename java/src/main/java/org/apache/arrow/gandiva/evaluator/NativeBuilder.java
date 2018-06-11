@@ -27,6 +27,7 @@ package org.apache.arrow.gandiva.evaluator;
 
     static {
         try {
+            // TODO: Load gandiva_jni from a jar
             System.loadLibrary(LIBRARY_NAME);
         } catch (UnsatisfiedLinkError e) {
             System.err.println("Native code library failed to load.\n" + e);
@@ -39,7 +40,7 @@ package org.apache.arrow.gandiva.evaluator;
 
     static native void evaluate(long moduleID, int num_rows,
                                 long[] bufAddrs, long[] bufSizes,
-                                long[] outValidityAddrs, long[] outValueAddrs);
+                                long[] outAddrs);
 
     static native void close(long moduleID);
 }

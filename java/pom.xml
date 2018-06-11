@@ -59,6 +59,9 @@
     </dependencies>
 
     <build>
+        <!--
+        TODO: Need to package the jni code (gandiva_jni) in the gandiva jar
+        -->
         <extensions>
             <extension>
                 <groupId>kr.motd.maven</groupId>
