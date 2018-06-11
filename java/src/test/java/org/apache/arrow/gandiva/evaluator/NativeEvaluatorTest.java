@@ -97,8 +97,8 @@ public class NativeEvaluatorTest {
         List<Field> cols = Lists.newArrayList(a, b);
         Schema schema = new Schema(cols);
 
-        ArrowType retType = new ArrowType.Bool();
-        TreeNode cond = TreeBuilder.makeFunction("greater_than", args, retType);
+        ArrowType retType = new ArrowType.Int(64, true);
+        TreeNode cond = TreeBuilder.makeFunction("greater_than", args, boolType);
         TreeNode ifNode = TreeBuilder.makeIf(cond, aNode, bNode, retType);
 
         ExpressionTree expr = TreeBuilder.makeExpression(ifNode, Field.nullable("c", retType));
