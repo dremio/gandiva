@@ -33,6 +33,13 @@ using date = int64_t;
 using time64 = int64_t;
 using timestamp = int64_t;
 
+#ifdef GANDIVA_UNIT_TEST
+// unit tests may be compiled without O2, so inlining may not happen.
+#define FORCE_INLINE
+#else
+#define FORCE_INLINE __attribute__((always_inline))
+#endif
+
 // Declarations : used in testing
 
 extern "C" {
