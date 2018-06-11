@@ -151,6 +151,7 @@ DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& extType) {
     case types::UNION:
     case types::DICTIONARY:
     case types::MAP:
+    default:
       return NULL;
   }
 }
