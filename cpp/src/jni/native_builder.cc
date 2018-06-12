@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
+#include <google/protobuf/io/coded_stream.h>
+
 #include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
 #include <memory>
 #include <map>
-
-#include <google/protobuf/io/coded_stream.h>
 
 #include <arrow/builder.h>
 #include <arrow/record_batch.h>
