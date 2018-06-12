@@ -392,4 +392,27 @@ public class NativeEvaluatorTest {
 
         eval.close();
     }
+
+    @Ignore
+    @Test
+    public void testUnknownFunction() {
+        ArrowType int8 = new ArrowType.Int(8, true);
+        Field c1 = Field.nullable("c1", int8);
+        Field c2 = Field.nullable("c2", int8);
+
+        TreeNode c1_Node = TreeBuilder.makeField(c1);
+        TreeNode c2_Node = TreeBuilder.makeField(c2);
+
+        TreeNode unknown = TreeBuilder.makeFunction("xxx_yyy", Lists.newArrayList(c1_Node, c2_Node), int8);
+        ExpressionTree expr = TreeBuilder.makeExpression(unknown, Field.nullable("result", int8));
+        Schema schema = new Schema(Lists.newArrayList(c1, c2));
+        boolean caughtException = false;
+        try {
+            NativeEvaluator eval = NativeEvaluator.makeProjector(schema, Lists.newArrayList(expr));
+        } catch (GandivaException ge) {
+            caughtException = true;
+        }
+
+        assertTrue(caughtException);
+    }
 }

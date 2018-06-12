@@ -29,7 +29,7 @@ set(JNI_HEADERS_DIR "${CMAKE_CURRENT_BINARY_DIR}/java")
 add_subdirectory(../../../java ./java)
 
 add_library(gandiva_jni SHARED
-  nativeBuilder.cc
+  native_builder.cc
   ${PROTO_SRCS}
   ${PROTO_HDRS})
 add_dependencies(gandiva_jni gandiva_java)

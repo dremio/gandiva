@@ -29,19 +29,19 @@ namespace gandiva {
 class ProjectorHolder {
  public:
     ProjectorHolder(SchemaPtr schema,
-                    FieldVector retTypes,
+                    FieldVector ret_types,
                     std::shared_ptr<Projector> projector)
     : schema_(schema),
-      retTypes_(retTypes),
+      ret_types_(ret_types),
       projector_(std::move(projector)) {}
 
     SchemaPtr schema() { return schema_; }
-    FieldVector retTypes() { return retTypes_; }
+    FieldVector rettypes() { return ret_types_; }
     std::shared_ptr<Projector> projector() { return projector_; }
 
  private:
     SchemaPtr schema_;
-    FieldVector retTypes_;
+    FieldVector ret_types_;
     std::shared_ptr<Projector> projector_;
 };
 

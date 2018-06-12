@@ -40,7 +40,7 @@ package org.apache.arrow.gandiva.evaluator;
 
     static native void evaluate(long moduleID, int num_rows,
                                 long[] bufAddrs, long[] bufSizes,
-                                long[] outAddrs);
+                                long[] outAddrs, long[] outSizes);
 
     static native void close(long moduleID);
 }
