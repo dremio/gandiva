@@ -98,16 +98,10 @@ void MapErase(jlong module_id) {
 std::shared_ptr<ProjectorHolder> MapLookup(jlong module_id) {
   std::shared_ptr<ProjectorHolder> result = NULL;
 
-  g_mtx_.lock();
-
-  std::unordered_map<jlong, std::shared_ptr<ProjectorHolder>>::iterator it;
-
-  it = projector_modules_map_.find(module_id);
-  if (it != projector_modules_map_.end()) {
-    result = it->second;
+  try {
+    result = projector_modules_map_.at(module_id);
+  } catch (const std::out_of_range& e) {
   }
-
-  g_mtx_.unlock();
 
   return result;
 }
