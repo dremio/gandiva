@@ -23,7 +23,7 @@ pushd $CPP_BUILD_DIR
 # Temporary work around to copy the library to current java directory.
 # Follow work to make this as argument in maven and loading the library
 # dynamically.
-cp $CPP_BUILD_DIR/src/jni/lingandiva_jni.so $GANDIVA_JAVA_DIR/lingandiva_jni.so
+cp $CPP_BUILD_DIR/src/jni/libgandiva_jni.so $GANDIVA_JAVA_DIR/libgandiva_jni.so
 
 mvn test -f $GANDIVA_JAVA_DIR/pom.xml
 
