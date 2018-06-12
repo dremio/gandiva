@@ -15,9 +15,10 @@
 #ifndef GANDIVA_LLVM_TYPES_H
 #define GANDIVA_LLVM_TYPES_H
 
+#include <map>
+
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
-#include <map>
 #include "gandiva/arrow.h"
 
 namespace gandiva {
@@ -33,6 +34,10 @@ class LLVMTypes {
 
   llvm::Type *i8_type() {
     return llvm::Type::getInt8Ty(context_);
+  }
+
+  llvm::Type *i16_type() {
+    return llvm::Type::getInt16Ty(context_);
   }
 
   llvm::Type *i32_type() {

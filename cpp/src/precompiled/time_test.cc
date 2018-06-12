@@ -12,17 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GANDIVA_LITERAL_HOLDER
-#define GANDIVA_LITERAL_HOLDER
+#include <time.h>
 
-#include <string>
-
-#include <boost/variant.hpp>
+#include <gtest/gtest.h>
+#include "precompiled/types.h"
 
 namespace gandiva {
 
-using LiteralHolder = boost::variant<bool, int32_t, int64_t, float, double>;
+timestamp StringToTimestamp(const char *buf) {
+  struct tm tm;
+  strptime(buf, "%Y-%m-%d %H:%M:%S", &tm);
+  return timegm(&tm) * 1000; // to millis
+}
+
+TEST(TestTime, TestExtractTimestamp) {
+  timestamp ts = StringToTimestamp("1970-05-02 10:20:33");
+
+  EXPECT_EQ(extractYear_timestamp(ts), 1970);
+  EXPECT_EQ(extractMonth_timestamp(ts), 5);
+  EXPECT_EQ(extractDay_timestamp(ts), 2);
+  EXPECT_EQ(extractHour_timestamp(ts), 10);
+  EXPECT_EQ(extractMinute_timestamp(ts), 20);
+}
 
 } // namespace gandiva
-
-#endif //GANDIVA_LITERAL_HOLDER

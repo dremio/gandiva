@@ -16,6 +16,7 @@ extern "C" {
 
 #include<time.h>
 #include<stdlib.h>
+
 #include "./types.h"
 
 #define MILLIS_TO_SEC(millis) (millis / 1000)
@@ -24,12 +25,12 @@ extern "C" {
 #define DATE_TYPES(INNER) \
   INNER(date) \
   INNER(time64) \
-  INNER(timestamp64)
+  INNER(timestamp)
 
 
 // Extract  year.
 #define EXTRACT_YEAR(TYPE) \
-  __attribute__((always_inline)) \
+  FORCE_INLINE \
   int64 extractYear##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
@@ -40,7 +41,7 @@ extern "C" {
 DATE_TYPES(EXTRACT_YEAR)
 
 #define EXTRACT_MONTH(TYPE) \
-  __attribute__((always_inline)) \
+  FORCE_INLINE \
   int64 extractMonth##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
@@ -51,7 +52,7 @@ DATE_TYPES(EXTRACT_YEAR)
 DATE_TYPES(EXTRACT_MONTH)
 
 #define EXTRACT_DAY(TYPE) \
-  __attribute__((always_inline)) \
+  FORCE_INLINE \
   int64 extractDay##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
@@ -62,7 +63,7 @@ DATE_TYPES(EXTRACT_MONTH)
 DATE_TYPES(EXTRACT_DAY)
 
 #define EXTRACT_HOUR(TYPE) \
-  __attribute__((always_inline)) \
+  FORCE_INLINE \
   int64 extractHour##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \
@@ -73,7 +74,7 @@ DATE_TYPES(EXTRACT_DAY)
 DATE_TYPES(EXTRACT_HOUR)
 
 #define EXTRACT_MINUTE(TYPE) \
-  __attribute__((always_inline)) \
+  FORCE_INLINE \
   int64 extractMinute##_##TYPE(TYPE millis) { \
     time_t tsec = (time_t) MILLIS_TO_SEC(millis); \
     struct tm tm; \

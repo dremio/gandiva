@@ -38,7 +38,9 @@ function(add_precompiled_unit_test REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
 
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
+  target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
   target_link_libraries(${TEST_NAME} PRIVATE gtest_main)
+  target_compile_definitions(${TEST_NAME} PRIVATE GANDIVA_UNIT_TEST=1)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
 endfunction(add_precompiled_unit_test REL_TEST_NAME)
@@ -99,7 +101,7 @@ function(add_lint)
     ${CPPLINT_BIN}
     --verbose=2
     --linelength=90
-    --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references,-build/include_order
+    --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references
     )
   endif (UNIX)
 endfunction(add_lint)
