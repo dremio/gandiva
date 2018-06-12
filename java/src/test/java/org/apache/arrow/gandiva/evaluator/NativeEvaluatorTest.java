@@ -393,6 +393,57 @@ public class NativeEvaluatorTest {
         eval.close();
     }
 
+    @Test
+    public void testSmallOutputVectors() throws GandivaException, Exception {
+        ArrowType int32 = new ArrowType.Int(32, true);
+        Field a = Field.nullable("a", int32);
+        Field b = Field.nullable("b", int32);
+        List<Field> args = Lists.newArrayList(a, b);
+
+        Field retType = Field.nullable("c", int32);
+        ExpressionTree root = TreeBuilder.makeExpression("add", args, retType);
+
+        List<ExpressionTree> exprs = Lists.newArrayList(root);
+
+        Schema schema = new Schema(args);
+        NativeEvaluator eval = NativeEvaluator.makeProjector(schema, exprs);
+
+        int numRows = 16;
+        byte[] validity = new byte[] {(byte) 255, 0};
+        // second half is "undefined"
+        int[] values_a = new int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+        int[] values_b = new int[] {16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+
+        ArrowBuf validity_a = buf(validity);
+        ArrowBuf data_a = intBuf(values_a);
+        ArrowBuf validity_b = buf(validity);
+        ArrowBuf data_b = intBuf(values_b);
+        ArrowRecordBatch batch = new ArrowRecordBatch(
+                numRows,
+                Lists.newArrayList(new ArrowFieldNode(numRows, 8), new ArrowFieldNode(numRows, 8)),
+                Lists.newArrayList(validity_a, data_a, validity_b, data_b));
+
+        IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
+
+        List<ValueVector> output = new ArrayList<ValueVector>();
+        output.add(intVector);
+        try {
+            eval.evaluate(batch, output);
+        } catch (Throwable t) {
+            intVector.allocateNew(numRows);
+            eval.evaluate(batch, output);
+        }
+
+        for(int i = 0; i < 8; i++) {
+            assertFalse(intVector.isNull(i));
+            assertEquals(17, intVector.get(i));
+        }
+        for(int i = 8; i < 16; i++) {
+            assertTrue(intVector.isNull(i));
+        }
+        eval.close();
+    }
+
     @Ignore
     @Test
     public void testUnknownFunction() {
