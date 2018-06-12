@@ -84,7 +84,7 @@ message Field {
 }
 
 message FieldNode {
-  required Field field = 1;
+  optional Field field = 1;
 }
 
 message FunctionNode {
@@ -100,12 +100,35 @@ message IfNode {
   optional ExtGandivaType returnType = 4;
 }
 
+message IntNode {
+  optional int32 value = 1;
+}
+
+message FloatNode {
+  optional float value = 1;
+}
+
+message DoubleNode {
+  optional double value = 1;
+}
+
+message BooleanNode {
+  optional bool value = 1;
+}
+
+message LongNode {
+  optional int64 value = 1;
+}
+
 message TreeNode {
-  oneof nodeType {
-    FieldNode fieldNode = 1;
-    FunctionNode fnNode = 2;
-    IfNode ifNode = 3;
-  }
+  optional FieldNode fieldNode = 1;
+  optional FunctionNode fnNode = 2;
+  optional IfNode ifNode = 3;
+  optional IntNode intNode = 4;
+  optional FloatNode floatNode = 5;
+  optional LongNode longNode = 6;
+  optional BooleanNode booleanNode = 7;
+  optional DoubleNode doubleNode = 8;
 }
 
 message ExpressionRoot {
