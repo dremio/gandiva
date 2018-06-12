@@ -20,5 +20,5 @@ set -ex
 
 source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
-# Tests will be run the travis script.
+# Tests will be run as part of the travis script.
 mvn clean install -f $GANDIVA_JAVA_DIR/pom.xml -DskipTests

@@ -20,7 +20,9 @@ source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
 pushd $CPP_BUILD_DIR
 
-# ignoring the file until other PR is resolved
+# Temporary work around to copy the library to current java directory.
+# Follow work to make this as argument in maven and loading the library
+# dynamically.
 cp $CPP_BUILD_DIR/src/jni/lingandiva_jni.so $GANDIVA_JAVA_DIR/lingandiva_jni.so
 
 mvn test -f $GANDIVA_JAVA_DIR/pom.xml
