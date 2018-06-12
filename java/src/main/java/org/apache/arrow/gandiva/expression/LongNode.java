@@ -21,6 +21,10 @@ package org.apache.arrow.gandiva.expression;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
 
+/**
+ * Used to represent expression tree nodes representing long constants.
+ * Used in the expression (x + 5L)
+ */
 class LongNode implements TreeNode {
     private final Long value;
 

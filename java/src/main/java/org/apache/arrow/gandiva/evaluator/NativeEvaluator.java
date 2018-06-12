@@ -21,9 +21,11 @@ package org.apache.arrow.gandiva.evaluator;
 import io.netty.buffer.ArrowBuf;
 import org.apache.arrow.gandiva.exceptions.EvaluatorClosedException;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
+import org.apache.arrow.gandiva.exceptions.UnsupportedTypeException;
 import org.apache.arrow.gandiva.expression.ArrowTypeHelper;
 import org.apache.arrow.gandiva.expression.ExpressionTree;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
+import org.apache.arrow.vector.FixedWidthVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.ipc.message.ArrowBuffer;
 import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
@@ -32,6 +34,8 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import java.util.List;
 
 public class NativeEvaluator {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NativeEvaluator.class);
+
     private final long moduleID;
     private final Schema schema;
     private final int numExprs;
@@ -45,7 +49,7 @@ public class NativeEvaluator {
     }
 
     /**
-     * Invoke this function to generate LLVM code to evaluate the list of expressions
+     * Invoke this function to generate LLVM code to evaluate the list of project expressions
      * Invoke NativeEvaluator::Evalute() against a RecordBatch to evaluate the record batch
      * against these projections
      *
@@ -65,15 +69,11 @@ public class NativeEvaluator {
         // Invoke the JNI layer to create the LLVM module representing the expressions
         GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
         long moduleID = NativeBuilder.buildNativeCode(schemaBuf.toByteArray(), builder.build().toByteArray());
-        if (moduleID == 0L) {
-            throw new GandivaException("Unable to create native module for the given expressions");
-        }
-
         return new NativeEvaluator(moduleID, schema, exprs.size());
     }
 
     /**
-     * Invoke this function to invoke the projection against the recordBatch.
+     * Invoke this function to evaluate a set of expressions against a recordBatch
      *
      * @param recordBatch Record batch including the data
      * @param out_columns Result of applying the project on the data
@@ -85,6 +85,7 @@ public class NativeEvaluator {
         }
 
         if (numExprs != out_columns.size()) {
+            logger.info("Expected " + numExprs + " columns, got " + out_columns.size());
             throw new GandivaException("Incorrect number of columns for the output vector");
         }
 
@@ -108,6 +109,10 @@ public class NativeEvaluator {
         long[] outSizes = new long[2 * out_columns.size()];
         idx = 0;
         for(ValueVector valueVector : out_columns) {
+            if (!(valueVector instanceof FixedWidthVector)) {
+                throw new UnsupportedTypeException("Unsupported value vector type");
+            }
+
             outAddrs[idx] = valueVector.getValidityBuffer().memoryAddress();
             outSizes[idx++] = valueVector.getValidityBuffer().capacity();
             outAddrs[idx] = valueVector.getDataBuffer().memoryAddress();

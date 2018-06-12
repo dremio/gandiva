@@ -21,8 +21,8 @@ package org.apache.arrow.gandiva.exceptions;
 /**
  * Represents an exception thrown while dealing with unhandled types
  */
-public class UnhandledTypeException extends GandivaException {
-    public UnhandledTypeException(String msg) {
+public class UnsupportedTypeException extends GandivaException {
+    public UnsupportedTypeException(String msg) {
         super(msg);
     }
 }

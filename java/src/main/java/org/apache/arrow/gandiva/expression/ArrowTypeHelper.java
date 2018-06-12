@@ -20,7 +20,7 @@ package org.apache.arrow.gandiva.expression;
 
 import org.apache.arrow.flatbuf.Type;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
-import org.apache.arrow.gandiva.exceptions.UnhandledTypeException;
+import org.apache.arrow.gandiva.exceptions.UnsupportedTypeException;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -181,7 +181,7 @@ public class ArrowTypeHelper {
         if (!builder.hasType()) {
             // type has not been set
             // throw an exception
-            throw new UnhandledTypeException("Unhandled type" + arrowType.toString());
+            throw new UnsupportedTypeException("Unsupported type" + arrowType.toString());
         }
 
         return builder.build();

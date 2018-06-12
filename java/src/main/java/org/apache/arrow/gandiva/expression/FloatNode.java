@@ -21,6 +21,10 @@ package org.apache.arrow.gandiva.expression;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
 
+/**
+ * Used to represent expression tree nodes representing float constants.
+ * Used in the expression (x + 5.0)
+ */
 class FloatNode implements TreeNode {
     private final Float value;
 

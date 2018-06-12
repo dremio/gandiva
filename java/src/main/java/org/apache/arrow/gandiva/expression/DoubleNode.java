@@ -21,6 +21,10 @@ package org.apache.arrow.gandiva.expression;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
 
+/**
+ * Used to represent expression tree nodes representing double constants.
+ * Used in the expression (x + 5.0)
+ */
 class DoubleNode implements TreeNode {
     private final Double value;
 
