@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ArrowTypeHelperTest {
 
-    void testInt(int width, boolean isSigned, int expected) throws GandivaException {
+    private void testInt(int width, boolean isSigned, int expected) throws GandivaException {
         ArrowType arrowType = new ArrowType.Int(width, isSigned);
         GandivaTypes.ExtGandivaType gandivaType = ArrowTypeHelper.arrowTypeToProtobuf(arrowType);
         assertEquals(expected, gandivaType.getType().getNumber());
@@ -51,7 +51,7 @@ public class ArrowTypeHelperTest {
         testInt(64, true, GandivaTypes.GandivaType.INT64_VALUE);
     }
 
-    void testFloat(FloatingPointPrecision precision, int expected) throws GandivaException {
+    private void testFloat(FloatingPointPrecision precision, int expected) throws GandivaException {
         ArrowType arrowType = new ArrowType.FloatingPoint(precision);
         GandivaTypes.ExtGandivaType gandivaType = ArrowTypeHelper.arrowTypeToProtobuf(arrowType);
         assertEquals(expected, gandivaType.getType().getNumber());
@@ -64,7 +64,7 @@ public class ArrowTypeHelperTest {
         testFloat(FloatingPointPrecision.DOUBLE, GandivaTypes.GandivaType.DOUBLE_VALUE);
     }
 
-    void testBasic(ArrowType arrowType, int expected) throws GandivaException {
+    private void testBasic(ArrowType arrowType, int expected) throws GandivaException {
         GandivaTypes.ExtGandivaType gandivaType = ArrowTypeHelper.arrowTypeToProtobuf(arrowType);
         assertEquals(expected, gandivaType.getType().getNumber());
     }

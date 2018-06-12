@@ -33,6 +33,14 @@ import org.apache.arrow.vector.types.pojo.Schema;
 
 import java.util.List;
 
+/**
+ * This class provides a mechanism to evaluate a set of expressions against a RecordBatch.
+ * Follow these steps to use this class:
+ * 1) Use the static method makeProjector() to create an instance of this class that evaluates a
+ *    set of expressions
+ * 2) Invoke the method evaluate() to evaluate these expressions against a RecordBatch
+ * 3) Invoke close() to release resources
+ */
 public class NativeEvaluator {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NativeEvaluator.class);
 

@@ -23,11 +23,11 @@
 #include <memory>
 #include <map>
 
+#include <google/protobuf/io/coded_stream.h>
+
 #include <arrow/builder.h>
 #include <arrow/record_batch.h>
 #include <arrow/type.h>
-
-#include <google/protobuf/io/coded_stream.h>
 
 #include "jni/org_apache_arrow_gandiva_evaluator_NativeBuilder.h"
 #include "jni/module_holder.h"

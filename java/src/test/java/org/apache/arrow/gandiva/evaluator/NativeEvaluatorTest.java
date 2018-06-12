@@ -449,6 +449,7 @@ public class NativeEvaluatorTest {
         eval.close();
     }
 
+    // This test is ignored until the cpp layer handles errors gracefully
     @Ignore
     @Test
     public void testUnknownFunction() {
