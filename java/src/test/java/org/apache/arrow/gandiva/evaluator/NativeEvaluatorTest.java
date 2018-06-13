@@ -450,11 +450,6 @@ public class NativeEvaluatorTest {
         eval.close();
     }
 
-    @Test
-    public void testFail() {
-        Assert.fail();
-    }
-
     // This test is ignored until the cpp layer handles errors gracefully
     @Ignore
     @Test
