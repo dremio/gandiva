@@ -21,6 +21,7 @@
 #include <utility>
 #include <memory>
 
+#include "codegen/stop_watch.h"
 #include "gandiva/arrow.h"
 #include "gandiva/projector.h"
 
@@ -39,10 +40,13 @@ class ProjectorHolder {
     FieldVector rettypes() { return ret_types_; }
     std::shared_ptr<Projector> projector() { return projector_; }
 
+    StopWatch &eval_timer() { return eval_timer_; }
+
  private:
     SchemaPtr schema_;
     FieldVector ret_types_;
     std::shared_ptr<Projector> projector_;
+    StopWatch eval_timer_;
 };
 
 } // namespace gandiva

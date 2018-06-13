@@ -75,12 +75,6 @@ jlong MapInsert(std::shared_ptr<ProjectorHolder> holder) {
   return result;
 }
 
-void MapErase(jlong module_id) {
-  g_mtx_.lock();
-  projector_modules_map_.erase(module_id);
-  g_mtx_.unlock();
-}
-
 std::shared_ptr<ProjectorHolder> MapLookup(jlong module_id) {
   std::shared_ptr<ProjectorHolder> result = nullptr;
 
@@ -90,6 +84,16 @@ std::shared_ptr<ProjectorHolder> MapLookup(jlong module_id) {
   }
 
   return result;
+}
+
+void MapErase(jlong module_id) {
+  std::cerr << "Time spent in gandiva jni Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate "
+            << MapLookup(module_id)->eval_timer().ElapsedMicros()
+            << " us\n";
+
+  g_mtx_.lock();
+  projector_modules_map_.erase(module_id);
+  g_mtx_.unlock();
 }
 
 DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& ext_type) {
@@ -405,6 +409,7 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
     ThrowException(env, "Unknown module id");
     return;
   }
+  holder->eval_timer().Start();
 
   jlong *in_buf_addrs = env->GetLongArrayElements(buf_addrs, 0);
   jlong *in_buf_sizes = env->GetLongArrayElements(buf_sizes, 0);
@@ -464,6 +469,8 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
   env->ReleaseLongArrayElements(buf_sizes, in_buf_sizes, JNI_ABORT);
   env->ReleaseLongArrayElements(out_buf_addrs, out_bufs, JNI_ABORT);
   env->ReleaseLongArrayElements(out_buf_sizes, out_sizes, JNI_ABORT);
+
+  holder->eval_timer().Stop();
 
   if (status.ok()) {
     return;

@@ -31,6 +31,7 @@ cd gandiva/cpp
 mkdir debug
 cd debug
 cmake ..
+make
 make test
 ```
 
@@ -42,6 +43,7 @@ cd gandiva/cpp
 mkdir release
 cd release
 cmake .. -DCMAKE_BUILD_TYPE=Release
+make
 make test
 ```
 

@@ -18,6 +18,7 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
+import com.google.common.base.Stopwatch;
 import io.netty.buffer.ArrowBuf;
 import org.apache.arrow.gandiva.exceptions.EvaluatorClosedException;
 import org.apache.arrow.gandiva.exceptions.GandivaException;
@@ -32,6 +33,7 @@ import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class provides a mechanism to evaluate a set of expressions against a RecordBatch.
@@ -48,12 +50,14 @@ public class NativeEvaluator {
     private final Schema schema;
     private final int numExprs;
     private boolean closed;
+    private final Stopwatch timer;
 
     private NativeEvaluator(long moduleID, Schema schema, int numExprs) {
         this.moduleID = moduleID;
         this.schema = schema;
         this.numExprs = numExprs;
         this.closed = false;
+        this.timer = Stopwatch.createUnstarted();
     }
 
     /**
@@ -88,46 +92,52 @@ public class NativeEvaluator {
      * @throws Exception
      */
     public void evaluate(ArrowRecordBatch recordBatch, List<ValueVector> out_columns) throws GandivaException, Exception {
-        if (this.closed) {
-            throw new EvaluatorClosedException();
-        }
-
-        if (numExprs != out_columns.size()) {
-            logger.info("Expected " + numExprs + " columns, got " + out_columns.size());
-            throw new GandivaException("Incorrect number of columns for the output vector");
-        }
-
-        List<ArrowBuf> buffers = recordBatch.getBuffers();
-        List<ArrowBuffer> buffersLayout = recordBatch.getBuffersLayout();
-
-        long[] bufAddrs = new long[buffers.size()];
-        long[] bufSizes = new long[buffers.size()];
-
-        int idx = 0;
-        for(ArrowBuf buf : buffers) {
-            bufAddrs[idx++] = buf.memoryAddress();
-        }
-
-        idx = 0;
-        for(ArrowBuffer bufLayout : buffersLayout) {
-            bufSizes[idx++] = bufLayout.getSize();
-        }
-
-        long[] outAddrs = new long[2 * out_columns.size()];
-        long[] outSizes = new long[2 * out_columns.size()];
-        idx = 0;
-        for(ValueVector valueVector : out_columns) {
-            if (!(valueVector instanceof FixedWidthVector)) {
-                throw new UnsupportedTypeException("Unsupported value vector type");
+        timer.start();
+        try {
+            if (this.closed) {
+                throw new EvaluatorClosedException();
             }
 
-            outAddrs[idx] = valueVector.getValidityBuffer().memoryAddress();
-            outSizes[idx++] = valueVector.getValidityBuffer().capacity();
-            outAddrs[idx] = valueVector.getDataBuffer().memoryAddress();
-            outSizes[idx++] = valueVector.getDataBuffer().capacity();
-        }
+            if (numExprs != out_columns.size()) {
+                logger.info("Expected " + numExprs + " columns, got " + out_columns.size());
+                throw new GandivaException("Incorrect number of columns for the output vector");
+            }
 
-        NativeBuilder.evaluate(this.moduleID, recordBatch.getLength(), bufAddrs, bufSizes, outAddrs, outSizes);
+            List<ArrowBuf> buffers = recordBatch.getBuffers();
+            List<ArrowBuffer> buffersLayout = recordBatch.getBuffersLayout();
+
+            long[] bufAddrs = new long[buffers.size()];
+            long[] bufSizes = new long[buffers.size()];
+
+            int idx = 0;
+            for (ArrowBuf buf : buffers) {
+                bufAddrs[idx++] = buf.memoryAddress();
+            }
+
+            idx = 0;
+            for (ArrowBuffer bufLayout : buffersLayout) {
+                bufSizes[idx++] = bufLayout.getSize();
+            }
+
+            long[] outAddrs = new long[2 * out_columns.size()];
+            long[] outSizes = new long[2 * out_columns.size()];
+            idx = 0;
+            for (ValueVector valueVector : out_columns) {
+                if (!(valueVector instanceof FixedWidthVector)) {
+                    throw new UnsupportedTypeException("Unsupported value vector type");
+                }
+
+                outAddrs[idx] = valueVector.getValidityBuffer().memoryAddress();
+                outSizes[idx++] = valueVector.getValidityBuffer().capacity();
+                outAddrs[idx] = valueVector.getDataBuffer().memoryAddress();
+                outSizes[idx++] = valueVector.getDataBuffer().capacity();
+            }
+
+
+            NativeBuilder.evaluate(this.moduleID, recordBatch.getLength(), bufAddrs, bufSizes, outAddrs, outSizes);
+        } finally {
+            timer.stop();
+        }
     }
 
     public void close() throws GandivaException {
@@ -136,6 +146,7 @@ public class NativeEvaluator {
         }
 
         NativeBuilder.close(this.moduleID);
+        System.out.println("Time spent in gandiva-java NativeEvaluator::evaluate() " + timer.elapsed(TimeUnit.MICROSECONDS) + " us");
         this.closed = true;
     }
 }
