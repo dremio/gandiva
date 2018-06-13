@@ -56,6 +56,8 @@ matrix:
     before_script:
     - ulimit -c unlimited -S
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
+    # combining java and cpp build for now.
+    # can separate them as needed later.
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_java.sh
     script:
     - $TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh && $TRAVIS_BUILD_DIR/ci/travis_script_java.sh

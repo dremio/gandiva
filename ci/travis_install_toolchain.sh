@@ -20,6 +20,8 @@ source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
 source $TRAVIS_BUILD_DIR/ci/travis_install_conda.sh
 
+# Pinning Gandiva to Arrow 0.8 version. We are seeing seg-faults with
+# 0.9 version. Will be tracked in https://dremio.atlassian.net/browse/GDV-69.
 if [ ! -e $CPP_TOOLCHAIN ]; then
     # Set up C++ toolchain from conda-forge packages for faster builds
     conda create -y -q -p $CPP_TOOLCHAIN python=2.7 \
@@ -31,7 +33,7 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
         cmake \
         curl \
         ninja \
-        arrow-cpp = 0.8.0 \
+        arrow-cpp=0.8.0 \
         boost-cpp
 
     conda update -y -q -p $CPP_TOOLCHAIN ca-certificates -c defaults
