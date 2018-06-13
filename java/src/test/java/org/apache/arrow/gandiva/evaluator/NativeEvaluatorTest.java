@@ -36,6 +36,7 @@ import org.apache.arrow.vector.types.FloatingPointPrecision;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -447,6 +448,11 @@ public class NativeEvaluatorTest {
             assertTrue(intVector.isNull(i));
         }
         eval.close();
+    }
+
+    @Test
+    public void testFail() {
+        Assert.fail();
     }
 
     // This test is ignored until the cpp layer handles errors gracefully
