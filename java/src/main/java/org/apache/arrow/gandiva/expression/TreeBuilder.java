@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TreeBuilder {
-
   /**
    * Helper functions to create literal constants.
    */

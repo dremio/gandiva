@@ -208,7 +208,6 @@ public class ArrowTypeHelper {
    */
   public static GandivaTypes.Field arrowFieldToProtobuf(Field field) throws GandivaException {
     GandivaTypes.Field.Builder builder = GandivaTypes.Field.newBuilder();
-
     builder.setName(field.getName());
     builder.setType(ArrowTypeHelper.arrowTypeToProtobuf(field.getType()));
     builder.setNullable(field.isNullable());
