@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Copyright (C) 2017-2018 Dremio Corporation
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,27 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Adapted from Apache Arrow
+set -e
 
 source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
-source $TRAVIS_BUILD_DIR/ci/travis_install_conda.sh
+pushd $CPP_BUILD_DIR
 
-# Pinning Gandiva to Arrow 0.8 version. We are seeing seg-faults with
-# 0.9 version. Will be tracked in https://dremio.atlassian.net/browse/GDV-69.
-if [ ! -e $CPP_TOOLCHAIN ]; then
-    # Set up C++ toolchain from conda-forge packages for faster builds
-    conda create -y -q -p $CPP_TOOLCHAIN python=2.7 \
-        flatbuffers \
-        libprotobuf \
-        gflags \
-        gtest \
-        ccache \
-        cmake \
-        curl \
-        ninja \
-        arrow-cpp=0.8.0 \
-        boost-cpp
+# TODO : Temporary work around to copy the library to current java directory.
+# Follow-up work to take this as an argument in maven and loading the library
+# dynamically.
+# Covered in https://dremio.atlassian.net/browse/GDV-68
+cp $CPP_BUILD_DIR/src/jni/libgandiva_jni.so $GANDIVA_JAVA_DIR/libgandiva_jni.so
 
-    conda update -y -q -p $CPP_TOOLCHAIN ca-certificates -c defaults
-fi
+mvn test -f $GANDIVA_JAVA_DIR/pom.xml
+
+popd
