@@ -140,6 +140,21 @@ public class NativeEvaluator {
         }
     }
 
+    public void evaluate(int numRecords,
+                         long[] inAddrs, long[] inSizes,
+                         long[] outAddrs, long[] outSizes) throws GandivaException, Exception {
+        timer.start();
+        try {
+            if (this.closed) {
+                throw new EvaluatorClosedException();
+            }
+
+            NativeBuilder.evaluate(this.moduleID, numRecords, inAddrs, inSizes, outAddrs, outSizes);
+        } finally {
+            timer.stop();
+        }
+    }
+
     public void close() throws GandivaException {
         if (this.closed) {
             return;
