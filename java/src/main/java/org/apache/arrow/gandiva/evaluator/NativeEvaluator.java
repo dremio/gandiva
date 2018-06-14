@@ -115,6 +115,7 @@ public class NativeEvaluator {
       bufSizes[idx++] = bufLayout.getSize();
     }
 
+    int numRows = recordBatch.getLength();
     long[] outAddrs = new long[2 * outColumns.size()];
     long[] outSizes = new long[2 * outColumns.size()];
     idx = 0;
@@ -127,9 +128,11 @@ public class NativeEvaluator {
       outSizes[idx++] = valueVector.getValidityBuffer().capacity();
       outAddrs[idx] = valueVector.getDataBuffer().memoryAddress();
       outSizes[idx++] = valueVector.getDataBuffer().capacity();
+
+      valueVector.setValueCount(numRows);
     }
 
-    NativeBuilder.evaluate(this.moduleId, recordBatch.getLength(),
+    NativeBuilder.evaluate(this.moduleId, numRows,
             bufAddrs, bufSizes,
             outAddrs, outSizes);
   }
