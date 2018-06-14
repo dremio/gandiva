@@ -49,8 +49,10 @@ Status LLVMGenerator::Make(std::unique_ptr<LLVMGenerator> *llvm_generator) {
 }
 
 LLVMGenerator::~LLVMGenerator() {
-  std::cerr << "Time spent in gandiva-cpp LLVMGenerator::Execute " << eval_timer_.ElapsedMicros() << " us\n";
   std::cerr << "Time spent in gandiva-cpp jit function " << jit_timer_.ElapsedMicros() << " us\n";
+  std::cerr << "Time spent in gandiva-cpp bitmap function " << bm_timer_.ElapsedMicros() << " us\n";
+  std::cerr << "Time spent in gandiva-cpp prep_batch " << prep_batch_timer_.ElapsedMicros() << " us\n";
+  std::cerr << "Time spent in gandiva-cpp LLVMGenerator::Execute " << eval_timer_.ElapsedMicros() << " us\n";
 
   for (auto it = compiled_exprs_.begin(); it != compiled_exprs_.end(); ++it) {
     delete *it;
@@ -106,8 +108,10 @@ Status LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
   DCHECK_GT(record_batch.num_rows(), 0);
   eval_timer_.Start();
 
+  prep_batch_timer_.Start();
   auto eval_batch = annotator_.PrepareEvalBatch(record_batch, output_vector);
   DCHECK_GT(eval_batch->num_buffers(), 0);
+  prep_batch_timer_.Stop();
 
   // generate bitmap vectors, by doing an intersection.
   for (auto compiled_expr : compiled_exprs_) {
@@ -120,7 +124,9 @@ Status LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
     jit_timer_.Stop();
 
     // generate validity vectors.
+    bm_timer_.Start();
     ComputeBitMapsForExpr(*compiled_expr, *eval_batch);
+    bm_timer_.Stop();
   }
   eval_timer_.Stop();
   return Status::OK();

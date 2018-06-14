@@ -36,17 +36,21 @@ class ProjectorHolder {
       ret_types_(ret_types),
       projector_(std::move(projector)) {}
 
-    SchemaPtr schema() { return schema_; }
-    FieldVector rettypes() { return ret_types_; }
-    std::shared_ptr<Projector> projector() { return projector_; }
+    SchemaPtr &schema() { return schema_; }
+    const FieldVector &rettypes() { return ret_types_; }
+    std::shared_ptr<Projector> &projector() { return projector_; }
 
     StopWatch &eval_timer() { return eval_timer_; }
+    StopWatch &jni_timer() { return jni_timer_; }
+    StopWatch &prepargs_timer() { return prepargs_timer_; }
 
  private:
     SchemaPtr schema_;
     FieldVector ret_types_;
     std::shared_ptr<Projector> projector_;
     StopWatch eval_timer_;
+    StopWatch jni_timer_;
+    StopWatch prepargs_timer_;
 };
 
 } // namespace gandiva

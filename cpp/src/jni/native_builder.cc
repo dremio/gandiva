@@ -91,6 +91,14 @@ void MapErase(jlong module_id) {
             << MapLookup(module_id)->eval_timer().ElapsedMicros()
             << " us\n";
 
+  std::cerr << "Time spent in gandiva jni Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate: jni copy "
+            << MapLookup(module_id)->jni_timer().ElapsedMicros()
+            << " us\n";
+
+  std::cerr << "Time spent in gandiva jni Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate: prep args "
+            << MapLookup(module_id)->prepargs_timer().ElapsedMicros()
+            << " us\n";
+
   g_mtx_.lock();
   projector_modules_map_.erase(module_id);
   g_mtx_.unlock();
@@ -404,6 +412,7 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
    jlong module_id, jint num_rows,
    jlongArray buf_addrs, jlongArray buf_sizes,
    jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
+
   std::shared_ptr<ProjectorHolder> holder = MapLookup(module_id);
   if (holder == nullptr) {
     ThrowException(env, "Unknown module id");
@@ -411,20 +420,23 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
   }
   holder->eval_timer().Start();
 
+  holder->jni_timer().Start();
   jlong *in_buf_addrs = env->GetLongArrayElements(buf_addrs, 0);
   jlong *in_buf_sizes = env->GetLongArrayElements(buf_sizes, 0);
 
   jlong *out_bufs = env->GetLongArrayElements(out_buf_addrs, 0);
   jlong *out_sizes = env->GetLongArrayElements(out_buf_sizes, 0);
+  holder->jni_timer().Stop();
 
+  holder->prepargs_timer().Start();
   auto schema = holder->schema();
   std::vector<std::shared_ptr<arrow::ArrayData>> columns;
-  auto num_fields = schema->num_fields();
+  columns.reserve(schema->fields().size());
+
   int buf_idx = 0;
   int sz_idx = 0;
 
-  for (int i = 0; i < num_fields; i++) {
-    auto field = schema->field(i);
+  for (auto &field : schema->fields()) {
     jlong validity_addr = in_buf_addrs[buf_idx++];
     jlong value_addr = in_buf_addrs[buf_idx++];
 
@@ -440,11 +452,12 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
     columns.push_back(array_data);
   }
 
-  auto ret_types = holder->rettypes();
   ArrayDataVector output;
+  output.reserve(holder->rettypes().size());
+
   buf_idx = 0;
   sz_idx = 0;
-  for (FieldPtr field : ret_types) {
+  for (auto &field : holder->rettypes()) {
     uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
     uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
 
@@ -462,13 +475,17 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
     output.push_back(array_data);
   }
 
-  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
+  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, std::move(columns));
+  holder->prepargs_timer().Stop();
+
   gandiva::Status status = holder->projector()->Evaluate(*in_batch, output);
 
+  holder->jni_timer().Start();
   env->ReleaseLongArrayElements(buf_addrs, in_buf_addrs, JNI_ABORT);
   env->ReleaseLongArrayElements(buf_sizes, in_buf_sizes, JNI_ABORT);
   env->ReleaseLongArrayElements(out_buf_addrs, out_bufs, JNI_ABORT);
   env->ReleaseLongArrayElements(out_buf_sizes, out_sizes, JNI_ABORT);
+  holder->jni_timer().Stop();
 
   holder->eval_timer().Stop();
 

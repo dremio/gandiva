@@ -204,6 +204,8 @@ class LLVMGenerator {
 
   StopWatch eval_timer_;
   StopWatch jit_timer_;
+  StopWatch bm_timer_;
+  StopWatch prep_batch_timer_;
 };
 
 } // namespace gandiva
