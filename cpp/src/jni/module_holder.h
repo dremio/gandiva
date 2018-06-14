@@ -27,6 +27,35 @@
 
 namespace gandiva {
 
+class ReusableBuffer : public arrow::Buffer {
+ public:
+     ReusableBuffer(uint8_t* data, const int64_t size) : Buffer(data, size) {}
+
+     void set_sz(const int64_t size) {
+       size_ = size;
+       capacity_ = size;
+     }
+
+     void set_buf(const uint8_t *buf) {
+       data_ = buf;
+     }
+};
+
+class ReusableMutableBuffer : public arrow::MutableBuffer {
+ public:
+     ReusableMutableBuffer(uint8_t* data, const int64_t size)
+       : MutableBuffer(data, size) {}
+
+     void set_sz(const int64_t size) {
+       size_ = size;
+       capacity_ = size;
+     }
+
+     void set_buf(const uint8_t *buf) {
+       data_ = buf;
+     }
+};
+
 class ProjectorHolder {
  public:
     ProjectorHolder(SchemaPtr schema,
@@ -34,11 +63,32 @@ class ProjectorHolder {
                     std::shared_ptr<Projector> projector)
     : schema_(schema),
       ret_types_(ret_types),
-      projector_(std::move(projector)) {}
+      projector_(std::move(projector)) {
+
+      for (auto &field : schema->fields()) {
+        auto validity = std::make_shared<ReusableBuffer>(nullptr, 0);
+        auto data = std::make_shared<ReusableBuffer>(nullptr, 0);
+        auto array_data = arrow::ArrayData::Make(field->type(), 0 /*num_rows*/,
+                                                 {validity, data});
+        inputs_.push_back(array_data);
+      }
+
+      for (auto &field : ret_types) {
+        auto validity = std::make_shared<ReusableMutableBuffer>(nullptr, 0);
+        auto data = std::make_shared<ReusableMutableBuffer>(nullptr, 0);
+
+        auto array_data = arrow::ArrayData::Make(field->type(), 0 /*num_rows*/,
+                                                 {validity, data});
+        outputs_.push_back(array_data);
+      }
+    }
 
     SchemaPtr &schema() { return schema_; }
     const FieldVector &rettypes() { return ret_types_; }
     std::shared_ptr<Projector> &projector() { return projector_; }
+
+    ArrayDataVector &inputs() { return inputs_; }
+    ArrayDataVector &outputs() { return outputs_; }
 
     StopWatch &eval_timer() { return eval_timer_; }
     StopWatch &jni_timer() { return jni_timer_; }
@@ -48,9 +98,14 @@ class ProjectorHolder {
     SchemaPtr schema_;
     FieldVector ret_types_;
     std::shared_ptr<Projector> projector_;
+
+    ArrayDataVector inputs_;
+    ArrayDataVector outputs_;
+
     StopWatch eval_timer_;
     StopWatch jni_timer_;
     StopWatch prepargs_timer_;
+
 };
 
 } // namespace gandiva

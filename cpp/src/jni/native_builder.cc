@@ -430,55 +430,42 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
 
   holder->prepargs_timer().Start();
   auto schema = holder->schema();
-  std::vector<std::shared_ptr<arrow::ArrayData>> columns;
-  columns.reserve(schema->fields().size());
 
-  int buf_idx = 0;
-  int sz_idx = 0;
+  int idx = 0;
+  gandiva::ReusableBuffer *rbuf;
+  for (auto &adata : holder->inputs()) {
+    adata->length = num_rows;
 
-  for (auto &field : schema->fields()) {
-    jlong validity_addr = in_buf_addrs[buf_idx++];
-    jlong value_addr = in_buf_addrs[buf_idx++];
+    rbuf = dynamic_cast<gandiva::ReusableBuffer *>(adata->buffers.at(0).get());
+    rbuf->set_buf(reinterpret_cast<uint8_t*>(in_buf_addrs[idx]));
+    rbuf->set_sz(in_buf_sizes[idx]);
+    idx++;
 
-    jlong validity_size = in_buf_sizes[sz_idx++];
-    jlong value_size = in_buf_sizes[sz_idx++];
-
-    auto validity = std::shared_ptr<arrow::Buffer>(
-      new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
-    auto data = std::shared_ptr<arrow::Buffer>(
-      new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
-
-    auto array_data = arrow::ArrayData::Make(field->type(), num_rows, {validity, data});
-    columns.push_back(array_data);
+    rbuf = dynamic_cast<gandiva::ReusableBuffer *>(adata->buffers.at(1).get());
+    rbuf->set_buf(reinterpret_cast<uint8_t*>(in_buf_addrs[idx]));
+    rbuf->set_sz(in_buf_sizes[idx]);
+    idx++;
   }
+  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, holder->inputs());
 
-  ArrayDataVector output;
-  output.reserve(holder->rettypes().size());
+  idx = 0;
+  gandiva::ReusableMutableBuffer *mbuf;
+  for (auto &adata : holder->outputs()) {
+    adata->length = num_rows;
 
-  buf_idx = 0;
-  sz_idx = 0;
-  for (auto &field : holder->rettypes()) {
-    uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
-    uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
+    mbuf = dynamic_cast<gandiva::ReusableMutableBuffer *>(adata->buffers.at(0).get());
+    mbuf->set_buf(reinterpret_cast<uint8_t*>(out_bufs[idx]));
+    mbuf->set_sz(out_sizes[idx]);
+    idx++;
 
-    jlong bitmap_sz = out_sizes[sz_idx++];
-    jlong data_sz = out_sizes[sz_idx++];
-
-    std::shared_ptr<arrow::MutableBuffer> bitmap_buf =
-      std::make_shared<arrow::MutableBuffer>(validity_buf, bitmap_sz);
-    std::shared_ptr<arrow::MutableBuffer> data_buf =
-      std::make_shared<arrow::MutableBuffer>(value_buf, data_sz);
-
-    auto array_data = arrow::ArrayData::Make(field->type(),
-                                             num_rows,
-                                             {bitmap_buf, data_buf});
-    output.push_back(array_data);
+    mbuf = dynamic_cast<gandiva::ReusableMutableBuffer *>(adata->buffers.at(1).get());
+    mbuf->set_buf(reinterpret_cast<uint8_t*>(out_bufs[idx]));
+    mbuf->set_sz(out_sizes[idx]);
+    idx++;
   }
-
-  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, std::move(columns));
   holder->prepargs_timer().Stop();
 
-  gandiva::Status status = holder->projector()->Evaluate(*in_batch, output);
+  gandiva::Status status = holder->projector()->Evaluate(*in_batch, holder->outputs());
 
   holder->jni_timer().Start();
   env->ReleaseLongArrayElements(buf_addrs, in_buf_addrs, JNI_ABORT);
