@@ -32,7 +32,7 @@ mkdir debug
 cd debug
 cmake ..
 make
-make test
+ctest
 ```
 
 Release build :
@@ -44,7 +44,7 @@ mkdir release
 cd release
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make
-make test
+ctest
 ```
 
 ## Validating code style

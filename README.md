@@ -156,7 +156,7 @@ Here’s the sample C++ code to generate the sum of two integer arrow arrays.
      auto field_sum = field("add", int32());
      
      // Build expression
-     auto sum_expr = TreeExprBuilder::MakeExpression("add {field0, field1}, field_sum);
+     auto sum_expr = TreeExprBuilder::MakeExpression("add", {field0, field1}, field_sum);
      
      // Build a projector
      std::shared_ptr<Projector> projector;
@@ -188,34 +188,35 @@ The core functionality of Gandiva is implemented in C++. Language bindings are p
 To validate the techniques, we did a performance test with Dremio software using two alternative techniques of code 
 generation : using Java code generation vs gandiva.
 
-Two simple expressions were selected and the expression evaluation time alone was compared to process a json file having a 
-100 million records.
+Three simple expressions were selected and the expression evaluation time alone was compared to process a json dataset having 500 million records. The tests were 
+run on mac desktop (2.7GHz quad-core Intel Core i7 with 16GB ram).
 
+For both the tests, the dremio batch size was set to 16K.
 
 #### Sum
-     SELECT max(x+N2x+N3x) FROM testJson."100M.json"
+     SELECT max(x+N2x+N3x) FROM json.d500
 
 #### CASE-10
 
     SELECT count
     (case
-     when x < 1000000 then 0
-     when x < 2000000 then 1
-     when x < 3000000 then 2
-     when x < 4000000 then 3
-     when x < 5000000 then 4
-     when x < 6000000 then 5
-     when x < 7000000 then 6
-     when x < 8000000 then 7
-     when x < 9000000 then 8
-     when x < 10000000 then 9
+     when x < 1000000 then x/1000000 + 0
+     when x < 2000000 then x/2000000 + 1
+     when x < 3000000 then x/3000000 + 2
+     when x < 4000000 then x/4000000 + 3
+     when x < 5000000 then x/5000000 + 4
+     when x < 6000000 then x/6000000 + 5
+     when x < 7000000 then x/7000000 + 6
+     when x < 8000000 then x/8000000 + 7
+     when x < 9000000 then x/9000000 + 8
+     when x < 10000000 then x/10000000 + 9
      else 10
      end)
-     FROM testJson."100M.json"
+     FROM json.d500 
 
 #### CASE-100
 
-     Similar to case-10 but with 100 cases.
+     Similar to case-10 but with 100 cases, and three output columns.
 
 #### Results
 
@@ -225,13 +226,13 @@ Two simple expressions were selected and the expression evaluation time alone wa
        Test
     </td>
     <td>
-       Project time with Java JIT
+       Project time with Java JIT (seconds)
     </td>
     <td>
-        Project time with LLVM
+        Project time with LLVM (seconds)
      </td>
      <td>
-        Performance improvement with LLVM
+        Java JIT time / LLVM time
      </td>
   </tr>
     <tr>
@@ -239,13 +240,13 @@ Two simple expressions were selected and the expression evaluation time alone wa
        SUM
     </td>
     <td>
-       TODO
+       3.805
     </td>
     <td>
-        TODO
+       0.558
      </td>
      <td>
-        TODO
+        6.81x
      </td>
   </tr>
 </tr>
@@ -254,13 +255,13 @@ Two simple expressions were selected and the expression evaluation time alone wa
        CASE-10
     </td>
     <td>
-       TODO
+       4.308
     </td>
     <td>
-        TODO
+      0.925
      </td>
      <td>
-        TODO
+      4.66x
      </td>
   </tr>
   </tr>
@@ -269,13 +270,13 @@ Two simple expressions were selected and the expression evaluation time alone wa
        CASE-100
     </td>
     <td>
-       TODO
+       1361
     </td>
     <td>
-        TODO
+       15.187
      </td>
      <td>
-        TODO
+       89.61x
      </td>
   </tr>
 </table>
