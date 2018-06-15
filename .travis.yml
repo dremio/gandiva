@@ -65,3 +65,13 @@ matrix:
 after_failure:
 - COREFILE=$(find . -maxdepth 2 -name "core*" | head -n 1)
 - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
+
+deploy:
+  provider: gcs
+  access_key_id: GOOGFNKJYF3SLAFIS7BYBNYS
+  secret_access_key:
+    secure: j4yRqvzTE0RXJYCR9tFLZGLJuUExpei50VmZAG5F5STzEt+lQSxDEki5j0ItBnv9GeOMsn0fUVndY7Vw1LiuiWaq3lTRdzsfoo0taXAzMFC32eyr9IFep6r02+08MgiwGkI5gKTkobUZv5Gj1tqTodRZWK/MOCYoDF3+Xa8T9T2z0FfDZiMBVAMc4OLX4BlCuw6Zyy4Y0aonwOeRfJWFiGRzbSTbFwGY5OAAPRbnJrnm7VcttTylWbpP4Y3EQCv8kcuYcBwsiUkj68NQTI27vB3oV81lWFWNKHvKLYd8UJtD6tS0pzG+awlDFbQAR4Y/0krFV3V8lkTQX7a7J0cGpd4ACK48hB/SmEJfq6tkCRJQXbyiQ8GWZvaVoWcKT0wiDRvY/3aYll2lPw14Iw01LQqbdW5vxt/Beh3hNnnuJJcYS/vhNiDZDrwg2sKRUO9BWh421iiAztlKCdvBIrQpBeEyxvouhOOBGpDZLU5O1QZaKr4zpGacd87TIWpI8oMmpbPzn1pqivzGXD7GPcb/HWBpsuNp10iIy/1Q+OqJi/OKTgoUx0Icl27BFFk/jowKghLofb5gKP5d4yLZ3A1+HUOvQEiR+kOolayHsdoKQlMfZIjDZ4oXO0kfQ+LXJpo+fp7HR70tTS1gxeHFn4VYGpm0kZeg965+B/ScwKx++EM=
+  bucket: dremio-gandiva-data
+  skip_cleanup: true
+  detect_encoding: true
+  local-dir: "/home/travis/build/dremio/gandiva/cpp-build"
