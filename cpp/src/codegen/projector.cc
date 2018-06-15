@@ -109,6 +109,10 @@ Status Projector::Evaluate(const arrow::RecordBatch &batch,
     return Status::Invalid("output must be non-null.");
   }
 
+  if (pool_ == nullptr) {
+    return Status::Invalid("memory pool must be non-null.");
+  }
+
   // Allocate the output data vecs.
   ArrayDataVector output_data_vecs;
   for (auto &field : output_fields_) {

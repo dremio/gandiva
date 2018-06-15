@@ -16,7 +16,9 @@
 #define GANDIVA_EXPR_VALIDATOR_H
 
 #include <string>
+#include <unordered_map>
 
+#include "boost/functional/hash.hpp"
 #include "codegen/function_registry.h"
 #include "codegen/node_visitor.h"
 #include "codegen/node.h"
@@ -34,7 +36,12 @@ class FunctionRegistry;
 class ExprValidator : public NodeVisitor {
  public:
   explicit ExprValidator(LLVMTypes * types, SchemaPtr schema)
-    : types_(types), schema_(schema) {}
+    : types_(types),
+      schema_(schema) {
+      for (auto &field : schema_->fields()) {
+        field_map_[field->name()] =  field;
+      }
+    }
 
   /// \brief Validates the root node
   /// of an expression.
@@ -55,6 +62,11 @@ class ExprValidator : public NodeVisitor {
   LLVMTypes *types_;
 
   SchemaPtr schema_;
+
+  using FieldMap = std::unordered_map<std::string,
+                                      FieldPtr,
+                                      boost::hash<std::string>>;
+  FieldMap field_map_;
 };
 
 } // namespace gandiva

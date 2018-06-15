@@ -21,6 +21,9 @@
 namespace gandiva {
 
 Status ExprValidator::Validate(const ExpressionPtr &expr) {
+  if (expr == nullptr) {
+    return Status::ExpressionValidationError("Expression cannot be null.");
+  }
   Node &root = *expr->root();
   Status status = root.Accept(*this);
   if (!status.ok()) {
@@ -47,15 +50,16 @@ Status ExprValidator::Visit(const FieldNode &node) {
     return Status::ExpressionValidationError(ss.str());
   }
 
-  auto field_in_schema = schema_->GetFieldByName(node.field()->name());
+  auto field_in_schema_entry = field_map_.find(node.field()->name());
 
   // validate that field is in schema.
-  if (field_in_schema == nullptr) {
+  if (field_in_schema_entry == field_map_.end()) {
     std::stringstream ss;
     ss << "Field " <<  node.field()->name() << " not in schema.";
     return Status::ExpressionValidationError(ss.str());
   }
 
+  FieldPtr field_in_schema = field_in_schema_entry->second;
   // validate that field matches the definition in schema.
   if (!field_in_schema->Equals(node.field())) {
     std::stringstream ss;
