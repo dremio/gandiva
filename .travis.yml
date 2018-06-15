@@ -74,5 +74,6 @@ deploy:
   bucket: dremio-gandiva-data
   skip_cleanup: true
   detect_encoding: true
-  all_branches: true
   local-dir: "/home/travis/build/dremio/gandiva/cpp-build"
+  on:
+    all_branches: true
