@@ -17,6 +17,7 @@
 #define GANDIVA_EXPR_ARROW_H
 
 #include <memory>
+#include <set>
 #include <vector>
 
 #include <arrow/builder.h>
@@ -32,6 +33,7 @@ using DataTypeVector = std::vector<DataTypePtr>;
 
 using FieldPtr = std::shared_ptr<arrow::Field>;
 using FieldVector = std::vector<FieldPtr>;
+using FieldSet = std::set<FieldPtr>;
 
 using RecordBatchPtr = std::shared_ptr<arrow::RecordBatch>;
 

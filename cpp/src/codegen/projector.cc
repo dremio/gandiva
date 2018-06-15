@@ -18,7 +18,9 @@
 #include <vector>
 #include <utility>
 
+#include "codegen/expr_validator.h"
 #include "codegen/llvm_generator.h"
+#include "gandiva/status.h"
 
 namespace gandiva {
 
@@ -35,12 +37,25 @@ Status Projector::Make(SchemaPtr schema,
                        const ExpressionVector &exprs,
                        arrow::MemoryPool *pool,
                        std::shared_ptr<Projector> *projector) {
-  // TODO: validate schema
-  // TODO : validate expressions (fields, function signatures, output types, ..)
-
+  GANDIVA_RETURN_FAILURE_IF_FALSE((schema != nullptr),
+                                  Status::Invalid("schema cannot be null"));
+  GANDIVA_RETURN_FAILURE_IF_FALSE(!exprs.empty(),
+                                   Status::Invalid("expressions need to be non-empty"));
   // Build LLVM generator, and generate code for the specified expressions
   std::unique_ptr<LLVMGenerator> llvm_gen;
   Status status = LLVMGenerator::Make(&llvm_gen);
+  GANDIVA_RETURN_NOT_OK(status);
+
+  // Run the validation on the expressions.
+  // Return if any of the expression is invalid since
+  // we will not be able to process further.
+  ExprValidator expr_validator(llvm_gen->types());
+  for (auto &expr : exprs) {
+    status = expr_validator.Validate(expr);
+    GANDIVA_RETURN_NOT_OK(status);
+  }
+  FieldSet fields_in_expressions = expr_validator.GetFieldsReferencedInExpressions();
+  status = ValidateSchema(schema, fields_in_expressions);
   GANDIVA_RETURN_NOT_OK(status);
   llvm_gen->Build(exprs);
 
@@ -183,6 +198,26 @@ Status Projector::ValidateArrayDataCapacity(const arrow::ArrayData &array_data,
        << "has size " << data_len
        << ", must have minimum size " << min_data_len;
     return Status::Invalid(ss.str());
+  }
+  return Status::OK();
+}
+
+Status Projector::ValidateSchema(SchemaPtr schema, FieldSet fields_in_expressions) {
+  unsigned int num_fields_in_schema = static_cast<unsigned int>(schema->num_fields());
+  GANDIVA_RETURN_FAILURE_IF_FALSE((fields_in_expressions.size() == num_fields_in_schema),
+                                  Status::Invalid(
+                                  "schema and expression differ in number of fields."));
+  for (auto &field : fields_in_expressions) {
+    FieldPtr field_in_schema = schema->GetFieldByName(field->name());
+    if (field_in_schema == nullptr) {
+      std::stringstream ss;
+      ss << "field not found in schema : " << field->name();
+      return Status::Invalid(ss.str());
+    } else if (!field_in_schema->Equals(field)) {
+        std::stringstream ss;
+        ss << "field does match field in schema : " << field->name();
+        return Status::Invalid(ss.str());
+    }
   }
   return Status::OK();
 }

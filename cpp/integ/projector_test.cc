@@ -434,4 +434,228 @@ TEST_F(TestProjector, TestZeroCopyNegative) {
   EXPECT_EQ(status.code(), StatusCode::Invalid);
 }
 
+TEST_F(TestProjector, TestNonExistentFunction) {
+  // schema for input fields
+  auto field0 = field("f0", float32());
+  auto field1 = field("f2", float32());
+  auto schema = arrow::schema({field0, field1});
+
+  // output fields
+  auto field_result = field("res", boolean());
+
+  // Build expression
+  auto lt_expr = TreeExprBuilder::MakeExpression("non_existent_function",
+                                                 {field0, field1}, field_result);
+
+  // Build a projector for the expressions.
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {lt_expr}, pool_, &projector);
+  EXPECT_TRUE(status.IsExpressionValidationError());
+  std::string expected_error =
+    "Function bool non_existent_function(float, float) not supported yet.";
+  EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+}
+
+TEST_F(TestProjector, TestNotMatchingDataType) {
+   // schema for input fields
+   auto field0 = field("f0", float32());
+   auto schema = arrow::schema({field0});
+
+   // output fields
+   auto field_result = field("res", boolean());
+
+   // Build expression
+   auto node_f0 = TreeExprBuilder::MakeField(field0);
+   auto lt_expr = TreeExprBuilder::MakeExpression(node_f0, field_result);
+
+   // Build a projector for the expressions.
+   std::shared_ptr<Projector> projector;
+   Status status = Projector::Make(schema, {lt_expr}, pool_, &projector);
+   EXPECT_TRUE(status.IsExpressionValidationError());
+   std::string expected_error =
+     "Return type of root node float does not match that of expression bool";
+   EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+ }
+
+TEST_F(TestProjector, TestNotSupportedDataType) {
+  // schema for input fields
+  auto field0 = field("f0", list(int32()));
+  auto schema = arrow::schema({field0});
+
+  // output fields
+  auto field_result = field("res", list(int32()));
+
+  // Build expression
+  auto node_f0 = TreeExprBuilder::MakeField(field0);
+  auto lt_expr = TreeExprBuilder::MakeExpression(node_f0, field_result);
+
+  // Build a projector for the expressions.
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {lt_expr}, pool_, &projector);
+  EXPECT_TRUE(status.IsExpressionValidationError());
+  std::string expected_error = "Field f0 has unsupported data type list";
+  EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+}
+
+TEST_F(TestProjector, TestIncorrectSchemaSize) {
+  // schema for input fields
+  auto field0 = field("f0", float32());
+  auto field1 = field("f2", float32());
+  auto schema = arrow::schema({field0});
+
+  // output fields
+  auto field_result = field("res", boolean());
+
+  // Build expression
+  auto lt_expr = TreeExprBuilder::MakeExpression("less_than",
+                                                 {field0, field1}, field_result);
+
+  // Build a projector for the expressions.
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {lt_expr}, pool_, &projector);
+  EXPECT_TRUE(status.IsInvalid());
+  std::string expected_error =
+    "schema and expression differ in number of fields";
+  EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+}
+
+TEST_F(TestProjector, TestIncorrectSchemaMissingField) {
+  // schema for input fields
+  auto field0 = field("f0", float32());
+  auto field1 = field("f2", float32());
+  auto schema = arrow::schema({field0, field0});
+
+  // output fields
+  auto field_result = field("res", boolean());
+
+  // Build expression
+  auto lt_expr = TreeExprBuilder::MakeExpression("less_than",
+                                                 {field0, field1}, field_result);
+
+  // Build a projector for the expressions.
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {lt_expr}, pool_, &projector);
+  EXPECT_TRUE(status.IsInvalid());
+  std::string expected_error =
+    "field not found in schema";
+  EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+}
+
+TEST_F(TestProjector, TestIfNotSupportedFunction) {
+  // schema for input fields
+  auto fielda = field("a", int32());
+  auto fieldb = field("b", int32());
+  auto schema = arrow::schema({fielda, fieldb});
+
+  // output fields
+  auto field_result = field("res", int32());
+
+  // build expression.
+  // if (a > b)
+  //   a
+  // else
+  //   b
+  auto node_a = TreeExprBuilder::MakeField(fielda);
+  auto node_b = TreeExprBuilder::MakeField(fieldb);
+  auto condition = TreeExprBuilder::MakeFunction("non_existent_function",
+                                                 {node_a, node_b},
+                                                 boolean());
+  auto if_node = TreeExprBuilder::MakeIf(condition, node_a, node_b, int32());
+
+  auto expr = TreeExprBuilder::MakeExpression(if_node, field_result);
+
+  // Build a projector for the expressions.
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  EXPECT_TRUE(status.IsExpressionValidationError());
+}
+
+TEST_F(TestProjector, TestIfNotMatchingReturnType) {
+  // schema for input fields
+  auto fielda = field("a", int32());
+  auto fieldb = field("b", int32());
+  auto schema = arrow::schema({fielda, fieldb});
+
+  // output fields
+  auto field_result = field("res", int32());
+
+
+  auto node_a = TreeExprBuilder::MakeField(fielda);
+  auto node_b = TreeExprBuilder::MakeField(fieldb);
+  auto condition = TreeExprBuilder::MakeFunction("less_than",
+                                                 {node_a, node_b},
+                                                 boolean());
+  auto if_node = TreeExprBuilder::MakeIf(condition, node_a, node_b, boolean());
+
+  auto expr = TreeExprBuilder::MakeExpression(if_node, field_result);
+
+  // Build a projector for the expressions.
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  EXPECT_TRUE(status.IsExpressionValidationError());
+  std::string expected_error =
+    "Return type of if bool and then int32 not matching.";
+  EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+}
+
+TEST_F(TestProjector, TestElseNotMatchingReturnType) {
+  // schema for input fields
+  auto fielda = field("a", int32());
+  auto fieldb = field("b", int32());
+  auto fieldc = field("c", boolean());
+  auto schema = arrow::schema({fielda, fieldb});
+
+  // output fields
+  auto field_result = field("res", int32());
+
+
+  auto node_a = TreeExprBuilder::MakeField(fielda);
+  auto node_b = TreeExprBuilder::MakeField(fieldb);
+  auto node_c = TreeExprBuilder::MakeField(fieldc);
+  auto condition = TreeExprBuilder::MakeFunction("less_than",
+                                                 {node_a, node_b},
+                                                 boolean());
+  auto if_node = TreeExprBuilder::MakeIf(condition, node_a, node_c, int32());
+
+  auto expr = TreeExprBuilder::MakeExpression(if_node, field_result);
+
+  // Build a projector for the expressions.
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  EXPECT_TRUE(status.IsExpressionValidationError());
+  std::string expected_error =
+    "Return type of if int32 and else bool not matching.";
+  EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+}
+
+TEST_F(TestProjector, TestElseNotSupportedType) {
+  // schema for input fields
+  auto fielda = field("a", int32());
+  auto fieldb = field("b", int32());
+  auto fieldc = field("c", list(int32()));
+  auto schema = arrow::schema({fielda, fieldb});
+
+  // output fields
+  auto field_result = field("res", int32());
+
+
+  auto node_a = TreeExprBuilder::MakeField(fielda);
+  auto node_b = TreeExprBuilder::MakeField(fieldb);
+  auto node_c = TreeExprBuilder::MakeField(fieldc);
+  auto condition = TreeExprBuilder::MakeFunction("less_than",
+                                                 {node_a, node_b},
+                                                 boolean());
+  auto if_node = TreeExprBuilder::MakeIf(condition, node_a, node_c, int32());
+
+  auto expr = TreeExprBuilder::MakeExpression(if_node, field_result);
+
+  // Build a projector for the expressions.
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  EXPECT_TRUE(status.IsExpressionValidationError());
+  std::string expected_error =
+    "Field c has unsupported data type list";
+  EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+}
+
 } // namespace gandiva
