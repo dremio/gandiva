@@ -25,7 +25,7 @@ install:
  - java 7 or later
  - maven 3.3 or later
 
-## Building running tests
+## Building and running tests
 
 ```
 cd java
