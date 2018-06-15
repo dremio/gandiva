@@ -59,8 +59,7 @@ enum class StatusCode : char {
   Invalid = 1,
   CodeGenError = 2,
   ArrowError = 3,
-  ExpressionBuilderError = 4,
-  ExpressionValidationError = 5,
+  ExpressionValidationError = 4,
 };
 
 class Status {
@@ -97,10 +96,6 @@ class Status {
     return Status(StatusCode::Invalid, msg);
   }
 
-  static Status ExpressionBuilderError(const std::string& msg) {
-    return Status(StatusCode::ExpressionBuilderError, msg);
-  }
-
   static Status ArrowError(const std::string& msg) {
     return Status(StatusCode::ArrowError, msg);
   }
@@ -116,8 +111,6 @@ class Status {
   bool IsCodeGenError() const { return code() == StatusCode::CodeGenError; }
 
   bool IsInvalid() const { return code() == StatusCode::Invalid; }
-
-  bool IsExpressionBuilderError() const {return code() == StatusCode::ExpressionBuilderError; }
 
   bool IsArrowError() const {return code() == StatusCode::ArrowError; }
 

@@ -38,7 +38,7 @@ class TreeExprBuilder {
   static NodePtr MakeField(FieldPtr field);
 
   /// \brief create a node with a function.
-  /// returns null of return_type is null
+  /// returns null if return_type is null
   static NodePtr MakeFunction(const std::string &name,
                               const NodeVector &children,
                               DataTypePtr return_type);
