@@ -33,8 +33,8 @@ class FunctionRegistry;
 /// data types, signatures and return types
 class ExprValidator : public NodeVisitor {
  public:
-  explicit ExprValidator(LLVMTypes * types)
-    : types_(types) {}
+  explicit ExprValidator(LLVMTypes * types, SchemaPtr schema)
+    : types_(types), schema_(schema) {}
 
   /// \brief Validates the root node
   /// of an expression.
@@ -43,11 +43,6 @@ class ExprValidator : public NodeVisitor {
   /// 3. For if nodes that return types match
   ///    for if, then and else nodes.
   Status Validate(const ExpressionPtr &expr);
-
-  /// \brief Returns all fields that were referenced
-  /// in the expressions that was validated.
-  /// Used to validate against incoming schema.
-  FieldSet GetFieldsReferencedInExpressions() const { return field_set_;}
 
  private:
   Status Visit(const FieldNode &node) override;
@@ -59,7 +54,7 @@ class ExprValidator : public NodeVisitor {
 
   LLVMTypes *types_;
 
-  FieldSet field_set_;
+  SchemaPtr schema_;
 };
 
 } // namespace gandiva

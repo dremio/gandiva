@@ -46,7 +46,23 @@ Status ExprValidator::Visit(const FieldNode &node) {
       << node.return_type()->name();
     return Status::ExpressionValidationError(ss.str());
   }
-  field_set_.insert(node.field());
+
+  auto field_in_schema = schema_->GetFieldByName(node.field()->name());
+
+  // validate that field is in schema.
+  if (field_in_schema == nullptr) {
+    std::stringstream ss;
+    ss << "Field " <<  node.field()->name() << " not in schema.";
+    return Status::ExpressionValidationError(ss.str());
+  }
+
+  // validate that field matches the definition in schema.
+  if (!field_in_schema->Equals(node.field())) {
+    std::stringstream ss;
+    ss << "Field definition in schema " <<  field_in_schema->ToString()
+       << " different from field in expression " << node.field()->ToString();
+    return Status::ExpressionValidationError(ss.str());
+  }
   return Status::OK();
 }
 

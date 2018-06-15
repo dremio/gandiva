@@ -83,7 +83,7 @@ class Projector {
   Status ValidateEvaluateArgsCommon(const arrow::RecordBatch &batch);
 
   /// Validate the schema against all the expression fields.
-  static Status ValidateSchema(SchemaPtr schema, FieldSet fields_in_expressions);
+  static Status ValidateSchema(SchemaPtr schema, FieldSet &fields_in_expressions);
 
   const std::unique_ptr<LLVMGenerator> llvm_generator_;
   const SchemaPtr schema_;
