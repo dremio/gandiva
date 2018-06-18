@@ -188,13 +188,38 @@ The core functionality of Gandiva is implemented in C++. Language bindings are p
 To validate the techniques, we did a performance test with Dremio software using two alternative techniques of code 
 generation : using Java code generation vs gandiva.
 
-Three simple expressions were selected and the expression evaluation time alone was compared to process a json dataset having 500 million records. The tests were 
+Five simple expressions were selected and the expression evaluation time alone was compared to process a json dataset having 500 million records. The tests were 
 run on mac desktop (2.7GHz quad-core Intel Core i7 with 16GB ram).
 
 For both the tests, the dremio batch size was set to 16K.
 
 #### Sum
      SELECT max(x+N2x+N3x) FROM json.d500
+
+#### Five output columns
+
+     SELECT
+     sum(x + N2x + N3x),
+     sum(x * N2x - N3x),
+     sum(3 * x + 2 * N2x + N3x),
+     count(x >= N2x - N3x),
+     count(x + N2x = N3x)
+     FROM json.d500
+
+#### Ten output columns
+
+     SELECT
+     sum(x + N2x + N3x),
+     sum(x * N2x - N3x),
+     sum(3 * x + 2 * N2x + N3x),
+     count(x >= N2x - N3x),
+     count(x + N2x = N3x),
+     sum(x - N2x + N3x),
+     sum(x * N2x + N3x),
+     sum(x + 2 * N2x + 3 * N3x),
+     count(x <= N2x - N3x),
+     count(x = N3x - N2x)
+     FROM json.d500
 
 #### CASE-10
 
@@ -249,7 +274,37 @@ For both the tests, the dremio batch size was set to 16K.
         6.81x
      </td>
   </tr>
-</tr>
+  </tr>
+    <tr>
+    <td>
+       Five output columns
+    </td>
+    <td>
+       8.681 
+    </td>
+    <td>
+       1.689 
+     </td>
+     <td>
+       5.13x
+     </td>
+  </tr>
+  </tr>
+    <tr>
+    <td>
+      Ten output columns 
+    </td>
+    <td>
+      24.923 
+    </td>
+    <td>
+      3.476 
+     </td>
+     <td>
+      7.74x 
+     </td>
+  </tr>
+  </tr>
     <tr>
     <td>
        CASE-10
