@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright (C) 2017-2018 Dremio Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(gandiva)
+# Adapted from Apache Arrow
 
-add_gandiva_integ_test(projector_test.cc)
-add_gandiva_integ_test(if_expr_test.cc)
-add_gandiva_integ_test(literal_test.cc)
-add_gandiva_integ_test(projector_build_validation_test.cc)
+set -ex
+
+source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
+
+# Tests will be run as part of the travis script.
+mvn clean install -f $GANDIVA_JAVA_DIR/pom.xml -DskipTests
