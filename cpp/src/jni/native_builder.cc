@@ -75,12 +75,6 @@ jlong MapInsert(std::shared_ptr<ProjectorHolder> holder) {
   return result;
 }
 
-void MapErase(jlong module_id) {
-  g_mtx_.lock();
-  projector_modules_map_.erase(module_id);
-  g_mtx_.unlock();
-}
-
 std::shared_ptr<ProjectorHolder> MapLookup(jlong module_id) {
   std::shared_ptr<ProjectorHolder> result = nullptr;
 
@@ -90,6 +84,24 @@ std::shared_ptr<ProjectorHolder> MapLookup(jlong module_id) {
   }
 
   return result;
+}
+
+void MapErase(jlong module_id) {
+  std::cerr << "Time spent in gandiva jni Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate "
+            << MapLookup(module_id)->eval_timer().ElapsedMicros()
+            << " us\n";
+
+  std::cerr << "Time spent in gandiva jni Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate: jni copy "
+            << MapLookup(module_id)->jni_timer().ElapsedMicros()
+            << " us\n";
+
+  std::cerr << "Time spent in gandiva jni Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate: prep args "
+            << MapLookup(module_id)->prepargs_timer().ElapsedMicros()
+            << " us\n";
+
+  g_mtx_.lock();
+  projector_modules_map_.erase(module_id);
+  g_mtx_.unlock();
 }
 
 DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& ext_type) {
@@ -400,70 +412,69 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
    jlong module_id, jint num_rows,
    jlongArray buf_addrs, jlongArray buf_sizes,
    jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
+
   std::shared_ptr<ProjectorHolder> holder = MapLookup(module_id);
   if (holder == nullptr) {
     ThrowException(env, "Unknown module id");
     return;
   }
+  holder->eval_timer().Start();
 
+  holder->jni_timer().Start();
   jlong *in_buf_addrs = env->GetLongArrayElements(buf_addrs, 0);
   jlong *in_buf_sizes = env->GetLongArrayElements(buf_sizes, 0);
 
   jlong *out_bufs = env->GetLongArrayElements(out_buf_addrs, 0);
   jlong *out_sizes = env->GetLongArrayElements(out_buf_sizes, 0);
+  holder->jni_timer().Stop();
 
+  holder->prepargs_timer().Start();
   auto schema = holder->schema();
-  std::vector<std::shared_ptr<arrow::ArrayData>> columns;
-  auto num_fields = schema->num_fields();
-  int buf_idx = 0;
-  int sz_idx = 0;
 
-  for (int i = 0; i < num_fields; i++) {
-    auto field = schema->field(i);
-    jlong validity_addr = in_buf_addrs[buf_idx++];
-    jlong value_addr = in_buf_addrs[buf_idx++];
+  int idx = 0;
+  gandiva::ReusableBuffer *rbuf;
+  for (auto &adata : holder->inputs()) {
+    adata->length = num_rows;
 
-    jlong validity_size = in_buf_sizes[sz_idx++];
-    jlong value_size = in_buf_sizes[sz_idx++];
+    rbuf = dynamic_cast<gandiva::ReusableBuffer *>(adata->buffers.at(0).get());
+    rbuf->set_buf(reinterpret_cast<uint8_t*>(in_buf_addrs[idx]));
+    rbuf->set_sz(in_buf_sizes[idx]);
+    idx++;
 
-    auto validity = std::shared_ptr<arrow::Buffer>(
-      new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
-    auto data = std::shared_ptr<arrow::Buffer>(
-      new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
-
-    auto array_data = arrow::ArrayData::Make(field->type(), num_rows, {validity, data});
-    columns.push_back(array_data);
+    rbuf = dynamic_cast<gandiva::ReusableBuffer *>(adata->buffers.at(1).get());
+    rbuf->set_buf(reinterpret_cast<uint8_t*>(in_buf_addrs[idx]));
+    rbuf->set_sz(in_buf_sizes[idx]);
+    idx++;
   }
+  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, holder->inputs());
 
-  auto ret_types = holder->rettypes();
-  ArrayDataVector output;
-  buf_idx = 0;
-  sz_idx = 0;
-  for (FieldPtr field : ret_types) {
-    uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
-    uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
+  idx = 0;
+  gandiva::ReusableMutableBuffer *mbuf;
+  for (auto &adata : holder->outputs()) {
+    adata->length = num_rows;
 
-    jlong bitmap_sz = out_sizes[sz_idx++];
-    jlong data_sz = out_sizes[sz_idx++];
+    mbuf = dynamic_cast<gandiva::ReusableMutableBuffer *>(adata->buffers.at(0).get());
+    mbuf->set_buf(reinterpret_cast<uint8_t*>(out_bufs[idx]));
+    mbuf->set_sz(out_sizes[idx]);
+    idx++;
 
-    std::shared_ptr<arrow::MutableBuffer> bitmap_buf =
-      std::make_shared<arrow::MutableBuffer>(validity_buf, bitmap_sz);
-    std::shared_ptr<arrow::MutableBuffer> data_buf =
-      std::make_shared<arrow::MutableBuffer>(value_buf, data_sz);
-
-    auto array_data = arrow::ArrayData::Make(field->type(),
-                                             num_rows,
-                                             {bitmap_buf, data_buf});
-    output.push_back(array_data);
+    mbuf = dynamic_cast<gandiva::ReusableMutableBuffer *>(adata->buffers.at(1).get());
+    mbuf->set_buf(reinterpret_cast<uint8_t*>(out_bufs[idx]));
+    mbuf->set_sz(out_sizes[idx]);
+    idx++;
   }
+  holder->prepargs_timer().Stop();
 
-  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
-  gandiva::Status status = holder->projector()->Evaluate(*in_batch, output);
+  gandiva::Status status = holder->projector()->Evaluate(*in_batch, holder->outputs());
 
+  holder->jni_timer().Start();
   env->ReleaseLongArrayElements(buf_addrs, in_buf_addrs, JNI_ABORT);
   env->ReleaseLongArrayElements(buf_sizes, in_buf_sizes, JNI_ABORT);
   env->ReleaseLongArrayElements(out_buf_addrs, out_bufs, JNI_ABORT);
   env->ReleaseLongArrayElements(out_buf_sizes, out_sizes, JNI_ABORT);
+  holder->jni_timer().Stop();
+
+  holder->eval_timer().Stop();
 
   if (status.ok()) {
     return;

@@ -28,6 +28,7 @@
 #include "codegen/function_registry.h"
 #include "codegen/llvm_types.h"
 #include "codegen/lvalue.h"
+#include "codegen/stop_watch.h"
 #include "codegen/value_validity_pair.h"
 #include "gandiva/gandiva_aliases.h"
 
@@ -201,6 +202,11 @@ class LLVMGenerator {
   bool optimise_ir_;
   bool enable_ir_traces_;
   std::vector<std::string> trace_strings_;
+
+  StopWatch eval_timer_;
+  StopWatch jit_timer_;
+  StopWatch bm_timer_;
+  StopWatch prep_batch_timer_;
 };
 
 } // namespace gandiva
