@@ -17,6 +17,7 @@
 #define GANDIVA_EXPR_PROJECTOR_H
 
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -39,10 +40,12 @@ class Projector {
   /// \param[in] : schema schema for the record batches, and the expressions.
   /// \param[in] : exprs vector of expressions.
   /// \param[in] : pool memory pool used to allocate output arrays (if required).
+  /// \param[in] : path to pre-compiled binary files.
   /// \param[out]: projector the returned projector object
   static Status Make(SchemaPtr schema,
                      const ExpressionVector &exprs,
                      arrow::MemoryPool *pool,
+                     const char byteCodeFilePath[],
                      std::shared_ptr<Projector> *projector);
 
   /// Evaluate the specified record batch, and return the allocated and populated output

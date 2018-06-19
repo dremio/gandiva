@@ -34,7 +34,6 @@ class TestFunctionSignature : public ::testing::Test {
     local_date32_type_.reset();
   }
 
-  // virtual void TearDown() {}
   DataTypePtr local_i32_type_;
   DataTypePtr local_i64_type_;
   DataTypePtr local_date32_type_;

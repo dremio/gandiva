@@ -39,7 +39,8 @@ class Engine {
   /// factory method to create and initialize the engine object.
   ///
   /// \param[out] engine the created engine.
-  static Status Make(std::unique_ptr<Engine> *engine);
+  static Status Make(const char byteCodeFilePath[],
+                     std::unique_ptr<Engine> *engine);
 
   /// Add the function to the list of IR functions that need to be compiled.
   /// Compiling only the functions that are used by the module saves time.
@@ -66,7 +67,7 @@ class Engine {
   llvm::ExecutionEngine &execution_engine() { return *execution_engine_.get(); }
 
   /// load pre-compiled modules and merge them into the main module.
-  Status LoadPreCompiledIRFiles();
+  Status LoadPreCompiledIRFiles(const char byteCodeFilePath[]);
 
   /// dump the IR code to stdout with the prefix string.
   void DumpIR(std::string prefix);
