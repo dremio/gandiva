@@ -61,7 +61,7 @@ class NativeBuilder {
     }
   }
 
-  static void loadGandivaLibraryFromJar(final String tmpDir)
+  private static void loadGandivaLibraryFromJar(final String tmpDir)
           throws IOException, GandivaException {
     final String libraryToLoad = EnvironmentHelper.getEnvironmentSpecificLibraryName(LIBRARY_NAME);
     final File libraryFile = moveFileFromJarToTemp(tmpDir, libraryToLoad);
@@ -69,7 +69,7 @@ class NativeBuilder {
   }
 
 
-  static File moveFileFromJarToTemp(final String tmpDir, String libraryToLoad)
+  private static File moveFileFromJarToTemp(final String tmpDir, String libraryToLoad)
           throws IOException, GandivaException {
     final File temp = setupFile(tmpDir, libraryToLoad);
     try (final InputStream is = NativeBuilder.class.getClassLoader()
