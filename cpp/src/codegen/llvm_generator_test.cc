@@ -25,6 +25,8 @@
 
 namespace gandiva {
 
+extern const char kByteCodeFilePath[];
+
 typedef int64_t (*add_vector_func_t)(int64_t *elements, int nelements);
 
 class TestLLVMGenerator : public ::testing::Test {
@@ -32,8 +34,6 @@ class TestLLVMGenerator : public ::testing::Test {
   void FillBitMap(uint8_t *bmap, int nrecords);
   void ByteWiseIntersectBitMaps(uint8_t *dst, const std::vector<uint8_t *> &srcs,
                                 int nrecords);
-
-  FunctionRegistry registry_;
 };
 
 void TestLLVMGenerator::FillBitMap(uint8_t *bmap, int nrecords) {
@@ -61,7 +61,7 @@ void TestLLVMGenerator::ByteWiseIntersectBitMaps(uint8_t *dst,
 TEST_F(TestLLVMGenerator, TestAdd) {
   // Setup LLVM generator to do an arithmetic add of two vectors
   std::unique_ptr<LLVMGenerator> generator;
-  Status status = LLVMGenerator::Make(&generator);
+  Status status = LLVMGenerator::Make(kByteCodeFilePath, &generator);
   EXPECT_TRUE(status.ok());
   Annotator annotator;
 
@@ -126,7 +126,7 @@ TEST_F(TestLLVMGenerator, TestAdd) {
 TEST_F(TestLLVMGenerator, TestNullInternal) {
   // Setup LLVM generator to evaluate a NULL_INTERNAL type function.
   std::unique_ptr<LLVMGenerator> generator;
-  Status status = LLVMGenerator::Make(&generator);
+  Status status = LLVMGenerator::Make(kByteCodeFilePath, &generator);
   EXPECT_TRUE(status.ok());
   Annotator annotator;
 

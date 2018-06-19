@@ -317,7 +317,8 @@ void ThrowException(JNIEnv *env, const std::string msg) {
 
 JNIEXPORT jlong JNICALL
 Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
-  (JNIEnv *env, jclass cls, jbyteArray schema_arr, jbyteArray exprs_arr) {
+  (JNIEnv *env, jobject obj, jbyteArray schema_arr, jbyteArray exprs_arr,
+   jstring bytecode_file_path) {
   jlong module_id = 0LL;
   std::shared_ptr<Projector> projector;
   std::shared_ptr<ProjectorHolder> holder;
@@ -330,6 +331,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   jsize exprs_len = env->GetArrayLength(exprs_arr);
   jbyte *exprs_bytes = env->GetByteArrayElements(exprs_arr, 0);
 
+  const char *byte_code_file_path = env->GetStringUTFChars(bytecode_file_path, 0);
   ExpressionVector expr_vector;
   SchemaPtr schema_ptr;
   FieldVector ret_types;
@@ -344,6 +346,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(exprs_bytes), exprs_len, &exprs)) {
     env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
     env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
+    env->ReleaseStringUTFChars(bytecode_file_path, byte_code_file_path);
     std::cerr << "Unable to parse expressions protobuf\n";
     goto err_out;
   }
@@ -354,6 +357,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
     std::cerr << "Unable to construct arrow schema object from schema protobuf\n";
     env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
     env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
+    env->ReleaseStringUTFChars(bytecode_file_path, byte_code_file_path);
     goto err_out;
   }
 
@@ -365,6 +369,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
       std::cerr << "Unable to construct expression object from expression protobuf\n";
       env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
       env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
+      env->ReleaseStringUTFChars(bytecode_file_path, byte_code_file_path);
       goto err_out;
     }
 
@@ -373,11 +378,13 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   }
 
   // good to invoke the evaluator now
-  status = Projector::Make(schema_ptr, expr_vector, nullptr, &projector);
+  status = Projector::Make(schema_ptr, expr_vector, nullptr,
+                           byte_code_file_path, &projector);
   if (!status.ok()) {
     std::cerr << "Failed to make LLVM module due to " << status.message() << "\n";
     env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
     env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
+    env->ReleaseStringUTFChars(bytecode_file_path, byte_code_file_path);
     goto err_out;
   }
 
@@ -388,6 +395,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   module_id = MapInsert(holder);
   env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
   env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
+  env->ReleaseStringUTFChars(bytecode_file_path, byte_code_file_path);
   return module_id;
 
 err_out:
@@ -396,7 +404,7 @@ err_out:
 }
 
 JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate
-  (JNIEnv *env, jclass cls,
+  (JNIEnv *env, jobject cls,
    jlong module_id, jint num_rows,
    jlongArray buf_addrs, jlongArray buf_sizes,
    jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
@@ -473,6 +481,6 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
 }
 
 JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_close
-  (JNIEnv *env, jclass cls, jlong module_id) {
+  (JNIEnv *env, jobject cls, jlong module_id) {
   MapErase(module_id);
 }

@@ -42,8 +42,6 @@ namespace gandiva {
 bool Engine::init_once_done_ = false;
 std::once_flag init_once_flag;
 
-extern const char kByteCodeFilePath[];
-
 // One-time initializations.
 void Engine::InitOnce() {
   assert(!init_once_done_);
@@ -57,7 +55,8 @@ void Engine::InitOnce() {
 }
 
 /// factory method to construct the engine.
-Status Engine::Make(std::unique_ptr<Engine> *engine) {
+Status Engine::Make(const char byteCodeFilePath[],
+                    std::unique_ptr<Engine> *engine) {
   std::unique_ptr<Engine> engine_obj(new Engine());
 
   std::call_once(init_once_flag, [&engine_obj] {engine_obj->InitOnce();});
@@ -79,20 +78,20 @@ Status Engine::Make(std::unique_ptr<Engine> *engine) {
     return Status::CodeGenError(engine_obj->llvm_error_);
   }
 
-  Status result = engine_obj->LoadPreCompiledIRFiles();
+  Status result = engine_obj->LoadPreCompiledIRFiles(byteCodeFilePath);
   GANDIVA_RETURN_NOT_OK(result);
   *engine = std::move(engine_obj);
   return Status::OK();
 }
 
 // Handling for pre-compiled IR libraries.
-Status Engine::LoadPreCompiledIRFiles() {
+Status Engine::LoadPreCompiledIRFiles(const char byteCodeFilePath[]) {
   /// Read from file into memory buffer.
   llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> buffer_or_error =
-      llvm::MemoryBuffer::getFile(kByteCodeFilePath);
+      llvm::MemoryBuffer::getFile(byteCodeFilePath);
   if (!buffer_or_error) {
     std::stringstream ss;
-    ss << "Could not load module from IR " << kByteCodeFilePath << ": " <<
+    ss << "Could not load module from IR " << byteCodeFilePath << ": " <<
           buffer_or_error.getError().message();
     return Status::CodeGenError(ss.str());
   }

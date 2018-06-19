@@ -19,6 +19,8 @@
 
 namespace gandiva {
 
+extern const char kByteCodeFilePath[];
+
 typedef int64_t (*add_vector_func_t)(int64_t *elements, int nelements);
 
 class TestEngine : public ::testing::Test {
@@ -102,7 +104,7 @@ llvm::Function *TestEngine::BuildVecAdd(Engine *engine, LLVMTypes *types) {
 
 TEST_F(TestEngine, TestAddUnoptimised) {
   std::unique_ptr<Engine> engine;
-  Engine::Make(&engine);
+  Engine::Make(kByteCodeFilePath, &engine);
   LLVMTypes types(*engine->context());
   llvm::Function *ir_func = BuildVecAdd(engine.get(), &types);
   engine->FinalizeModule(false, false);
@@ -116,7 +118,7 @@ TEST_F(TestEngine, TestAddUnoptimised) {
 
 TEST_F(TestEngine, TestAddOptimised) {
   std::unique_ptr<Engine> engine;
-  Engine::Make(&engine);
+  Engine::Make(kByteCodeFilePath, &engine);
   LLVMTypes types(*engine->context());
   llvm::Function *ir_func = BuildVecAdd(engine.get(), &types);
   engine->FinalizeModule(true, false);

@@ -21,6 +21,8 @@
 
 namespace gandiva {
 
+extern const char kByteCodeFilePath[];
+
 using arrow::int32;
 using arrow::float32;
 using arrow::boolean;
@@ -58,7 +60,7 @@ TEST_F(TestIfExpr, TestSimple) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {expr}, pool_, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -108,7 +110,7 @@ TEST_F(TestIfExpr, TestSimpleArithmetic) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {expr}, pool_, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -165,7 +167,7 @@ TEST_F(TestIfExpr, TestNested) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {expr}, pool_, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -230,7 +232,7 @@ TEST_F(TestIfExpr, TestNestedInIf) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {expr}, pool_, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -292,7 +294,7 @@ TEST_F(TestIfExpr, TestBigNested) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {expr}, pool_, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data

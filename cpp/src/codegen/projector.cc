@@ -36,6 +36,7 @@ Projector::Projector(std::unique_ptr<LLVMGenerator> llvm_generator,
 Status Projector::Make(SchemaPtr schema,
                        const ExpressionVector &exprs,
                        arrow::MemoryPool *pool,
+                       const char byteCodeFilePath[],
                        std::shared_ptr<Projector> *projector) {
   GANDIVA_RETURN_FAILURE_IF_FALSE((schema != nullptr),
                                   Status::Invalid("schema cannot be null"));
@@ -43,7 +44,7 @@ Status Projector::Make(SchemaPtr schema,
                                    Status::Invalid("expressions need to be non-empty"));
   // Build LLVM generator, and generate code for the specified expressions
   std::unique_ptr<LLVMGenerator> llvm_gen;
-  Status status = LLVMGenerator::Make(&llvm_gen);
+  Status status = LLVMGenerator::Make(byteCodeFilePath, &llvm_gen);
   GANDIVA_RETURN_NOT_OK(status);
 
   // Run the validation on the expressions.

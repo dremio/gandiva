@@ -21,6 +21,8 @@
 
 namespace gandiva {
 
+extern const char kByteCodeFilePath[];
+
 using arrow::int32;
 using arrow::int64;
 using arrow::float32;
@@ -88,6 +90,7 @@ TEST_F(TestLiteral, TestSimpleArithmetic) {
   Status status = Projector::Make(schema,
                                   {expr_a, expr_b, expr_c, expr_d, expr_e},
                                   pool_,
+                                  kByteCodeFilePath,
                                   &projector);
   EXPECT_TRUE(status.ok());
 

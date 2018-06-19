@@ -20,6 +20,8 @@
 
 namespace gandiva {
 
+extern const char kByteCodeFilePath[];
+
 using arrow::int32;
 using arrow::float32;
 using arrow::boolean;
@@ -48,7 +50,8 @@ TEST_F(TestProjector, TestIntSumSub) {
                                                   field_sub);
 
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {sum_expr, sub_expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {sum_expr, sub_expr}, pool_,
+                                  kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -102,7 +105,7 @@ static void TestArithmeticOpsForType(arrow::MemoryPool *pool) {
   std::shared_ptr<Projector> projector;
   Status status =
       Projector::Make(schema, {sum_expr, sub_expr, mul_expr, div_expr, eq_expr, lt_expr},
-                      pool, &projector);
+                      pool, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -179,7 +182,7 @@ TEST_F(TestProjector, TestFloatLessThan) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {lt_expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {lt_expr}, pool_, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -214,7 +217,7 @@ TEST_F(TestProjector, TestIsNotNull) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {myexpr}, pool_, &projector);
+  Status status = Projector::Make(schema, {myexpr}, pool_, kByteCodeFilePath,&projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -248,7 +251,7 @@ TEST_F(TestProjector, TestNullInternal) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {myexpr}, pool_, &projector);
+  Status status = Projector::Make(schema, {myexpr}, pool_, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -296,7 +299,7 @@ TEST_F(TestProjector, TestNestedFunctions) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {expr1, expr2}, pool_, &projector);
+  Status status = Projector::Make(schema, {expr1, expr2}, pool_, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -333,7 +336,7 @@ TEST_F(TestProjector, TestZeroCopy) {
   auto cast_expr = TreeExprBuilder::MakeExpression("castFLOAT4", {field0}, res);
 
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {cast_expr}, nullptr /*pool*/, &projector);
+  Status status = Projector::Make(schema, {cast_expr}, nullptr /*pool*/, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -378,7 +381,7 @@ TEST_F(TestProjector, TestZeroCopyNegative) {
   auto cast_expr = TreeExprBuilder::MakeExpression("castFLOAT4", {field0}, res);
 
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {cast_expr}, nullptr /*pool*/, &projector);
+  Status status = Projector::Make(schema, {cast_expr}, nullptr /*pool*/, kByteCodeFilePath, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
