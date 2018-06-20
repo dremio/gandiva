@@ -28,6 +28,7 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/../proto/Types.p
 set(JNI_HEADERS_DIR "${CMAKE_CURRENT_BINARY_DIR}/java")
 add_subdirectory(../../../java ./java)
 
+set_property(TARGET gandiva_proto PROPERTY POSITION_INDEPENDENT_CODE ON)
 add_library(gandiva_proto STATIC
   ${PROTO_SRCS}
   ${PROTO_HDRS})
