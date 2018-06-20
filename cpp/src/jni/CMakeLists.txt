@@ -15,7 +15,7 @@
 project(gandiva_jni)
 
 # Find protobuf
-set(Protobuf_USE_STATIC_LIBS, ON)
+#set(Protobuf_USE_STATIC_LIBS, ON)
 find_package(Protobuf REQUIRED)
 
 # Find JNI
@@ -50,7 +50,7 @@ target_include_directories(gandiva_jni
     ${CMAKE_SOURCE_DIR}/src
 )
 
-# PROTOBUF is a public dependency i.e users of gandiva also will have a dependency on arrow.
+# PROTOBUF is a private dependency
 target_link_libraries(gandiva_jni
   PRIVATE
     protobuf::libprotobuf
