@@ -15,7 +15,7 @@
 project(gandiva_jni)
 
 # Find protobuf
-#set(Protobuf_USE_STATIC_LIBS, ON)
+set(Protobuf_USE_STATIC_LIBS, ON)
 find_package(Protobuf REQUIRED)
 
 # Find JNI
@@ -28,11 +28,19 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${CMAKE_SOURCE_DIR}/../proto/Types.p
 set(JNI_HEADERS_DIR "${CMAKE_CURRENT_BINARY_DIR}/java")
 add_subdirectory(../../../java ./java)
 
-add_library(gandiva_jni SHARED
-  native_builder.cc
+add_library(gandiva_proto STATIC
   ${PROTO_SRCS}
   ${PROTO_HDRS})
-add_dependencies(gandiva_jni gandiva_java)
+
+target_link_libraries(gandiva_proto
+  PRIVATE
+    protobuf::libprotobuf
+)
+
+add_library(gandiva_jni SHARED
+  native_builder.cc
+)
+add_dependencies(gandiva_jni gandiva_proto gandiva_java)
 
 # For users of gandiva_jni library (including integ tests), include-dir is :
 #   /usr/**/include dir after install,
@@ -53,6 +61,6 @@ target_include_directories(gandiva_jni
 # PROTOBUF is a private dependency
 target_link_libraries(gandiva_jni
   PRIVATE
-    protobuf::libprotobuf
+    gandiva_proto
     gandiva
 )
