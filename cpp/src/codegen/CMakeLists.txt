@@ -51,6 +51,7 @@ target_include_directories(gandiva_obj_lib
   PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${LLVM_INCLUDE_DIRS}
+    ${ARROW_INCLUDE_DIR}
 )
 
 build_arrow_lib("shared")

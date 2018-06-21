@@ -87,10 +87,10 @@ function(add_gandiva_integ_test REL_TEST_NAME GANDIVA_LIB)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
 
   add_executable(${TEST_NAME}_${GANDIVA_LIB} ${REL_TEST_NAME} ${ARGN})
-  target_include_directories(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${CMAKE_SOURCE_DIR})
+  target_include_directories(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${ARROW_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
   target_link_libraries(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${GANDIVA_LIB} gtest_main)
 
-  add_test(NAME ${TEST_NAME}_${GANDIVA_LIB} COMMAND ${TEST_NAME})
+  add_test(NAME ${TEST_NAME}_${GANDIVA_LIB} COMMAND ${TEST_NAME}_${GANDIVA_LIB})
   set_property(TEST ${TEST_NAME}_${GANDIVA_LIB} PROPERTY LABELS integ ${TEST_NAME}_${GANDIVA_LIB})
 endfunction(add_gandiva_integ_test REL_TEST_NAME)
 
