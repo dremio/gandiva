@@ -14,15 +14,22 @@
 
 # Find Arrow library and includes.
 
-find_library(ARROW_LIB arrow REQUIRED)
-message(STATUS "Found arrow library at ${ARROW_LIB}")
+find_library(ARROW_LIB_STATIC libarrow.a REQUIRED)
+find_library(ARROW_LIB_SHARED arrow REQUIRED)
+message(STATUS "Found arrow static library at ${ARROW_LIB_STATIC}")
+message(STATUS "Found arrow shared library at ${ARROW_LIB_SHARED}")
 
 find_path(ARROW_INCLUDE_DIR arrow/type.h)
 message(STATUS "found arrow includes at ${ARROW_INCLUDE_DIR}")
 
 # add an imported target ARROW::ARROW so that gandiva can take a dependency.
-add_library(ARROW::ARROW INTERFACE IMPORTED)
-set_target_properties(ARROW::ARROW PROPERTIES
+add_library(ARROW::ARROW_STATIC STATIC IMPORTED)
+add_library(ARROW::ARROW_SHARED INTERFACE IMPORTED)
+
+set_target_properties(ARROW::ARROW_STATIC PROPERTIES
+  IMPORTED_LOCATION "${ARROW_LIB_STATIC}"
+)
+set_target_properties(ARROW::ARROW_SHARED PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${ARROW_INCLUDE_DIR}"
-  INTERFACE_LINK_LIBRARIES "${ARROW_LIB}"
+  INTERFACE_LINK_LIBRARIES "${ARROW_LIB_SHARED}"
 )
