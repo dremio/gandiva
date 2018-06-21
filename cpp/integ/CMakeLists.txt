@@ -14,7 +14,15 @@
 
 project(gandiva)
 
-add_gandiva_integ_test(projector_test.cc)
-add_gandiva_integ_test(if_expr_test.cc)
-add_gandiva_integ_test(literal_test.cc)
-add_gandiva_integ_test(projector_build_validation_test.cc)
+add_gandiva_integ_test(projector_test.cc gandiva_shared)
+add_gandiva_integ_test(projector_test.cc gandiva_static)
+
+add_gandiva_integ_test(if_expr_test.cc gandiva_shared)
+add_gandiva_integ_test(if_expr_test.cc gandiva_static)
+
+add_gandiva_integ_test(literal_test.cc gandiva_shared)
+add_gandiva_integ_test(literal_test.cc gandiva_static)
+
+add_gandiva_integ_test(projector_build_validation_test.cc gandiva_shared)
+add_gandiva_integ_test(projector_build_validation_test.cc gandiva_static)
+

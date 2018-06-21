@@ -12,6 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Build the gandiva library
+function(build_arrow_lib TYPE)
+  string(TOUPPER ${TYPE} TYPE_UPPER_CASE)
+  add_library(gandiva_${TYPE} ${TYPE_UPPER_CASE} $<TARGET_OBJECTS:gandiva_obj_lib>)
+
+  target_include_directories(gandiva_${TYPE}
+    PUBLIC
+      $<INSTALL_INTERFACE:include>
+      $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  # ARROW is a public dependency i.e users of gandiva also will have a dependency on arrow.
+  target_link_libraries(gandiva_${TYPE}
+    PUBLIC
+      ARROW::ARROW_${TYPE_UPPER_CASE}
+    PRIVATE
+      Boost::boost)
+
+  # LLVM is a private dependency i.e users of gandiva will not need to include llvm headers
+  # or link with llvm libraries.
+  target_link_llvm(gandiva_${TYPE} PRIVATE)
+
+  # Set version for the library.
+  set(GANDIVA_VERSION_MAJOR 0)
+  set(GANDIVA_VERSION_MINOR 1)
+  set(GANDIVA_VERSION_PATCH 0)
+  set(GANDIVA_VERSION ${GANDIVA_VERSION_MAJOR}.${GANDIVA_VERSION_MINOR}.${GANDIVA_VERSION_PATCH})
+
+  set_target_properties(gandiva_${TYPE} PROPERTIES
+    VERSION ${GANDIVA_VERSION}
+    SOVERSION ${GANDIVA_VERSION_MAJOR}
+    OUTPUT_NAME gandiva
+  )
+endfunction(build_arrow_lib TYPE)
+
 # Add a unittest executable, with its dependencies.
 function(add_gandiva_unit_test REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
@@ -27,7 +64,7 @@ function(add_gandiva_unit_test REL_TEST_NAME)
     ${CMAKE_SOURCE_DIR}/src
   )
   target_link_libraries(${TEST_NAME}
-    PRIVATE ${ARROW_LIB} gtest_main Boost::boost
+    PRIVATE ${ARROW_LIB_SHARED} gtest_main Boost::boost
   )
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
@@ -46,15 +83,15 @@ function(add_precompiled_unit_test REL_TEST_NAME)
 endfunction(add_precompiled_unit_test REL_TEST_NAME)
 
 # Add an integ executable, with its dependencies.
-function(add_gandiva_integ_test REL_TEST_NAME)
+function(add_gandiva_integ_test REL_TEST_NAME GANDIVA_LIB)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
 
-  add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
-  target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
-  target_link_libraries(${TEST_NAME} PRIVATE gandiva gtest_main)
+  add_executable(${TEST_NAME}_${GANDIVA_LIB} ${REL_TEST_NAME} ${ARGN})
+  target_include_directories(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${ARROW_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
+  target_link_libraries(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${GANDIVA_LIB} gtest_main)
 
-  add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
-  set_property(TEST ${TEST_NAME} PROPERTY LABELS integ ${TEST_NAME})
+  add_test(NAME ${TEST_NAME}_${GANDIVA_LIB} COMMAND ${TEST_NAME}_${GANDIVA_LIB})
+  set_property(TEST ${TEST_NAME}_${GANDIVA_LIB} PROPERTY LABELS integ ${TEST_NAME}_${GANDIVA_LIB})
 endfunction(add_gandiva_integ_test REL_TEST_NAME)
 
 # Download and build external project.
