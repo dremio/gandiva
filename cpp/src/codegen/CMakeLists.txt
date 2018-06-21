@@ -22,60 +22,47 @@ find_package(Boost REQUIRED)
 set(BC_FILE_PATH_CC "${CMAKE_CURRENT_BINARY_DIR}/bc_file_path.cc")
 configure_file(bc_file_path.cc.in ${BC_FILE_PATH_CC})
 
-add_library(gandiva SHARED
-  annotator.cc
-  engine.cc
-  expr_decomposer.cc
-  function_registry.cc
-  llvm_generator.cc
-  llvm_types.cc
-  projector.cc
-  status.cc
-  tree_expr_builder.cc
-  expr_validator.cc
-  ${BC_FILE_PATH_CC})
+set(SRC_FILES annotator.cc
+      engine.cc
+      expr_decomposer.cc
+      function_registry.cc
+      llvm_generator.cc
+      llvm_types.cc
+      projector.cc
+      status.cc
+      tree_expr_builder.cc
+      expr_validator.cc
+      ${BC_FILE_PATH_CC})
+
+add_library(gandiva_obj_lib OBJECT ${SRC_FILES})
+
+# shared libraries need PIC
+set_property(TARGET gandiva_obj_lib PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 # For users of gandiva library (including integ tests), include-dir is :
 #   /usr/**/include dir after install,
 #   cpp/include during build
 # For building gandiva library itself, include-dir (in addition to above) is :
 #   cpp/src
-target_include_directories(gandiva
+target_include_directories(gandiva_obj_lib
   PUBLIC
     $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
   PRIVATE
     ${CMAKE_SOURCE_DIR}/src
+    ${LLVM_INCLUDE_DIRS}
 )
 
-# ARROW is a public dependency i.e users of gandiva also will have a dependency on arrow.
-target_link_libraries(gandiva
-  PUBLIC
-    ARROW::ARROW
-  PRIVATE
-    Boost::boost)
+build_arrow_lib("shared")
 
-# LLVM is a private dependency i.e users of gandiva will not need to include llvm headers
-# or link with llvm libraries.
-target_link_llvm(gandiva PRIVATE)
-
-# Set version for the library.
-set(GANDIVA_VERSION_MAJOR 0)
-set(GANDIVA_VERSION_MINOR 1)
-set(GANDIVA_VERSION_PATCH 0)
-set(GANDIVA_VERSION ${GANDIVA_VERSION_MAJOR}.${GANDIVA_VERSION_MINOR}.${GANDIVA_VERSION_PATCH})
-
-set_target_properties(gandiva PROPERTIES
-  VERSION ${GANDIVA_VERSION}
-  SOVERSION ${GANDIVA_VERSION_MAJOR}
-)
+build_arrow_lib("static")
 
 # install for gandiva
 include(GNUInstallDirs)
 
 # install libgandiva
 install(
-  TARGETS gandiva
+  TARGETS gandiva_shared gandiva_static
   DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
