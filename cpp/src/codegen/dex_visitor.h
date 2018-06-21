@@ -23,6 +23,8 @@ class VectorReadValidityDex;
 class VectorReadValueDex;
 class LocalBitMapValidityDex;
 class LiteralDex;
+class TrueDex;
+class FalseDex;
 class NonNullableFuncDex;
 class NullableNeverFuncDex;
 class NullableInternalFuncDex;
@@ -34,6 +36,8 @@ class DexVisitor {
   virtual void Visit(const VectorReadValidityDex &dex) = 0;
   virtual void Visit(const VectorReadValueDex &dex) = 0;
   virtual void Visit(const LocalBitMapValidityDex &dex) = 0;
+  virtual void Visit(const TrueDex &dex) = 0;
+  virtual void Visit(const FalseDex &dex) = 0;
   virtual void Visit(const LiteralDex &dex) = 0;
   virtual void Visit(const NonNullableFuncDex &dex) = 0;
   virtual void Visit(const NullableNeverFuncDex &dex) = 0;
@@ -51,6 +55,8 @@ class DexDefaultVisitor : public DexVisitor {
   VISIT_DCHECK(VectorReadValidityDex);
   VISIT_DCHECK(VectorReadValueDex);
   VISIT_DCHECK(LocalBitMapValidityDex);
+  VISIT_DCHECK(TrueDex);
+  VISIT_DCHECK(FalseDex);
   VISIT_DCHECK(LiteralDex);
   VISIT_DCHECK(NonNullableFuncDex);
   VISIT_DCHECK(NullableNeverFuncDex);
