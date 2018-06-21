@@ -14,20 +14,12 @@
 
 project(gandiva)
 
-add_gandiva_integ_test(projector_test.cc gandiva_shared)
-add_gandiva_integ_test(projector_test.cc gandiva_static)
-
-add_gandiva_integ_test(if_expr_test.cc gandiva_shared)
-add_gandiva_integ_test(if_expr_test.cc gandiva_static)
-
-add_gandiva_integ_test(boolean_expr_test.cc gandiva_static)
-add_gandiva_integ_test(boolean_expr_test.cc gandiva_shared)
-
-add_gandiva_integ_test(literal_test.cc gandiva_shared)
-add_gandiva_integ_test(literal_test.cc gandiva_static)
-
-add_gandiva_integ_test(projector_build_validation_test.cc gandiva_shared)
-add_gandiva_integ_test(projector_build_validation_test.cc gandiva_static)
-
-add_gandiva_integ_test(utf8_test.cc gandiva_shared)
-add_gandiva_integ_test(binary_test.cc gandiva_shared)
+foreach(lib_type IN LISTS [ "shared", "static" ])
+  add_gandiva_integ_test(projector_test.cc gandiva_${lib_type})
+  add_gandiva_integ_test(if_expr_test.cc gandiva_${lib_type})
+  add_gandiva_integ_test(literal_test.cc gandiva_${lib_type})
+  add_gandiva_integ_test(projector_build_validation_test.cc gandiva_${lib_type})
+  add_gandiva_integ_test(boolean_expr_test.cc gandiva_${lib_type})
+  add_gandiva_integ_test(utf8_test.cc gandiva_${lib_type})
+  add_gandiva_integ_test(binary_test.cc gandiva_${lib_type})
+endforeach(lib_type)

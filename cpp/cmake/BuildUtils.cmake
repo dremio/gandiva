@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build the gandiva library
-function(build_arrow_lib TYPE)
+function(build_gandiva_lib TYPE)
   string(TOUPPER ${TYPE} TYPE_UPPER_CASE)
   add_library(gandiva_${TYPE} ${TYPE_UPPER_CASE} $<TARGET_OBJECTS:gandiva_obj_lib>)
 
@@ -47,7 +47,7 @@ function(build_arrow_lib TYPE)
     SOVERSION ${GANDIVA_VERSION_MAJOR}
     OUTPUT_NAME gandiva
   )
-endfunction(build_arrow_lib TYPE)
+endfunction(build_gandiva_lib TYPE)
 
 # Add a unittest executable, with its dependencies.
 function(add_gandiva_unit_test REL_TEST_NAME)
@@ -90,7 +90,7 @@ function(add_gandiva_integ_test REL_TEST_NAME GANDIVA_LIB)
   target_include_directories(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${CMAKE_SOURCE_DIR})
   target_link_libraries(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${GANDIVA_LIB} gtest_main)
 
-  add_test(NAME ${TEST_NAME}_${GANDIVA_LIB} COMMAND ${TEST_NAME})
+  add_test(NAME ${TEST_NAME}_${GANDIVA_LIB} COMMAND ${TEST_NAME}_${GANDIVA_LIB})
   set_property(TEST ${TEST_NAME}_${GANDIVA_LIB} PROPERTY LABELS integ ${TEST_NAME}_${GANDIVA_LIB})
 endfunction(add_gandiva_integ_test REL_TEST_NAME)
 

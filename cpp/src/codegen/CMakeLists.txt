@@ -53,11 +53,12 @@ target_include_directories(gandiva_obj_lib
   PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${LLVM_INCLUDE_DIRS}
+    $<TARGET_PROPERTY:ARROW::ARROW_SHARED,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-build_arrow_lib("shared")
+build_gandiva_lib("shared")
 
-build_arrow_lib("static")
+build_gandiva_lib("static")
 
 # install for gandiva
 include(GNUInstallDirs)
