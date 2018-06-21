@@ -676,7 +676,7 @@ void LLVMGenerator::Visitor::Visit(const BooleanAndDex &dex) {
   LLVMTypes *types = generator_->types_;
   llvm::LLVMContext &context = generator_->context();
 
-  // Create blocks for short-circuit block.
+  // Create blocks for short-circuit.
   llvm::BasicBlock *short_circuit_bb = llvm::BasicBlock::Create(context,
                                                                 "short_circuit",
                                                                 function_);
@@ -698,7 +698,6 @@ void LLVMGenerator::Visitor::Visit(const BooleanAndDex &dex) {
                                                      current->validity(),
                                                      "valid_and_false");
 
-    llvm::LLVMContext &context = generator_->context();
     llvm::BasicBlock *else_bb = llvm::BasicBlock::Create(context, "else", function_);
     builder.CreateCondBr(valid_and_false, short_circuit_bb, else_bb);
 
@@ -747,7 +746,7 @@ void LLVMGenerator::Visitor::Visit(const BooleanOrDex &dex) {
   LLVMTypes *types = generator_->types_;
   llvm::LLVMContext &context = generator_->context();
 
-  // Create blocks for short-circuit block.
+  // Create blocks for short-circuit.
   llvm::BasicBlock *short_circuit_bb = llvm::BasicBlock::Create(context,
                                                                 "short_circuit",
                                                                 function_);
@@ -768,7 +767,6 @@ void LLVMGenerator::Visitor::Visit(const BooleanOrDex &dex) {
                                                     current->validity(),
                                                     "valid_and_true");
 
-    llvm::LLVMContext &context = generator_->context();
     llvm::BasicBlock *else_bb = llvm::BasicBlock::Create(context, "else", function_);
     builder.CreateCondBr(valid_and_true, short_circuit_bb, else_bb);
 
