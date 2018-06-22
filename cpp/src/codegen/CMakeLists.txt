@@ -38,8 +38,8 @@ set(SRC_FILES annotator.cc
 
 add_library(gandiva_obj_lib OBJECT ${SRC_FILES})
 
-# shared libraries need PIC
-set_property(TARGET gandiva_obj_lib PROPERTY POSITION_INDEPENDENT_CODE 1)
+# set PIC so that object library can be included in shared libs.
+set_target_properties(gandiva_obj_lib PROPERTIES POSITION_INDEPENDENT_CODE 1)
 
 # For users of gandiva library (including integ tests), include-dir is :
 #   /usr/**/include dir after install,
