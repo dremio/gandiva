@@ -15,6 +15,8 @@
 #ifndef GANDIVA_BITMAP_ACCUMULATOR_H
 #define GANDIVA_BITMAP_ACCUMULATOR_H
 
+#include <vector>
+
 #include "codegen/dex_visitor.h"
 #include "codegen/dex.h"
 #include "codegen/eval_batch.h"

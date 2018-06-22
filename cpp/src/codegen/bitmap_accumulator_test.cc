@@ -27,7 +27,6 @@ class TestBitMapAccumulator : public ::testing::Test {
   void FillBitMap(uint8_t *bmap, int nrecords);
   void ByteWiseIntersectBitMaps(uint8_t *dst, const std::vector<uint8_t *> &srcs,
                                 int nrecords);
-
 };
 
 void TestBitMapAccumulator::FillBitMap(uint8_t *bmap, int nrecords) {

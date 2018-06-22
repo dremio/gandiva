@@ -62,9 +62,9 @@ NodePtr TreeExprBuilder::MakeNull(DataTypePtr data_type) {
   case arrow::Type::UINT64:
     return std::make_shared<LiteralNode>(data_type, LiteralHolder((uint64_t)0), true);
   case arrow::Type::FLOAT:
-    return std::make_shared<LiteralNode>(data_type, LiteralHolder((float)0), true);
+    return std::make_shared<LiteralNode>(data_type, LiteralHolder((float_t)0), true);
   case arrow::Type::DOUBLE:
-    return std::make_shared<LiteralNode>(data_type, LiteralHolder((double)0), true);
+    return std::make_shared<LiteralNode>(data_type, LiteralHolder((double_t)0), true);
   default:
     return nullptr;
   }

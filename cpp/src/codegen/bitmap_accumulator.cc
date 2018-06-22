@@ -14,6 +14,8 @@
 
 #include "codegen/bitmap_accumulator.h"
 
+#include <vector>
+
 namespace gandiva {
 
 void BitMapAccumulator::ComputeResult(uint8_t *dst_bitmap) {
@@ -31,7 +33,6 @@ void BitMapAccumulator::ComputeResult(uint8_t *dst_bitmap) {
 void BitMapAccumulator::IntersectBitMaps(uint8_t *dst_map,
                                          const std::vector<uint8_t *> &src_maps,
                                          int num_records) {
-
   uint64_t *dst_map64 = reinterpret_cast<uint64_t *>(dst_map);
   int num_words = (num_records + 63) / 64; // aligned to 8-byte.
   int num_bytes = num_words * 8;
