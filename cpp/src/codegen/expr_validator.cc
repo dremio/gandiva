@@ -141,9 +141,6 @@ Status ExprValidator::Visit(const BooleanNode &node) {
   }
 
   for (auto &child : node.children()) {
-    status = child->Accept(*this);
-    GANDIVA_RETURN_NOT_OK(status);
-
     if (child->return_type() != arrow::boolean()) {
       std::stringstream ss;
       ss << "Boolean expression has a child with return type "
@@ -151,6 +148,9 @@ Status ExprValidator::Visit(const BooleanNode &node) {
          << ", expected return type boolean";
       return Status::ExpressionValidationError(ss.str());
     }
+
+    status = child->Accept(*this);
+    GANDIVA_RETURN_NOT_OK(status);
   }
   return Status::OK();
 }

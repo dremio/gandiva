@@ -130,11 +130,13 @@ Status ExprDecomposer::Visit(const BooleanNode &node) {
   auto validity_dex = std::make_shared<LocalBitMapValidityDex>(local_bitmap_idx);
 
   std::shared_ptr<BooleanDex> value_dex;
-  if (node.expr_type() == BooleanNode::AND) {
+  switch (node.expr_type()) {
+  case BooleanNode::AND:
     value_dex = std::make_shared<BooleanAndDex>(args, local_bitmap_idx);
-  } else {
-    DCHECK_EQ(node.expr_type(), BooleanNode::OR);
+    break;
+  case BooleanNode::OR:
     value_dex = std::make_shared<BooleanOrDex>(args, local_bitmap_idx);
+    break;
   }
   result_ = std::make_shared<ValueValidityPair>(validity_dex, value_dex);
   return Status::OK();
