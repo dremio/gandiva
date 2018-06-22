@@ -30,11 +30,8 @@ function(build_gandiva_lib TYPE)
     PUBLIC
       ARROW::ARROW_${TYPE_UPPER_CASE}
     PRIVATE
-      Boost::boost)
-
-  # LLVM is a private dependency i.e users of gandiva will not need to include llvm headers
-  # or link with llvm libraries.
-  target_link_llvm(gandiva_${TYPE} PRIVATE)
+      Boost::boost
+      LLVM::LLVM_INTERFACE)
 
   # Set version for the library.
   set(GANDIVA_VERSION_MAJOR 0)
