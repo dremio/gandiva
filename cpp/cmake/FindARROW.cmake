@@ -18,6 +18,7 @@ find_library(ARROW_LIB arrow REQUIRED)
 message(STATUS "Found arrow library at ${ARROW_LIB}")
 
 find_path(ARROW_INCLUDE_DIR arrow/type.h)
+include_directories("${ARROW_INCLUDE_DIR}")
 message(STATUS "found arrow includes at ${ARROW_INCLUDE_DIR}")
 
 # add an imported target ARROW::ARROW so that gandiva can take a dependency.
