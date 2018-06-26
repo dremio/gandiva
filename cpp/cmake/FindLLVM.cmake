@@ -35,9 +35,3 @@ set_target_properties(LLVM::LLVM_INTERFACE PROPERTIES
   INTERFACE_LINK_LIBRARIES "${LLVM_LIBS}"
 )
 
-# Convenience function for targets to link llvm.
-function(target_link_llvm TARGET TYPE)
-  target_include_directories(${TARGET} ${TYPE} ${LLVM_INCLUDE_DIRS})
-  target_compile_definitions(${TARGET} ${TYPE} ${LLVM_DEFINITIONS})
-  target_link_libraries(${TARGET} ${TYPE} ${LLVM_LIBS})
-endfunction()
