@@ -26,14 +26,14 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
     # Set up C++ toolchain from conda-forge packages for faster builds
     conda create -y -q -p $CPP_TOOLCHAIN python=2.7 \
         flatbuffers \
-        libprotobuf \
+        libprotobuf=2.5.0 \
         gflags \
         gtest \
         ccache \
         cmake \
         curl \
         ninja \
-        arrow-cpp=0.8.0 \
+        arrow-cpp=0.9.0 \
         boost-cpp
 
     conda update -y -q -p $CPP_TOOLCHAIN ca-certificates -c defaults
