@@ -100,6 +100,10 @@ message IfNode {
   optional ExtGandivaType returnType = 4;
 }
 
+message NullNode {
+  optional ExtGandivaType type = 1;
+}
+
 message IntNode {
   optional int32 value = 1;
 }
@@ -129,6 +133,7 @@ message TreeNode {
   optional LongNode longNode = 6;
   optional BooleanNode booleanNode = 7;
   optional DoubleNode doubleNode = 8;
+  optional NullNode nullNode = 11;
 }
 
 message ExpressionRoot {
