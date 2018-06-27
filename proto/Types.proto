@@ -108,6 +108,10 @@ message OrNode {
   repeated TreeNode args = 1;
 }
 
+message NullNode {
+  optional ExtGandivaType type = 1;
+}
+
 message IntNode {
   optional int32 value = 1;
 }
@@ -139,6 +143,7 @@ message TreeNode {
   optional DoubleNode doubleNode = 8;
   optional AndNode andNode = 9;
   optional OrNode orNode = 10;
+  optional NullNode nullNode = 11;
 }
 
 message ExpressionRoot {
