@@ -100,6 +100,14 @@ message IfNode {
   optional ExtGandivaType returnType = 4;
 }
 
+message AndNode {
+  repeated TreeNode args = 1;
+}
+
+message OrNode {
+  repeated TreeNode args = 1;
+}
+
 message NullNode {
   optional ExtGandivaType type = 1;
 }
@@ -133,6 +141,8 @@ message TreeNode {
   optional LongNode longNode = 6;
   optional BooleanNode booleanNode = 7;
   optional DoubleNode doubleNode = 8;
+  optional AndNode andNode = 9;
+  optional OrNode orNode = 10;
   optional NullNode nullNode = 11;
 }
 
