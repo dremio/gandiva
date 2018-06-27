@@ -486,7 +486,7 @@ TEST_F(TestProjector, TestTime) {
   // Create a row-batch with some sample data
   int num_records = 4;
   auto validity = { true, true, true, true };
-  auto field0_data = {
+  std::vector<int64_t> field0_data = {
     MillisSince(epoch, 2000, 1, 1, 5, 0, 0),
     MillisSince(epoch, 1999, 12, 31, 5, 0, 0),
     MillisSince(epoch, 2015, 6, 30, 20, 0, 0),
@@ -494,7 +494,7 @@ TEST_F(TestProjector, TestTime) {
   };
   auto array0 = MakeArrowTypeArray<arrow::Date64Type, int64_t>(date64(), field0_data, validity);
 
-  auto field1_data = {
+  std::vector<int64_t> field1_data = {
     MillisSince(epoch, 2000, 1, 1, 5, 0, 0),
     MillisSince(epoch, 1999, 12, 31, 4, 0, 0),
     MillisSince(epoch, 2015, 6, 30, 20, 0, 0),
@@ -503,7 +503,7 @@ TEST_F(TestProjector, TestTime) {
 
   auto array1 = MakeArrowTypeArray<arrow::Time32Type, int64_t>(time32(arrow::TimeUnit::MILLI), field1_data, validity);
 
-  auto field2_data = {
+  std::vector<int64_t> field2_data = {
     MillisSince(epoch, 1999, 12, 31, 5, 0, 0),
     MillisSince(epoch, 2000, 1, 2, 5, 0, 0),
     MillisSince(epoch, 2015, 7, 1, 1, 0, 0),
