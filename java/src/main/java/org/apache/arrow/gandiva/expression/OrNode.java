@@ -16,10 +16,10 @@
 
 package org.apache.arrow.gandiva.expression;
 
-  import org.apache.arrow.gandiva.exceptions.GandivaException;
-  import org.apache.arrow.gandiva.ipc.GandivaTypes;
+import org.apache.arrow.gandiva.exceptions.GandivaException;
+import org.apache.arrow.gandiva.ipc.GandivaTypes;
 
-  import java.util.List;
+import java.util.List;
 
 class OrNode implements TreeNode {
   private final List<TreeNode> children;
