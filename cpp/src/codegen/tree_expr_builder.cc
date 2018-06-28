@@ -37,6 +37,14 @@ MAKE_LITERAL(arrow::uint64(), uint64_t)
 MAKE_LITERAL(arrow::float32(), float)
 MAKE_LITERAL(arrow::float64(), double)
 
+NodePtr TreeExprBuilder::MakeStringLiteral(const std::string &value) {
+  return std::make_shared<LiteralNode>(arrow::utf8(), LiteralHolder(value), false);
+}
+
+NodePtr TreeExprBuilder::MakeBinaryLiteral(const std::string &value) {
+  return std::make_shared<LiteralNode>(arrow::binary(), LiteralHolder(value), false);
+}
+
 NodePtr TreeExprBuilder::MakeNull(DataTypePtr data_type) {
   if (data_type == nullptr) {
     return nullptr;
@@ -65,6 +73,9 @@ NodePtr TreeExprBuilder::MakeNull(DataTypePtr data_type) {
     return std::make_shared<LiteralNode>(data_type, LiteralHolder((float_t)0), true);
   case arrow::Type::DOUBLE:
     return std::make_shared<LiteralNode>(data_type, LiteralHolder((double_t)0), true);
+  case arrow::Type::STRING:
+  case arrow::Type::BINARY:
+    return std::make_shared<LiteralNode>(data_type, LiteralHolder(std::string("")), true);
   default:
     return nullptr;
   }
