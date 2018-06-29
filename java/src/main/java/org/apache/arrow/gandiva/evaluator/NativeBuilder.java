@@ -36,10 +36,12 @@ class NativeBuilder {
 
   private static volatile NativeBuilder INSTANCE;
 
-  private final String byteCodeFilePath;
+  private final long defaultConfiguration;
 
   private NativeBuilder(String byteCodeFilePath) {
-    this.byteCodeFilePath = byteCodeFilePath;
+    ConfigurationBuilder configBuilder = new ConfigurationBuilder();
+    configBuilder.withByteCodeFilePath(byteCodeFilePath);
+    defaultConfiguration = configBuilder.buildConfigInstance();
   }
 
   static NativeBuilder getInstance() throws GandivaException {
@@ -51,10 +53,6 @@ class NativeBuilder {
       }
     }
     return INSTANCE;
-  }
-
-  String getByteCodeFilePath() {
-    return byteCodeFilePath;
   }
 
   private static NativeBuilder setupInstance() throws GandivaException {
@@ -109,17 +107,32 @@ class NativeBuilder {
   }
 
   /**
-   * Generates the LLVM module to evaluate the expressions.
+   * Generates the LLVM module to evaluate the expressions with
+   * custom configuration.
    *
    * @param schemaBuf   The schema serialized as a protobuf. See Types.proto
    *                    to see the protobuf specification
    * @param exprListBuf The serialized protobuf of the expression vector. Each
    *                    expression is created using TreeBuilder::MakeExpression
-   * @param gandivaConfig Runtime config for Gandiva.
+   * @param configId    Configuration to gandiva.
    * @return A moduleId that is passed to the evaluate() and close() methods
    */
   native long buildNativeCode(byte[] schemaBuf, byte[] exprListBuf,
-                              byte[] gandivaConfig);
+                              long configId);
+
+  /**
+   * Generates the LLVM module to evaluate the expressions with
+   * default configuration.
+   *
+   * @param schemaBuf   The schema serialized as a protobuf. See Types.proto
+   *                    to see the protobuf specification
+   * @param exprListBuf The serialized protobuf of the expression vector. Each
+   *                    expression is created using TreeBuilder::MakeExpression
+   * @return A moduleId that is passed to the evaluate() and close() methods
+   */
+  long buildNativeCode(byte[] schemaBuf, byte[] exprListBuf) {
+    return  buildNativeCode(schemaBuf, exprListBuf, defaultConfiguration);
+  }
 
   /**
    * Evaluate the expressions represented by the moduleId on a record batch

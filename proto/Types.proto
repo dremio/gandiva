@@ -158,7 +158,3 @@ message ExpressionList {
 message Schema {
   repeated Field columns = 1;
 }
-
-message GandivaConfiguration {
-  optional string irByteCodeFilePath = 1;
-}

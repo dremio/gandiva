@@ -1,20 +1,16 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (C) 2017-2018 Dremio Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include <google/protobuf/io/coded_stream.h>
 
@@ -31,6 +27,7 @@
 
 #include "jni/org_apache_arrow_gandiva_evaluator_NativeBuilder.h"
 #include "jni/module_holder.h"
+#include "jni/config_holder.h"
 #include "Types.pb.h"
 #include "gandiva/configuration.h"
 #include "gandiva/tree_expr_builder.h"
@@ -52,7 +49,7 @@ using gandiva::ArrayDataVector;
 using gandiva::ProjectorHolder;
 using gandiva::Configuration;
 using gandiva::ConfigurationBuilder;
-
+using gandiva::ConfigHolder;
 
 // forward declarations
 NodePtr ProtoTypeToNode(const types::TreeNode& node);
@@ -416,9 +413,7 @@ void ThrowException(JNIEnv *env, const std::string msg) {
   env->ThrowNew(gandiva_exception_, msg.c_str());
 }
 
-void releaseInput(jbyteArray gandiva_configuration,
-                  jbyte *gandiva_config_bytes,
-                  jbyteArray schema_arr,
+void releaseInput(jbyteArray schema_arr,
                   jbyte *schema_bytes,
                   jbyteArray exprs_arr,
                   jbyte *exprs_bytes,
@@ -426,13 +421,12 @@ void releaseInput(jbyteArray gandiva_configuration,
                   ) {
   env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
   env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
-  env->ReleaseByteArrayElements(gandiva_configuration, gandiva_config_bytes, JNI_ABORT);
 }
 
 JNIEXPORT jlong JNICALL
 Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   (JNIEnv *env, jobject obj, jbyteArray schema_arr, jbyteArray exprs_arr,
-   jbyteArray gandiva_configuration) {
+   jlong configuration_id) {
   jlong module_id = 0LL;
   std::shared_ptr<Projector> projector;
   std::shared_ptr<ProjectorHolder> holder;
@@ -445,34 +439,26 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   jsize exprs_len = env->GetArrayLength(exprs_arr);
   jbyte *exprs_bytes = env->GetByteArrayElements(exprs_arr, 0);
 
-  types::GandivaConfiguration gandiva_config_proto;
-  jsize gandiva_config_len = env->GetArrayLength(gandiva_configuration);
-  jbyte *gandiva_config_bytes = env->GetByteArrayElements(gandiva_configuration, 0);
-
-
   ExpressionVector expr_vector;
   SchemaPtr schema_ptr;
   FieldVector ret_types;
   gandiva::Status status;
 
+  std::shared_ptr<Configuration> config = ConfigHolder::MapLookup(configuration_id);
+
+  if (config == nullptr) {
+    std::cerr << "configuration is mandatory.";
+    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+  }
+
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(schema_bytes), schema_len, &schema)) {
     std::cerr << "Unable to parse schema protobuf\n";
-    releaseInput(gandiva_configuration, gandiva_config_bytes,
-                 schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     goto err_out;
   }
 
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(exprs_bytes), exprs_len, &exprs)) {
-    releaseInput(gandiva_configuration, gandiva_config_bytes,
-                 schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
-    std::cerr << "Unable to parse expressions protobuf\n";
-    goto err_out;
-  }
-
-  if (!ParseProtobuf(reinterpret_cast<uint8_t *>(gandiva_config_bytes),
-                     gandiva_config_len, &gandiva_config_proto)) {
-    releaseInput(gandiva_configuration, gandiva_config_bytes,
-                 schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     std::cerr << "Unable to parse expressions protobuf\n";
     goto err_out;
   }
@@ -481,8 +467,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   schema_ptr = ProtoTypeToSchema(schema);
   if (schema_ptr == nullptr) {
     std::cerr << "Unable to construct arrow schema object from schema protobuf\n";
-    releaseInput(gandiva_configuration, gandiva_config_bytes,
-                 schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     goto err_out;
   }
 
@@ -492,8 +477,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
 
     if (root == nullptr) {
       std::cerr << "Unable to construct expression object from expression protobuf\n";
-      releaseInput(gandiva_configuration, gandiva_config_bytes,
-                   schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+      releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
       goto err_out;
     }
 
@@ -501,27 +485,13 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
     ret_types.push_back(root->result());
   }
 
-  if (!gandiva_config_proto.has_irbytecodefilepath()
-      || gandiva_config_proto.irbytecodefilepath().size() == 0) {
-    std::cerr << "Location of byte code is mandatory";
-    releaseInput(gandiva_configuration, gandiva_config_bytes,
-                 schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
-    goto err_out;
-  }
-
-  {
-    ConfigurationBuilder config_builder;
-    config_builder.set_byte_code_file_path(gandiva_config_proto.irbytecodefilepath());
-    std::shared_ptr<Configuration> config = config_builder.build();
-
-    // good to invoke the evaluator now
-    status = Projector::Make(schema_ptr, expr_vector, nullptr,
+  // good to invoke the evaluator now
+  status = Projector::Make(schema_ptr, expr_vector, nullptr,
                              config, &projector);
-  }
+
   if (!status.ok()) {
     std::cerr << "Failed to make LLVM module due to " << status.message() << "\n";
-    releaseInput(gandiva_configuration, gandiva_config_bytes,
-                 schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     goto err_out;
   }
 
@@ -530,8 +500,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
                                                                 ret_types,
                                                                 std::move(projector)));
   module_id = MapInsert(holder);
-  releaseInput(gandiva_configuration, gandiva_config_bytes,
-               schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+  releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
   return module_id;
 
 err_out:

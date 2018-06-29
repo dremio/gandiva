@@ -77,12 +77,8 @@ public class NativeEvaluator {
     // Invoke the JNI layer to create the LLVM module representing the expressions
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
     NativeBuilder gandivaBridge = NativeBuilder.getInstance();
-    GandivaTypes.GandivaConfiguration.Builder configBuilder =
-            GandivaTypes.GandivaConfiguration.newBuilder();
-    GandivaTypes.GandivaConfiguration gandivaConfiguration =
-            configBuilder.setIrByteCodeFilePath(gandivaBridge.getByteCodeFilePath()).build();
-    long moduleId = gandivaBridge.buildNativeCode(schemaBuf.toByteArray(),
-            builder.build().toByteArray(), gandivaConfiguration.toByteArray());
+    long moduleId = gandivaBridge.buildNativeCode(schemaBuf.toByteArray(), builder.build()
+            .toByteArray());
     return new NativeEvaluator(moduleId, schema, exprs.size());
   }
 
