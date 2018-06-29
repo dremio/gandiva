@@ -21,7 +21,6 @@ import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.expression.ExpressionTree;
 import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
-import org.apache.arrow.vector.BigIntVector;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.ipc.message.ArrowFieldNode;
@@ -29,6 +28,7 @@ import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
 import org.apache.arrow.vector.types.FloatingPointPrecision;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.joda.time.Instant;
 import org.junit.Before;
 
 import java.util.ArrayList;
@@ -135,6 +135,16 @@ class BaseNativeEvaluatorTest {
     ArrowBuf buffer = allocator.buffer(data.length * 8);
     for (int i = 0; i < data.length; i++) {
       buffer.writeDouble(data[i]);
+    }
+
+    return buffer;
+  }
+
+  ArrowBuf stringToMillis(String[] dates) {
+    ArrowBuf buffer = allocator.buffer(dates.length * 8);
+    for(int i = 0; i < dates.length; i++) {
+      Instant instant = Instant.parse(dates[i]);
+      buffer.writeLong(instant.getMillis());
     }
 
     return buffer;
