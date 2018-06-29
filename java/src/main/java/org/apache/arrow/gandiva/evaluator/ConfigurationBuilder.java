@@ -16,12 +16,16 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
+import org.apache.arrow.gandiva.exceptions.GandivaException;
+
 /**
  * Used to construct gandiva configuration objects.
  */
 public class ConfigurationBuilder {
 
   private String byteCodeFilePath = "";
+
+  private static volatile long defaultConfiguration = 0L;
 
   public ConfigurationBuilder withByteCodeFilePath(final String byteCodeFilePath) {
     this.byteCodeFilePath = byteCodeFilePath;
@@ -30,6 +34,25 @@ public class ConfigurationBuilder {
 
   public String getByteCodeFilePath() {
     return byteCodeFilePath;
+  }
+
+  /**
+   * Get the default configuration to invoke gandiva.
+   * @return default configuration
+   * @throws GandivaException if unable to get native builder instance.
+   */
+  static long getDefaultConfiguration() throws GandivaException {
+    if (defaultConfiguration == 0L) {
+      synchronized (ConfigurationBuilder.class) {
+        if (defaultConfiguration == 0L) {
+          ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+          String defaultFilePath = NativeBuilder.getInstance().getByteCodeFilePath();
+          configurationBuilder.withByteCodeFilePath(defaultFilePath);
+          defaultConfiguration = configurationBuilder.buildConfigInstance();
+        }
+      }
+    }
+    return defaultConfiguration;
   }
 
   public native long buildConfigInstance();

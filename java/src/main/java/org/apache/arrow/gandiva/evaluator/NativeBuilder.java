@@ -36,12 +36,10 @@ class NativeBuilder {
 
   private static volatile NativeBuilder INSTANCE;
 
-  private final long defaultConfiguration;
+  private final String byteCodeFilePath;
 
   private NativeBuilder(String byteCodeFilePath) {
-    ConfigurationBuilder configBuilder = new ConfigurationBuilder();
-    configBuilder.withByteCodeFilePath(byteCodeFilePath);
-    defaultConfiguration = configBuilder.buildConfigInstance();
+    this.byteCodeFilePath = byteCodeFilePath;
   }
 
   static NativeBuilder getInstance() throws GandivaException {
@@ -107,6 +105,13 @@ class NativeBuilder {
   }
 
   /**
+   * Returns the byte code file path extracted from jar.
+   */
+  public String getByteCodeFilePath() {
+    return byteCodeFilePath;
+  }
+
+  /**
    * Generates the LLVM module to evaluate the expressions with
    * custom configuration.
    *
@@ -119,20 +124,6 @@ class NativeBuilder {
    */
   native long buildNativeCode(byte[] schemaBuf, byte[] exprListBuf,
                               long configId);
-
-  /**
-   * Generates the LLVM module to evaluate the expressions with
-   * default configuration.
-   *
-   * @param schemaBuf   The schema serialized as a protobuf. See Types.proto
-   *                    to see the protobuf specification
-   * @param exprListBuf The serialized protobuf of the expression vector. Each
-   *                    expression is created using TreeBuilder::MakeExpression
-   * @return A moduleId that is passed to the evaluate() and close() methods
-   */
-  long buildNativeCode(byte[] schemaBuf, byte[] exprListBuf) {
-    return  buildNativeCode(schemaBuf, exprListBuf, defaultConfiguration);
-  }
 
   /**
    * Evaluate the expressions represented by the moduleId on a record batch

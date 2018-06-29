@@ -68,6 +68,23 @@ public class NativeEvaluator {
    */
   public static NativeEvaluator makeProjector(Schema schema, List<ExpressionTree> exprs)
           throws GandivaException {
+    return makeProjector(schema, exprs, ConfigurationBuilder.getDefaultConfiguration());
+  }
+
+  /**
+   * Invoke this function to generate LLVM code to evaluate the list of project expressions.
+   * Invoke NativeEvaluator::Evalute() against a RecordBatch to evaluate the record batch
+   * against these projections.
+   *
+   * @param schema Table schema. The field names in the schema should match the fields used
+   *               to create the TreeNodes
+   * @param exprs  List of expressions to be evaluated against data
+   * @param configurationId Custom configuration created through config builder.
+   *
+   * @return A native evaluator object that can be used to invoke these projections on a RecordBatch
+   */
+  public static NativeEvaluator makeProjector(Schema schema, List<ExpressionTree> exprs, long
+          configurationId) throws GandivaException {
     // serialize the schema and the list of expressions as a protobuf
     GandivaTypes.ExpressionList.Builder builder = GandivaTypes.ExpressionList.newBuilder();
     for (ExpressionTree expr : exprs) {
@@ -78,7 +95,7 @@ public class NativeEvaluator {
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
     NativeBuilder gandivaBridge = NativeBuilder.getInstance();
     long moduleId = gandivaBridge.buildNativeCode(schemaBuf.toByteArray(), builder.build()
-            .toByteArray());
+            .toByteArray(), configurationId);
     return new NativeEvaluator(moduleId, schema, exprs.size());
   }
 
