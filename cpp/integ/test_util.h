@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <chrono>
+#include <memory>
 #include <vector>
 #include <utility>
 #include "arrow/test-util.h"
@@ -39,6 +40,16 @@ static ArrayPtr MakeArrowArray(std::vector<C_TYPE> values,
   arrow::ArrayFromVector<TYPE, C_TYPE>(validity, values, &out);
   return out;
 }
+
+template<typename TYPE, typename C_TYPE>
+static ArrayPtr MakeArrowTypeArray(const std::shared_ptr<arrow::DataType>& type,
+                                   const std::vector<C_TYPE> &values,
+                                   const std::vector<bool> &validity) {
+  ArrayPtr out;
+  arrow::ArrayFromVector<TYPE, C_TYPE>(type, validity, values, &out);
+  return out;
+}
+
 #define MakeArrowArrayBool MakeArrowArray<arrow::BooleanType, bool>
 #define MakeArrowArrayInt8 MakeArrowArray<arrow::Int8Type, int8_t>
 #define MakeArrowArrayInt16 MakeArrowArray<arrow::Int16Type, int16_t>

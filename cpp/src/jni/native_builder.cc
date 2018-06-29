@@ -92,6 +92,46 @@ std::shared_ptr<ProjectorHolder> MapLookup(jlong module_id) {
   return result;
 }
 
+DataTypePtr ProtoTypeToTime32(const types::ExtGandivaType& ext_type) {
+  switch (ext_type.timeunit()) {
+    case types::SEC:
+      return arrow::time32(arrow::TimeUnit::SECOND);
+    case types::MILLISEC:
+      return arrow::time32(arrow::TimeUnit::MILLI);
+    default:
+      std::cerr << "Unknown time unit: " << ext_type.timeunit() << " for time32\n";
+      return nullptr;
+  }
+}
+
+DataTypePtr ProtoTypeToTime64(const types::ExtGandivaType& ext_type) {
+  switch (ext_type.timeunit()) {
+    case types::MICROSEC:
+      return arrow::time64(arrow::TimeUnit::MICRO);
+    case types::NANOSEC:
+      return arrow::time64(arrow::TimeUnit::NANO);
+    default:
+      std::cerr << "Unknown time unit: " << ext_type.timeunit() << " for time64\n";
+      return nullptr;
+  }
+}
+
+DataTypePtr ProtoTypeToTimestamp(const types::ExtGandivaType& ext_type) {
+  switch (ext_type.timeunit()) {
+    case types::SEC:
+      return arrow::timestamp(arrow::TimeUnit::SECOND);
+    case types::MILLISEC:
+      return arrow::timestamp(arrow::TimeUnit::MILLI);
+    case types::MICROSEC:
+      return arrow::timestamp(arrow::TimeUnit::MICRO);
+    case types::NANOSEC:
+      return arrow::timestamp(arrow::TimeUnit::NANO);
+    default:
+      std::cerr << "Unknown time unit: " << ext_type.timeunit() << " for timestamp\n";
+      return nullptr;
+  }
+}
+
 DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& ext_type) {
   switch (ext_type.type()) {
     case types::NONE:
@@ -131,11 +171,14 @@ DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& ext_type) {
     case types::DECIMAL:
       // TODO: error handling
       return arrow::decimal(ext_type.precision(), ext_type.scale());
+    case types::TIME32:
+      return ProtoTypeToTime32(ext_type);
+    case types::TIME64:
+      return ProtoTypeToTime64(ext_type);
+    case types::TIMESTAMP:
+      return ProtoTypeToTimestamp(ext_type);
 
     case types::FIXED_SIZE_BINARY:
-    case types::TIMESTAMP:
-    case types::TIME32:
-    case types::TIME64:
     case types::INTERVAL:
     case types::LIST:
     case types::STRUCT:
@@ -225,6 +268,48 @@ NodePtr ProtoTypeToIfNode(const types::IfNode& node) {
   return TreeExprBuilder::MakeIf(cond, then_node, else_node, return_type);
 }
 
+NodePtr ProtoTypeToAndNode(const types::AndNode& node) {
+  NodeVector children;
+
+  for (int i = 0; i < node.args_size(); i++) {
+    const types::TreeNode& arg = node.args(i);
+
+    NodePtr n = ProtoTypeToNode(arg);
+    if (n == nullptr) {
+      std::cerr << "Unable to create argument for boolean and\n";
+      return nullptr;
+    }
+    children.push_back(n);
+  }
+  return TreeExprBuilder::MakeAnd(children);
+}
+
+NodePtr ProtoTypeToOrNode(const types::OrNode& node) {
+  NodeVector children;
+
+  for (int i = 0; i < node.args_size(); i++) {
+    const types::TreeNode& arg = node.args(i);
+
+    NodePtr n = ProtoTypeToNode(arg);
+    if (n == nullptr) {
+      std::cerr << "Unable to create argument for boolean or\n";
+      return nullptr;
+    }
+    children.push_back(n);
+  }
+  return TreeExprBuilder::MakeOr(children);
+}
+
+NodePtr ProtoTypeToNullNode(const types::NullNode& node) {
+  DataTypePtr data_type = ProtoTypeToDataType(node.type());
+  if (data_type == nullptr) {
+    std::cerr << "Unknown type " << data_type->ToString() << " for null node\n";
+    return nullptr;
+  }
+
+  return TreeExprBuilder::MakeNull(data_type);
+}
+
 NodePtr ProtoTypeToNode(const types::TreeNode& node) {
   if (node.has_fieldnode()) {
     return ProtoTypeToFieldNode(node.fieldnode());
@@ -236,6 +321,18 @@ NodePtr ProtoTypeToNode(const types::TreeNode& node) {
 
   if (node.has_ifnode()) {
     return ProtoTypeToIfNode(node.ifnode());
+  }
+
+  if (node.has_andnode()) {
+    return ProtoTypeToAndNode(node.andnode());
+  }
+
+  if (node.has_ornode()) {
+    return ProtoTypeToOrNode(node.ornode());
+  }
+
+  if (node.has_nullnode()) {
+    return ProtoTypeToNullNode(node.nullnode());
   }
 
   if (node.has_intnode()) {
