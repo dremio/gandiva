@@ -106,7 +106,7 @@ Status TimedEvaluate(SchemaPtr schema,
     std::vector<ArrayPtr> columns;
     for (int col = 0; col < num_fields; col++) {
       std::vector<C_TYPE> data = GenerateData<C_TYPE>(col, num_in_batch, fn_ptr);
-      std::vector<bool> validity (num_in_batch, true);
+      std::vector<bool> validity(num_in_batch, true);
       ArrayPtr col_data = MakeArrowArray<TYPE, C_TYPE>(data, validity);
 
       columns.push_back(col_data);

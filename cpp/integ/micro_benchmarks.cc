@@ -34,13 +34,14 @@ class TestBenchmarks : public ::testing::Test {
   arrow::MemoryPool* pool_;
 };
 
+unsigned int seed = 100;
 int32_t GenRandLessThan250(int field_num) {
-  auto num = rand();
+  auto num = rand_r(&seed);
   return (num % 250);
 }
 
 int64_t GenRandInt64(int field_num) {
-  return rand();
+  return rand_r(&seed);
 }
 
 TEST_F(TestBenchmarks, TimedTestAdd3) {
