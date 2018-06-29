@@ -89,6 +89,8 @@ function(add_lint)
     file(GLOB_RECURSE LINT_FILES
       "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
+      "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.cc"
       )
 
     find_program(CPPLINT_BIN NAMES cpplint cpplint.py HINTS ${BUILD_SUPPORT_DIR})
