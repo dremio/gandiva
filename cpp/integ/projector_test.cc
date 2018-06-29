@@ -88,9 +88,10 @@ TEST_F(TestProjector, TestIntSumSubCustomConfig) {
                                                   field_sub);
 
   std::shared_ptr<Projector> projector;
-  std::shared_ptr<Configuration> config;
+  ConfigurationBuilder config_builder;
+  std::shared_ptr<Configuration> config = config_builder.build();
 
-  Status status = Projector::Make(schema, {sum_expr, sub_expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {sum_expr, sub_expr}, pool_, config, &projector);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data

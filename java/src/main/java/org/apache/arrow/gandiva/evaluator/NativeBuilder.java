@@ -16,6 +16,8 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
+import static java.util.UUID.randomUUID;
+
 import org.apache.arrow.gandiva.exceptions.GandivaException;
 
 import java.io.File;
@@ -90,7 +92,10 @@ class NativeBuilder {
 
   private static File setupFile(String tmpDir, String libraryToLoad)
           throws IOException, GandivaException {
-    final File temp = new File(tmpDir, libraryToLoad);
+    // accommodate multiple processes running with gandiva jar.
+    // length should be ok since uuid is only 36 characters.
+    final String randomizeFileName = libraryToLoad + randomUUID();
+    final File temp = new File(tmpDir, randomizeFileName);
     if (temp.exists() && !temp.delete()) {
       throw new GandivaException("File: " + temp.getAbsolutePath()
               + " already exists and cannot be removed.");
