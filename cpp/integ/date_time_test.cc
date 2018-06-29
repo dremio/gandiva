@@ -36,7 +36,9 @@ class TestProjector : public ::testing::Test {
   arrow::MemoryPool* pool_;
 };
 
-long long MillisSince(time_t base_line, int yy, int mm, int dd, int hr, int min, int sec) {
+int64_t MillisSince(time_t base_line,
+                     int32_t yy, int32_t mm, int32_t dd,
+                     int32_t hr, int32_t min, int32_t sec) {
   struct tm given_ts = {0};
   given_ts.tm_year = (yy - 1900);
   given_ts.tm_mon = (mm - 1);
@@ -61,19 +63,38 @@ TEST_F(TestProjector, TestTime) {
   auto field_hour = field("hh", int64());
 
   // extract year and month from date
-  auto date2year_expr = TreeExprBuilder::MakeExpression("extractYear", {field0}, field_year);
-  auto date2month_expr = TreeExprBuilder::MakeExpression("extractMonth", {field0}, field_month);
+  auto date2year_expr = TreeExprBuilder::MakeExpression(
+    "extractYear",
+    {field0},
+    field_year);
+  auto date2month_expr = TreeExprBuilder::MakeExpression(
+    "extractMonth",
+    {field0},
+    field_month);
 
   // extract day and hour from time32
-  auto time2day_expr = TreeExprBuilder::MakeExpression("extractDay", {field1}, field_day);
-  auto time2hour_expr = TreeExprBuilder::MakeExpression("extractHour", {field1}, field_hour);
+  auto time2day_expr = TreeExprBuilder::MakeExpression(
+    "extractDay",
+    {field1},
+    field_day);
+  auto time2hour_expr = TreeExprBuilder::MakeExpression(
+    "extractHour",
+    {field1},
+    field_hour);
 
   // extract month and day from timestamp
-  auto ts2month_expr = TreeExprBuilder::MakeExpression("extractMonth", {field2}, field_month);
+  auto ts2month_expr = TreeExprBuilder::MakeExpression
+    ("extractMonth",
+    {field2},
+    field_month);
   auto ts2day_expr = TreeExprBuilder::MakeExpression("extractDay", {field2}, field_day);
 
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {date2year_expr, date2month_expr, ts2month_expr, ts2day_expr}, pool_, &projector);
+  Status status = Projector::Make(
+    schema,
+    {date2year_expr, date2month_expr, ts2month_expr, ts2day_expr},
+    pool_,
+    &projector);
   ASSERT_TRUE(status.ok());
 
   struct tm y1970 = {0};
@@ -90,7 +111,9 @@ TEST_F(TestProjector, TestTime) {
     MillisSince(epoch, 2015, 6, 30, 20, 0, 0),
     MillisSince(epoch, 2015, 7, 1, 20, 0, 0)
   };
-  auto array0 = MakeArrowTypeArray<arrow::Date64Type, int64_t>(date64(), field0_data, validity);
+  auto array0 = MakeArrowTypeArray<arrow::Date64Type, int64_t>(
+    date64(),
+    field0_data, validity);
 
   std::vector<int64_t> field1_data = {
     MillisSince(epoch, 2000, 1, 1, 5, 0, 0),
@@ -99,7 +122,10 @@ TEST_F(TestProjector, TestTime) {
     MillisSince(epoch, 2015, 7, 3, 3, 0, 0)
   };
 
-  auto array1 = MakeArrowTypeArray<arrow::Time32Type, int64_t>(time32(arrow::TimeUnit::MILLI), field1_data, validity);
+  auto array1 = MakeArrowTypeArray<arrow::Time32Type, int64_t>(
+    time32(arrow::TimeUnit::MILLI),
+    field1_data,
+    validity);
 
   std::vector<int64_t> field2_data = {
     MillisSince(epoch, 1999, 12, 31, 5, 0, 0),
@@ -108,7 +134,10 @@ TEST_F(TestProjector, TestTime) {
     MillisSince(epoch, 2015, 6, 29, 23, 0, 0)
   };
 
-  auto array2 = MakeArrowTypeArray<arrow::TimestampType, int64_t>(arrow::timestamp(arrow::TimeUnit::MILLI), field2_data, validity);
+  auto array2 = MakeArrowTypeArray<arrow::TimestampType, int64_t>(
+    arrow::timestamp(arrow::TimeUnit::MILLI),
+    field2_data,
+    validity);
 
   // expected output
   // date 2 year and date 2 month
