@@ -46,54 +46,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class NativeEvaluatorTest {
-
-  private final static String EMPTY_SCHEMA_PATH = "";
-
-  private BufferAllocator allocator;
-  private ArrowType boolType;
-
-  @Before
-  public void init() {
-    allocator = new RootAllocator(Long.MAX_VALUE);
-    boolType = new ArrowType.Bool();
-  }
-
-  ArrowBuf buf(byte[] bytes) {
-    ArrowBuf buffer = allocator.buffer(bytes.length);
-    buffer.writeBytes(bytes);
-    return buffer;
-  }
-
-  ArrowBuf intBuf(int[] ints) {
-    ArrowBuf buffer = allocator.buffer(ints.length * 4);
-    for (int i = 0; i < ints.length; i++) {
-      buffer.writeInt(ints[i]);
-    }
-    return buffer;
-  }
-
-  ArrowBuf longBuf(long[] longs) {
-    ArrowBuf buffer = allocator.buffer(longs.length * 8);
-    for (int i = 0; i < longs.length; i++) {
-      buffer.writeLong(longs[i]);
-    }
-    return buffer;
-  }
-
-  ArrowBuf doubleBuf(double[] data) {
-    ArrowBuf buffer = allocator.buffer(data.length * 8);
-    for (int i = 0; i < data.length; i++) {
-      buffer.writeDouble(data[i]);
-    }
-
-    return buffer;
-  }
-
+public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
   @Test
   public void testMakeProjector() throws GandivaException {
-    Field a = Field.nullable("a", new ArrowType.Int(64, true));
-    Field b = Field.nullable("b", new ArrowType.Int(64, true));
+    Field a = Field.nullable("a", int64);
+    Field b = Field.nullable("b", int64);
     TreeNode aNode = TreeBuilder.makeField(a);
     TreeNode bNode = TreeBuilder.makeField(b);
     List<TreeNode> args = Lists.newArrayList(aNode, bNode);
@@ -101,11 +58,10 @@ public class NativeEvaluatorTest {
     List<Field> cols = Lists.newArrayList(a, b);
     Schema schema = new Schema(cols);
 
-    ArrowType retType = new ArrowType.Int(64, true);
     TreeNode cond = TreeBuilder.makeFunction("greater_than", args, boolType);
-    TreeNode ifNode = TreeBuilder.makeIf(cond, aNode, bNode, retType);
+    TreeNode ifNode = TreeBuilder.makeIf(cond, aNode, bNode, int64);
 
-    ExpressionTree expr = TreeBuilder.makeExpression(ifNode, Field.nullable("c", retType));
+    ExpressionTree expr = TreeBuilder.makeExpression(ifNode, Field.nullable("c", int64));
     List<ExpressionTree> exprs = Lists.newArrayList(expr);
 
     NativeEvaluator evaluator1 = NativeEvaluator.makeProjector(schema, exprs);
@@ -119,11 +75,11 @@ public class NativeEvaluatorTest {
 
   @Test
   public void testEvaluate() throws GandivaException, Exception {
-    Field a = Field.nullable("a", new ArrowType.Int(32, true));
-    Field b = Field.nullable("b", new ArrowType.Int(32, true));
+    Field a = Field.nullable("a", int32);
+    Field b = Field.nullable("b", int32);
     List<Field> args = Lists.newArrayList(a, b);
 
-    Field retType = Field.nullable("c", new ArrowType.Int(32, true));
+    Field retType = Field.nullable("c", int32);
     ExpressionTree root = TreeBuilder.makeExpression("add", args, retType);
 
     List<ExpressionTree> exprs = Lists.newArrayList(root);
@@ -165,8 +121,6 @@ public class NativeEvaluatorTest {
 
   @Test
   public void testAdd3() throws GandivaException, Exception {
-    ArrowType int32 = new ArrowType.Int(32, true);
-
     Field x = Field.nullable("x", int32);
     Field N2x = Field.nullable("N2x", int32);
     Field N3x = Field.nullable("N3x", int32);
@@ -249,8 +203,6 @@ public class NativeEvaluatorTest {
      * when x < 100 then 9
      * else 10
      */
-    ArrowType int64 = new ArrowType.Int(64, true);
-
     Field x = Field.nullable("x", int64);
     TreeNode x_node = TreeBuilder.makeField(x);
 
@@ -310,7 +262,6 @@ public class NativeEvaluatorTest {
 
   @Test
   public void testIsNull() throws GandivaException, Exception {
-    ArrowType float64 = new ArrowType.FloatingPoint(FloatingPointPrecision.DOUBLE);
     Field x = Field.nullable("x", float64);
 
     TreeNode x_node = TreeBuilder.makeField(x);
@@ -351,7 +302,6 @@ public class NativeEvaluatorTest {
 
   @Test
   public void testEquals() throws GandivaException, Exception {
-    ArrowType int32 = new ArrowType.Int(32, true);
     Field c1 = Field.nullable("c1", int32);
     Field c2 = Field.nullable("c2", int32);
 
@@ -399,7 +349,6 @@ public class NativeEvaluatorTest {
 
   @Test
   public void testSmallOutputVectors() throws GandivaException, Exception {
-    ArrowType int32 = new ArrowType.Int(32, true);
     Field a = Field.nullable("a", int32);
     Field b = Field.nullable("b", int32);
     List<Field> args = Lists.newArrayList(a, b);
@@ -452,7 +401,6 @@ public class NativeEvaluatorTest {
   @Ignore
   @Test
   public void testUnknownFunction() {
-    ArrowType int8 = new ArrowType.Int(8, true);
     Field c1 = Field.nullable("c1", int8);
     Field c2 = Field.nullable("c2", int8);
 

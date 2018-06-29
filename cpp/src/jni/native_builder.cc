@@ -402,6 +402,7 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
    jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
   std::shared_ptr<ProjectorHolder> holder = MapLookup(module_id);
   if (holder == nullptr) {
+    std::cerr << "Unknown module id\n";
     ThrowException(env, "Unknown module id");
     return;
   }
@@ -469,6 +470,7 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
     return;
   }
 
+  std::cerr << "Evaluate returned " << status.message() << "\n";
   ThrowException(env, status.message());
 }
 
