@@ -63,6 +63,7 @@ public class NativeEvaluator {
    * @param schema Table schema. The field names in the schema should match the fields used
    *               to create the TreeNodes
    * @param exprs  List of expressions to be evaluated against data
+   *
    * @return A native evaluator object that can be used to invoke these projections on a RecordBatch
    */
   public static NativeEvaluator makeProjector(Schema schema, List<ExpressionTree> exprs)
@@ -75,8 +76,13 @@ public class NativeEvaluator {
 
     // Invoke the JNI layer to create the LLVM module representing the expressions
     GandivaTypes.Schema schemaBuf = ArrowTypeHelper.arrowSchemaToProtobuf(schema);
-    long moduleId = NativeBuilder.buildNativeCode(schemaBuf.toByteArray(),
-            builder.build().toByteArray());
+    NativeBuilder gandivaBridge = NativeBuilder.getInstance();
+    GandivaTypes.GandivaConfiguration.Builder configBuilder =
+            GandivaTypes.GandivaConfiguration.newBuilder();
+    GandivaTypes.GandivaConfiguration gandivaConfiguration =
+            configBuilder.setIrByteCodeFilePath(gandivaBridge.getByteCodeFilePath()).build();
+    long moduleId = gandivaBridge.buildNativeCode(schemaBuf.toByteArray(),
+            builder.build().toByteArray(), gandivaConfiguration.toByteArray());
     return new NativeEvaluator(moduleId, schema, exprs.size());
   }
 
@@ -87,7 +93,7 @@ public class NativeEvaluator {
    * @param outColumns Result of applying the project on the data
    */
   public void evaluate(ArrowRecordBatch recordBatch, List<ValueVector> outColumns)
-          throws GandivaException, Exception {
+          throws GandivaException {
     if (this.closed) {
       throw new EvaluatorClosedException();
     }
@@ -130,7 +136,7 @@ public class NativeEvaluator {
       valueVector.setValueCount(numRows);
     }
 
-    NativeBuilder.evaluate(this.moduleId, numRows,
+    NativeBuilder.getInstance().evaluate(this.moduleId, numRows,
             bufAddrs, bufSizes,
             outAddrs, outSizes);
   }
@@ -143,7 +149,7 @@ public class NativeEvaluator {
       return;
     }
 
-    NativeBuilder.close(this.moduleId);
+    NativeBuilder.getInstance().close(this.moduleId);
     this.closed = true;
   }
 }

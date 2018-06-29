@@ -16,26 +16,91 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
+import org.apache.arrow.gandiva.exceptions.GandivaException;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+
 /**
  * This class is implemented in JNI. This provides the Java interface
  * to invoke functions in JNI
  */
 class NativeBuilder {
   private static final String LIBRARY_NAME = "gandiva_jni";
+  private static final String IRHELPERS_BC = "irhelpers.bc";
 
-  static {
-    try {
-      // TODO: Load the gandiva_jni lib dynamically from a jar
-      System.loadLibrary(LIBRARY_NAME);
-    } catch (UnsatisfiedLinkError unsatisfiedLinkError) {
-      String errMsg = "Unable to load native library: "
-              + LIBRARY_NAME
-              + " due to "
-              + unsatisfiedLinkError.toString();
-      System.err.println(errMsg);
-      // TODO: Need to handle this better. Gandiva cannot exit in case of a failure
-      System.exit(1);
+  private static volatile NativeBuilder INSTANCE;
+
+  private final String byteCodeFilePath;
+
+  private NativeBuilder(String byteCodeFilePath) {
+    this.byteCodeFilePath = byteCodeFilePath;
+  }
+
+  static NativeBuilder getInstance() throws GandivaException {
+    if (INSTANCE == null) {
+      synchronized (NativeBuilder.class) {
+        if (INSTANCE == null) {
+          INSTANCE = setupInstance();
+        }
+      }
     }
+    return INSTANCE;
+  }
+
+  String getByteCodeFilePath() {
+    return byteCodeFilePath;
+  }
+
+  private static NativeBuilder setupInstance() throws GandivaException {
+    try {
+      String tempDir = System.getProperty("java.io.tmpdir");
+      loadGandivaLibraryFromJar(tempDir);
+      File byteCodeFile = moveFileFromJarToTemp(tempDir, IRHELPERS_BC);
+      return new NativeBuilder(byteCodeFile.getAbsolutePath());
+    } catch (IOException ioException) {
+      throw new GandivaException("unable to create native instance", ioException);
+    }
+  }
+
+  private static void loadGandivaLibraryFromJar(final String tmpDir)
+          throws IOException, GandivaException {
+    final String libraryToLoad = System.mapLibraryName(LIBRARY_NAME);
+    final File libraryFile = moveFileFromJarToTemp(tmpDir, libraryToLoad);
+    System.load(libraryFile.getAbsolutePath());
+  }
+
+
+  private static File moveFileFromJarToTemp(final String tmpDir, String libraryToLoad)
+          throws IOException, GandivaException {
+    final File temp = setupFile(tmpDir, libraryToLoad);
+    try (final InputStream is = NativeBuilder.class.getClassLoader()
+            .getResourceAsStream(libraryToLoad)) {
+      if (is == null) {
+        throw new GandivaException(libraryToLoad + " was not found inside JAR.");
+      } else {
+        Files.copy(is, temp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      }
+    }
+    return temp;
+  }
+
+  private static File setupFile(String tmpDir, String libraryToLoad)
+          throws IOException, GandivaException {
+    final File temp = new File(tmpDir, libraryToLoad);
+    if (temp.exists() && !temp.delete()) {
+      throw new GandivaException("File: " + temp.getAbsolutePath()
+              + " already exists and cannot be removed.");
+    }
+    if (!temp.createNewFile()) {
+      throw new GandivaException("File: " + temp.getAbsolutePath()
+              + " could not be created.");
+    }
+    temp.deleteOnExit();
+    return temp;
   }
 
   /**
@@ -45,9 +110,11 @@ class NativeBuilder {
    *                    to see the protobuf specification
    * @param exprListBuf The serialized protobuf of the expression vector. Each
    *                    expression is created using TreeBuilder::MakeExpression
+   * @param gandivaConfig Runtime config for Gandiva.
    * @return A moduleId that is passed to the evaluate() and close() methods
    */
-  static native long buildNativeCode(byte[] schemaBuf, byte[] exprListBuf);
+  native long buildNativeCode(byte[] schemaBuf, byte[] exprListBuf,
+                              byte[] gandivaConfig);
 
   /**
    * Evaluate the expressions represented by the moduleId on a record batch
@@ -66,7 +133,7 @@ class NativeBuilder {
    * @param outSizes The allocated size of the output buffers. On successful evaluation,
    *                 the result is stored in the output buffers
    */
-  static native void evaluate(long moduleId, int numRows,
+  native void evaluate(long moduleId, int numRows,
                               long[] bufAddrs, long[] bufSizes,
                               long[] outAddrs, long[] outSizes);
 
@@ -75,5 +142,5 @@ class NativeBuilder {
    *
    * @param moduleId moduleId that needs to be closed
    */
-  static native void close(long moduleId);
+  native void close(long moduleId);
 }

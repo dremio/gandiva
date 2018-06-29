@@ -20,12 +20,6 @@ source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
 pushd $CPP_BUILD_DIR
 
-# TODO : Temporary work around to copy the library to current java directory.
-# Follow-up work to take this as an argument in maven and loading the library
-# dynamically.
-# Covered in https://dremio.atlassian.net/browse/GDV-68
-cp $CPP_BUILD_DIR/src/jni/libgandiva_jni.so $GANDIVA_JAVA_DIR/libgandiva_jni.so
-
-mvn test -f $GANDIVA_JAVA_DIR/pom.xml
+mvn test -f $GANDIVA_JAVA_DIR/pom.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
 
 popd
