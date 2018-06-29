@@ -43,6 +43,10 @@ class Configuration {
   const std::string byte_code_file_path_;
 };
 
+/// \brief configuration builder for gandiva
+///
+/// Provides a default configuration and convenience methods
+/// to override specific values and build a custom instance
 class ConfigurationBuilder {
  public:
   ConfigurationBuilder() :
