@@ -45,7 +45,7 @@ Java_org_apache_arrow_gandiva_evaluator_ConfigurationBuilder_buildConfigInstance
   }
 
   jstring byte_code_file_path = (jstring) env->CallObjectMethod(configuration,
-                                                      byte_code_accessor_method_id_, 0);
+                                                 byte_code_accessor_method_id_, 0);
   ConfigurationBuilder configuration_builder;
   if (byte_code_file_path != nullptr) {
     const char *byte_code_file_path_cpp = env->GetStringUTFChars(byte_code_file_path, 0);
