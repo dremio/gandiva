@@ -46,6 +46,8 @@ NodePtr TreeExprBuilder::MakeBinaryLiteral(const std::string &value) {
 }
 
 NodePtr TreeExprBuilder::MakeNull(DataTypePtr data_type) {
+  static const std::string empty = "";
+
   if (data_type == nullptr) {
     return nullptr;
   }
@@ -75,7 +77,7 @@ NodePtr TreeExprBuilder::MakeNull(DataTypePtr data_type) {
     return std::make_shared<LiteralNode>(data_type, LiteralHolder((double_t)0), true);
   case arrow::Type::STRING:
   case arrow::Type::BINARY:
-    return std::make_shared<LiteralNode>(data_type, LiteralHolder(std::string("")), true);
+    return std::make_shared<LiteralNode>(data_type, LiteralHolder(empty), true);
   default:
     return nullptr;
   }
