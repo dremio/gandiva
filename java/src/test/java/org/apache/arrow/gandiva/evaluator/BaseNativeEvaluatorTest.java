@@ -172,6 +172,13 @@ class BaseNativeEvaluatorTest {
     long finish;
     long elapsedTime = 0;
 
+    // set up output vectors
+    // for each expression, generate the output vector
+    for (int i = 0; i < numExprs; i++) {
+      ValueVector valueVector = generator.generateOutputVector(maxRowsInBatch);
+      outputVectors.add(valueVector);
+    }
+
     // set the bitmap
     ArrowBuf validity = arrowBufWithAllValid(maxRowsInBatch);
     while (numRemaining > 0) {
@@ -194,13 +201,6 @@ class BaseNativeEvaluatorTest {
       // create record batch
       ArrowRecordBatch recordBatch = new ArrowRecordBatch(numRowsInBatch, fieldNodes, inputData);
 
-      // set up output vectors
-      // for each expression, generate the output vector
-      for (int i = 0; i < numExprs; i++) {
-        ValueVector valueVector = generator.generateOutputVector(numRowsInBatch);
-        outputVectors.add(valueVector);
-      }
-
       start = System.nanoTime();
       evaluator.evaluate(recordBatch, outputVectors);
       finish = System.nanoTime();
@@ -212,13 +212,8 @@ class BaseNativeEvaluatorTest {
       for(ArrowBuf buf : dataBufs) {
         buf.release();
       }
-      for(ValueVector valueVector : outputVectors) {
-        valueVector.getDataBuffer().release();
-        valueVector.getValidityBuffer().release();
-      }
       dataBufs.clear();
       inputData.clear();
-      outputVectors.clear();
       fieldNodes.clear();
     }
 

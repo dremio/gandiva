@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdlib.h>
 #include <gtest/gtest.h>
 #include "arrow/memory_pool.h"
 #include "integ/test_util.h"
+#include "integ/timed_evaluate.h"
 #include "gandiva/projector.h"
 #include "gandiva/status.h"
 #include "gandiva/tree_expr_builder.h"
@@ -33,16 +33,6 @@ class TestBenchmarks : public ::testing::Test {
  protected:
   arrow::MemoryPool* pool_;
 };
-
-unsigned int seed = 100;
-int32_t GenRandLessThan250(int field_num) {
-  auto num = rand_r(&seed);
-  return (num % 250);
-}
-
-int64_t GenRandInt64(int field_num) {
-  return rand_r(&seed);
-}
 
 TEST_F(TestBenchmarks, TimedTestAdd3) {
   // schema for input fields
@@ -69,12 +59,14 @@ TEST_F(TestBenchmarks, TimedTestAdd3) {
   EXPECT_TRUE(status.ok());
 
   int64_t elapsed_millis;
-  status = TimedEvaluate<arrow::Int64Type, int64_t>(schema,
-                                                    projector,
-                                                    GenRandInt64,
-                                                    100 * MILLION,
-                                                    16 * THOUSAND,
-                                                    elapsed_millis);
+  Int64DataGenerator data_generator;
+  status = TimedEvaluate<arrow::Int64Type, int64_t>(
+      schema,
+      projector,
+      data_generator,
+      100 * MILLION,
+      16 * THOUSAND,
+      elapsed_millis);
   ASSERT_TRUE(status.ok());
   std::cout << "Time taken for Add3 " << elapsed_millis << " ms\n";
 }
@@ -116,12 +108,14 @@ TEST_F(TestBenchmarks, TimedTestBigNested) {
   EXPECT_TRUE(status.ok());
 
   int64_t elapsed_millis;
-  status = TimedEvaluate<arrow::Int32Type, int32_t>(schema,
-                                                    projector,
-                                                    GenRandLessThan250,
-                                                    100 * MILLION,
-                                                    16 * THOUSAND,
-                                                    elapsed_millis);
+  BoundedInt32DataGenerator data_generator(250);
+  status = TimedEvaluate<arrow::Int32Type, int32_t>(
+      schema,
+      projector,
+      data_generator,
+      100 * MILLION,
+      16 * THOUSAND,
+      elapsed_millis);
   ASSERT_TRUE(status.ok());
   std::cout << "Time taken for BigNestedIf " << elapsed_millis << " ms\n";
 }

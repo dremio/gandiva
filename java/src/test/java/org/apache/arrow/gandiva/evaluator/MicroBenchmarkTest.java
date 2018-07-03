@@ -25,18 +25,14 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class MicroBenchmark extends BaseNativeEvaluatorTest {
-
+public class MicroBenchmarkTest extends BaseNativeEvaluatorTest {
   @Test
-  public void testAdd3() throws GandivaException, Exception {
+  public void testAdd3() throws Exception {
     Field x = Field.nullable("x", int32);
     Field N2x = Field.nullable("N2x", int32);
     Field N3x = Field.nullable("N3x", int32);
-
-    List<TreeNode> args = new ArrayList<TreeNode>();
 
     // x + N2x + N3x
     TreeNode add1 = TreeBuilder.makeFunction("add", Lists.newArrayList(TreeBuilder.makeField(x), TreeBuilder.makeField(N2x)), int32);
@@ -54,11 +50,9 @@ public class MicroBenchmark extends BaseNativeEvaluatorTest {
     System.out.println("Time taken for evaluating 100m records of add3 is " + timeTaken + "ms");
   }
 
-  // TODO: Using int64 in testIf causes the test to fail due to lack of memory
-  // Need to ensure that the native buffers are released early as part of the
-  // evaluation
   @Test
-  public void testIf() throws GandivaException, Exception {
+  public void testIf() throws Exception {
+    // TODO: Using int64 in testIf causes the test to fail due to lack of memory
     /*
      * when x < 10 then 0
      * when x < 20 then 1
