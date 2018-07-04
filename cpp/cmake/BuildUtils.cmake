@@ -87,6 +87,7 @@ find_program(CLANG_FORMAT_BIN NAMES clang-format)
 message(STATUS "Found clang-format executable at ${CLANG_FORMAT_BIN}")
 
 file(GLOB_RECURSE LINT_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
   "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.h"
