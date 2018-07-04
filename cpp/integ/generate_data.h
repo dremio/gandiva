@@ -21,12 +21,12 @@ namespace gandiva {
 
 template<typename C_TYPE>
 class DataGenerator {
-  public:
+ public:
     virtual C_TYPE GenerateData() = 0;
 };
 
 class Int32DataGenerator : public DataGenerator<int32_t> {
-  public:
+ public:
     Int32DataGenerator()
       : seed_(100) {}
 
@@ -34,25 +34,25 @@ class Int32DataGenerator : public DataGenerator<int32_t> {
       return rand_r(&seed_);
     }
 
-  protected:
+ protected:
     unsigned int seed_;
 };
 
 class BoundedInt32DataGenerator : public Int32DataGenerator {
-  public:
-    BoundedInt32DataGenerator(uint32_t upperBound)
+ public:
+    explicit BoundedInt32DataGenerator(uint32_t upperBound)
       : Int32DataGenerator(), upperBound_(upperBound) {}
 
     int32_t GenerateData() {
       return (rand_r(&seed_) % upperBound_);
     }
 
-  protected:
+ protected:
     uint32_t upperBound_;
 };
 
 class Int64DataGenerator : public DataGenerator<int64_t> {
-  public:
+ public:
     Int64DataGenerator()
       : seed_(100) {}
 
@@ -60,7 +60,7 @@ class Int64DataGenerator : public DataGenerator<int64_t> {
       return rand_r(&seed_);
     }
 
-  protected:
+ protected:
     unsigned int seed_;
 };
 

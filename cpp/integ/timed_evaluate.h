@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <vector>
 #include "gandiva/arrow.h"
 #include "gandiva/projector.h"
 #include "integ/generate_data.h"
