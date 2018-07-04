@@ -11,22 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include "jni/config_holder.h"
 
-#ifndef GANDIVA_LITERAL_HOLDER
-#define GANDIVA_LITERAL_HOLDER
-
-#include <string>
-
-#include <boost/variant.hpp>
+#include <cstdint>
 
 namespace gandiva {
+int64_t ConfigHolder::config_id_ = 1;
 
-using LiteralHolder = boost::variant<
-  bool, float, double,
-  int8_t, int16_t, int32_t, int64_t,
-  uint8_t, uint16_t, uint32_t, uint64_t,
-  std::string>;
+// map of configuration objects created so far
+std::unordered_map<int64_t, std::shared_ptr<Configuration>>
+  ConfigHolder::configuration_map_;
 
-} // namespace gandiva
-
-#endif //GANDIVA_LITERAL_HOLDER
+std::mutex ConfigHolder::g_mtx_;
+} //namespace gandiva

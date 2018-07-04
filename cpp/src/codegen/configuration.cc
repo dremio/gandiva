@@ -12,21 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GANDIVA_LITERAL_HOLDER
-#define GANDIVA_LITERAL_HOLDER
+#include "gandiva/configuration.h"
 
-#include <string>
-
-#include <boost/variant.hpp>
-
-namespace gandiva {
-
-using LiteralHolder = boost::variant<
-  bool, float, double,
-  int8_t, int16_t, int32_t, int64_t,
-  uint8_t, uint16_t, uint32_t, uint64_t,
-  std::string>;
-
-} // namespace gandiva
-
-#endif //GANDIVA_LITERAL_HOLDER
+namespace  gandiva {
+  const std::shared_ptr<Configuration>
+    ConfigurationBuilder::default_configuration_ = InitDefaultConfig();
+}

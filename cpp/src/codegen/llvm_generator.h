@@ -29,6 +29,7 @@
 #include "codegen/llvm_types.h"
 #include "codegen/lvalue.h"
 #include "codegen/value_validity_pair.h"
+#include "gandiva/configuration.h"
 #include "gandiva/gandiva_aliases.h"
 
 namespace gandiva {
@@ -39,7 +40,8 @@ class LLVMGenerator {
   ~LLVMGenerator();
 
   /// \brief Factory method to initialize the generator.
-  static Status Make(std::unique_ptr<LLVMGenerator> *llvm_generator);
+  static Status Make(std::shared_ptr<Configuration> config,
+                     std::unique_ptr<LLVMGenerator> *llvm_generator);
 
   /// \brief Build the code for the expression trees. Each element in the vector
   /// represents an expression tree
@@ -50,6 +52,7 @@ class LLVMGenerator {
                  const ArrayDataVector &output_vector);
 
   LLVMTypes *types() { return types_; }
+  llvm::Module *module() { return engine_->module(); }
 
  private:
   LLVMGenerator();
@@ -57,7 +60,6 @@ class LLVMGenerator {
   FRIEND_TEST(TestLLVMGenerator, TestAdd);
   FRIEND_TEST(TestLLVMGenerator, TestNullInternal);
 
-  llvm::Module *module() { return engine_->module(); }
   llvm::LLVMContext &context() { return *(engine_->context()); }
   llvm::IRBuilder<> &ir_builder() { return engine_->ir_builder(); }
 
@@ -72,7 +74,8 @@ class LLVMGenerator {
             llvm::Value *loop_var);
 
     void Visit(const VectorReadValidityDex &dex) override;
-    void Visit(const VectorReadValueDex &dex) override;
+    void Visit(const VectorReadFixedLenValueDex &dex) override;
+    void Visit(const VectorReadVarLenValueDex &dex) override;
     void Visit(const LocalBitMapValidityDex &dex) override;
     void Visit(const TrueDex &dex) override;
     void Visit(const FalseDex &dex) override;
@@ -107,7 +110,7 @@ class LLVMGenerator {
     std::vector<llvm::Value *> BuildParams(const ValueValidityPairVector &args,
                                            bool with_validity);
 
-    // Switch to the entry_block and get reference of the validity/value buffer
+    // Switch to the entry_block and get reference of the validity/value/offsets buffer
     llvm::Value *GetBufferReference(int idx, BufferType buffer_type, FieldPtr field);
 
     // Switch to the entry_block and get reference to the local bitmap.
@@ -143,6 +146,11 @@ class LLVMGenerator {
   llvm::Value *GetDataReference(llvm::Value *arg_addrs,
                                 int idx,
                                 FieldPtr field);
+
+  /// Generate code to load the vector at specified index and cast it as offsets array.
+  llvm::Value *GetOffsetsReference(llvm::Value *arg_addrs,
+                                   int idx,
+                                   FieldPtr field);
 
   /// Generate code for the value array of one expression.
   Status CodeGenExprValue(DexPtr value_expr,
