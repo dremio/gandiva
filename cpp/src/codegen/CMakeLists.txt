@@ -17,7 +17,7 @@ project(gandiva)
 # Find arrow
 find_package(ARROW)
 
-find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS system regex filesystem REQUIRED)
 
 set(BC_FILE_PATH_CC "${CMAKE_CURRENT_BINARY_DIR}/bc_file_path.cc")
 configure_file(bc_file_path.cc.in ${BC_FILE_PATH_CC})
