@@ -72,8 +72,8 @@ else
           $GANDIVA_CPP_DIR
 fi
 
-# Do the lint checks
-$TRAVIS_MAKE lint
+# Do the style checks
+$TRAVIS_MAKE stylecheck
 
 # Build and install libraries
 $TRAVIS_MAKE -j4

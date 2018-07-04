@@ -48,4 +48,5 @@ enable_testing()
 add_subdirectory(src)
 add_subdirectory(integ)
 
-add_lint()  # "make lint" target
+add_stylecheck()  # "make stylecheck" target
+add_stylefix()    # "make stylefix" target

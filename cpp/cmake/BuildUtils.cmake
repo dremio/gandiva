@@ -83,30 +83,42 @@ function(build_external PROJ)
                    EXCLUDE_FROM_ALL)
 endfunction(build_external PROJ)
 
-# Add "make lint" target
-function(add_lint)
+find_program(CLANG_FORMAT_BIN NAMES clang-format)
+message(STATUS "Found clang-format executable at ${CLANG_FORMAT_BIN}")
+
+file(GLOB_RECURSE LINT_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.cc"
+)
+
+# Add "make stylecheck" target
+function(add_stylecheck)
   if (UNIX)
-    file(GLOB_RECURSE LINT_FILES
-      "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
-      "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.cc"
-      )
-
-    find_program(CPPLINT_BIN NAMES cpplint cpplint.py HINTS ${BUILD_SUPPORT_DIR})
-    message(STATUS "Found cpplint executable at ${CPPLINT_BIN}")
-
-    # Full lint
-    # Balancing act: cpplint.py takes a non-trivial time to launch,
-    # so process 12 files per invocation, while still ensuring parallelism
-    add_custom_target(lint echo ${LINT_FILES} | xargs -n12 -P8
-    ${CPPLINT_BIN}
-    --verbose=2
-    --linelength=90
-    --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references
+    add_custom_target(stylecheck
+      COMMENT "Performing stylecheck on all .cpp/.h files"
+      # use ! to check for no replacement
+      COMMAND !
+      ${CLANG_FORMAT_BIN}
+      -style=file
+      -output-replacements-xml
+      ${LINT_FILES}
+      | grep "replacement offset"
     )
   endif (UNIX)
-endfunction(add_lint)
+endfunction(add_stylecheck)
+
+# Add "make stylefix" target
+function(add_stylefix)
+  if (UNIX)
+    add_custom_target(stylefix
+      COMMENT "Performing stylefix on all .cpp/.h files"
+      COMMAND
+      echo ${LINT_FILES} | xargs ${CLANG_FORMAT_BIN} -style=file -i
+    )
+  endif (UNIX)
+endfunction(add_stylefix)
 
 function(prevent_in_source_builds)
  file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
