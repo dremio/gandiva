@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Copyright (C) 2017-2018 Dremio Corporation
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -33,7 +33,7 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
         cmake \
         curl \
         ninja \
-        arrow-cpp \
+        arrow-cpp=0.8.0 \
         boost-cpp
 
     conda update -y -q -p $CPP_TOOLCHAIN ca-certificates -c defaults
