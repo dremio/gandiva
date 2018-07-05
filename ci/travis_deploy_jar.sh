@@ -17,4 +17,4 @@ set -e
 
 source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
-mvn deploy --settings $TRAVIS_BUILD_DIR/ci/settings.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
+mvn deploy -f $GANDIVA_JAVA_DIR/pom.xml --settings $TRAVIS_BUILD_DIR/ci/settings.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
