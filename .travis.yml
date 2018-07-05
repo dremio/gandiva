@@ -65,3 +65,12 @@ matrix:
 after_failure:
 - COREFILE=$(find . -maxdepth 2 -name "core*" | head -n 1)
 - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
+env:
+  matrix:
+  - secure: fwJQWGU3j65MYCra6h36cp8m66Q+AbHO8SzI+/kPECdd3y3HL86HqI1XOrjzIYUGEm5CSJtxoj4HF5nYWFU5PugQLlVZj/Ri/ggrt7qdy0DT8fXEy1BPy1MyFi8n0U45tVtbTcttr3RStAdT+g3uKtihX5KLsEmlqYCiI2xapm82jAdd9bbXMJQAihZY5t0ovA3p11BSZJgoXMj923UFdmM5YO9AMc8WevEU+GYGorg19hFPa1AO4oqZeqJoxaPxWEfdpDTTj9ngqwyuwuHJplnMFtyR7UiTLkp/NHxK2e6jQ4ViwB0QNn4Zoo3dce1Q99GS4w1UWDq+RFxW76YCgj254v5YKaVjuGRX+36I9G4rnaVKE/SpIAWCChtnhMtam9kYsmnfEbfL8XlojKQu3nl04qA2xosOwSSPtl1E/xAGae/JwFqWLXjnlXnrdt5CQiV5ctFg2PNtUlqWwt4OdhmbuUfggejaZkWfhExnAgbD9gr4qKNhzkK9csEO9leOln5o/oAoU8YDb/0t/exv0DdXnUn+b2UGTnWFA8TmyYWgscOMB9CCBjoUm/RURlooVthZq3souKCP7DwlJi2hVpFiE8nMVyLNSE2LM+9T3iorowuxZdVeD1KSRo32LhS4czcwXBnMzpmi8GlcUcbZj3RDGCm1Nc5czs4gLMGeCE8=
+  - secure: n4eyFRbV7LCzqfy6erFr9/GUxPbMsMNXroP+QBKSgiA4qDqBNh70tZAplAOT/9ounj1Jj8dJuruyFiJNv3IB68YBzTwM5IeNjDfhRiPTSpIiLSD65FLHJ7FrLY05FeCAGpqL+bF+dL2yqhrRIf1SScX9NW8TcUitdtqXdjxOvCT8hrU/oy+VJ6/xauj5f62Rx52HwiM2KHLZM3klbEMRQnIz9tk7IlgC2LtF4xaM8KWG5BHnFjXOq5AtHgN6FMEQIhHx98BFHNzwF+kqBB3nECWXp3rGuhYkThZyldbyAmmxr0gN6trSmXlx4RoFI0UP2X57xyVNquz8odPKYyPb8Uftu/PLaRPdcEcfgYwuoEyUnVh8B+xn/P9wgtbg7PCHKaFVRTpJowYhW/X70p+W9j2Nyh2ShFQfUo4b3JIVkBWBuJ/5y/+d64ky7rzf5rNSn2ZuB8CjYz6zW4uz/YullwYJzOTQc59o4mU4Aj47tdF9uHvj2LZLQExroufteqAyyMTRRv5spP1rfp4mB2ASUAN9SeytsrNMz7jnj11d+/drFxDS77TNIeE1W6EuTiI3N862QHhgUpV4BDl8OljK4c4ffAPuTW1yIEsIZrDl9fKjHJ6GcOTvpPn19ZRWvQ1aZus7rtqUofs2xackfVsjX0Dl5R8QlvuW86YZLxd1TK8=
+deploy:
+  provider: script
+  script: bash $TRAVIS_BUILD_DIR/ci/travis_deploy_jar.sh
+  on:
+    branch: master
