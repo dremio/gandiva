@@ -73,5 +73,5 @@ deploy:
   script: bash $TRAVIS_BUILD_DIR/ci/travis_deploy_jar.sh
   skip_cleanup: true
   on:
-    all_branches: true
+    branch: master
 
