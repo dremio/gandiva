@@ -72,5 +72,4 @@ deploy:
   provider: script
   script: bash $TRAVIS_BUILD_DIR/ci/travis_deploy_jar.sh
   on:
-    tags: true
     all_branches: true
