@@ -14,45 +14,45 @@
 
 #include <google/protobuf/io/coded_stream.h>
 
+#include <map>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
-#include <memory>
-#include <map>
 
 #include <arrow/builder.h>
 #include <arrow/record_batch.h>
 #include <arrow/type.h>
 
-#include "jni/org_apache_arrow_gandiva_evaluator_NativeBuilder.h"
-#include "jni/module_holder.h"
-#include "jni/config_holder.h"
 #include "Types.pb.h"
 #include "gandiva/configuration.h"
 #include "gandiva/tree_expr_builder.h"
+#include "jni/config_holder.h"
+#include "jni/module_holder.h"
+#include "jni/org_apache_arrow_gandiva_evaluator_NativeBuilder.h"
 
-#define INIT_MODULE_ID   (4)
+#define INIT_MODULE_ID (4)
 
 using gandiva::DataTypePtr;
-using gandiva::FieldPtr;
-using gandiva::FieldVector;
-using gandiva::SchemaPtr;
-using gandiva::NodePtr;
-using gandiva::NodeVector;
 using gandiva::ExpressionPtr;
 using gandiva::ExpressionVector;
-using gandiva::TreeExprBuilder;
+using gandiva::FieldPtr;
+using gandiva::FieldVector;
+using gandiva::NodePtr;
+using gandiva::NodeVector;
 using gandiva::Projector;
+using gandiva::SchemaPtr;
+using gandiva::TreeExprBuilder;
 
 using gandiva::ArrayDataVector;
-using gandiva::ProjectorHolder;
+using gandiva::ConfigHolder;
 using gandiva::Configuration;
 using gandiva::ConfigurationBuilder;
-using gandiva::ConfigHolder;
+using gandiva::ProjectorHolder;
 
 // forward declarations
-NodePtr ProtoTypeToNode(const types::TreeNode& node);
+NodePtr ProtoTypeToNode(const types::TreeNode &node);
 
 // map from module ids returned to Java and module pointers
 std::unordered_map<jlong, std::shared_ptr<ProjectorHolder>> projector_modules_map_;
@@ -69,7 +69,7 @@ jlong MapInsert(std::shared_ptr<ProjectorHolder> holder) {
 
   jlong result = projector_module_id_++;
   projector_modules_map_.insert(
-    std::pair<jlong, std::shared_ptr<ProjectorHolder>>(result, holder));
+      std::pair<jlong, std::shared_ptr<ProjectorHolder>>(result, holder));
 
   g_mtx_.unlock();
 
@@ -87,13 +87,13 @@ std::shared_ptr<ProjectorHolder> MapLookup(jlong module_id) {
 
   try {
     result = projector_modules_map_.at(module_id);
-  } catch (const std::out_of_range& e) {
+  } catch (const std::out_of_range &e) {
   }
 
   return result;
 }
 
-DataTypePtr ProtoTypeToTime32(const types::ExtGandivaType& ext_type) {
+DataTypePtr ProtoTypeToTime32(const types::ExtGandivaType &ext_type) {
   switch (ext_type.timeunit()) {
     case types::SEC:
       return arrow::time32(arrow::TimeUnit::SECOND);
@@ -105,7 +105,7 @@ DataTypePtr ProtoTypeToTime32(const types::ExtGandivaType& ext_type) {
   }
 }
 
-DataTypePtr ProtoTypeToTime64(const types::ExtGandivaType& ext_type) {
+DataTypePtr ProtoTypeToTime64(const types::ExtGandivaType &ext_type) {
   switch (ext_type.timeunit()) {
     case types::MICROSEC:
       return arrow::time64(arrow::TimeUnit::MICRO);
@@ -117,7 +117,7 @@ DataTypePtr ProtoTypeToTime64(const types::ExtGandivaType& ext_type) {
   }
 }
 
-DataTypePtr ProtoTypeToTimestamp(const types::ExtGandivaType& ext_type) {
+DataTypePtr ProtoTypeToTimestamp(const types::ExtGandivaType &ext_type) {
   switch (ext_type.timeunit()) {
     case types::SEC:
       return arrow::timestamp(arrow::TimeUnit::SECOND);
@@ -133,7 +133,7 @@ DataTypePtr ProtoTypeToTimestamp(const types::ExtGandivaType& ext_type) {
   }
 }
 
-DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& ext_type) {
+DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType &ext_type) {
   switch (ext_type.type()) {
     case types::NONE:
       return arrow::null();
@@ -195,7 +195,7 @@ DataTypePtr ProtoTypeToDataType(const types::ExtGandivaType& ext_type) {
   }
 }
 
-FieldPtr ProtoTypeToField(const types::Field& f) {
+FieldPtr ProtoTypeToField(const types::Field &f) {
   const std::string &name = f.name();
   DataTypePtr type = ProtoTypeToDataType(f.type());
   bool nullable = true;
@@ -206,7 +206,7 @@ FieldPtr ProtoTypeToField(const types::Field& f) {
   return field(name, type, nullable);
 }
 
-NodePtr ProtoTypeToFieldNode(const types::FieldNode& node) {
+NodePtr ProtoTypeToFieldNode(const types::FieldNode &node) {
   FieldPtr field_ptr = ProtoTypeToField(node.field());
   if (field_ptr == nullptr) {
     std::cerr << "Unable to create field node from protobuf\n";
@@ -216,12 +216,12 @@ NodePtr ProtoTypeToFieldNode(const types::FieldNode& node) {
   return TreeExprBuilder::MakeField(field_ptr);
 }
 
-NodePtr ProtoTypeToFnNode(const types::FunctionNode& node) {
+NodePtr ProtoTypeToFnNode(const types::FunctionNode &node) {
   const std::string &name = node.functionname();
   NodeVector children;
 
   for (int i = 0; i < node.inargs_size(); i++) {
-    const types::TreeNode& arg = node.inargs(i);
+    const types::TreeNode &arg = node.inargs(i);
 
     NodePtr n = ProtoTypeToNode(arg);
     if (n == nullptr) {
@@ -241,7 +241,7 @@ NodePtr ProtoTypeToFnNode(const types::FunctionNode& node) {
   return TreeExprBuilder::MakeFunction(name, children, return_type);
 }
 
-NodePtr ProtoTypeToIfNode(const types::IfNode& node) {
+NodePtr ProtoTypeToIfNode(const types::IfNode &node) {
   NodePtr cond = ProtoTypeToNode(node.cond());
   if (cond == nullptr) {
     std::cerr << "Unable to create cond node for if node\n";
@@ -269,11 +269,11 @@ NodePtr ProtoTypeToIfNode(const types::IfNode& node) {
   return TreeExprBuilder::MakeIf(cond, then_node, else_node, return_type);
 }
 
-NodePtr ProtoTypeToAndNode(const types::AndNode& node) {
+NodePtr ProtoTypeToAndNode(const types::AndNode &node) {
   NodeVector children;
 
   for (int i = 0; i < node.args_size(); i++) {
-    const types::TreeNode& arg = node.args(i);
+    const types::TreeNode &arg = node.args(i);
 
     NodePtr n = ProtoTypeToNode(arg);
     if (n == nullptr) {
@@ -285,11 +285,11 @@ NodePtr ProtoTypeToAndNode(const types::AndNode& node) {
   return TreeExprBuilder::MakeAnd(children);
 }
 
-NodePtr ProtoTypeToOrNode(const types::OrNode& node) {
+NodePtr ProtoTypeToOrNode(const types::OrNode &node) {
   NodeVector children;
 
   for (int i = 0; i < node.args_size(); i++) {
-    const types::TreeNode& arg = node.args(i);
+    const types::TreeNode &arg = node.args(i);
 
     NodePtr n = ProtoTypeToNode(arg);
     if (n == nullptr) {
@@ -301,7 +301,7 @@ NodePtr ProtoTypeToOrNode(const types::OrNode& node) {
   return TreeExprBuilder::MakeOr(children);
 }
 
-NodePtr ProtoTypeToNullNode(const types::NullNode& node) {
+NodePtr ProtoTypeToNullNode(const types::NullNode &node) {
   DataTypePtr data_type = ProtoTypeToDataType(node.type());
   if (data_type == nullptr) {
     std::cerr << "Unknown type " << data_type->ToString() << " for null node\n";
@@ -311,7 +311,7 @@ NodePtr ProtoTypeToNullNode(const types::NullNode& node) {
   return TreeExprBuilder::MakeNull(data_type);
 }
 
-NodePtr ProtoTypeToNode(const types::TreeNode& node) {
+NodePtr ProtoTypeToNode(const types::TreeNode &node) {
   if (node.has_fieldnode()) {
     return ProtoTypeToFieldNode(node.fieldnode());
   }
@@ -356,11 +356,19 @@ NodePtr ProtoTypeToNode(const types::TreeNode& node) {
     return TreeExprBuilder::MakeLiteral(node.doublenode().value());
   }
 
+  if (node.has_stringnode()) {
+    return TreeExprBuilder::MakeStringLiteral(node.stringnode().value());
+  }
+
+  if (node.has_binarynode()) {
+    return TreeExprBuilder::MakeBinaryLiteral(node.binarynode().value());
+  }
+
   std::cerr << "Unknown node type in protobuf\n";
   return nullptr;
 }
 
-ExpressionPtr ProtoTypeToExpression(const types::ExpressionRoot& root) {
+ExpressionPtr ProtoTypeToExpression(const types::ExpressionRoot &root) {
   NodePtr root_node = ProtoTypeToNode(root.root());
   if (root_node == nullptr) {
     std::cerr << "Unable to create expression node from expression protobuf\n";
@@ -376,7 +384,7 @@ ExpressionPtr ProtoTypeToExpression(const types::ExpressionRoot& root) {
   return TreeExprBuilder::MakeExpression(root_node, field);
 }
 
-SchemaPtr ProtoTypeToSchema(const types::Schema& schema) {
+SchemaPtr ProtoTypeToSchema(const types::Schema &schema) {
   std::vector<FieldPtr> fields;
 
   for (int i = 0; i < schema.columns_size(); i++) {
@@ -413,20 +421,16 @@ void ThrowException(JNIEnv *env, const std::string msg) {
   env->ThrowNew(gandiva_exception_, msg.c_str());
 }
 
-void releaseInput(jbyteArray schema_arr,
-                  jbyte *schema_bytes,
-                  jbyteArray exprs_arr,
-                  jbyte *exprs_bytes,
-                  JNIEnv *env
-                  ) {
+void releaseInput(jbyteArray schema_arr, jbyte *schema_bytes, jbyteArray exprs_arr,
+                  jbyte *exprs_bytes, JNIEnv *env) {
   env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
   env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
-  (JNIEnv *env, jobject obj, jbyteArray schema_arr, jbyteArray exprs_arr,
-   jlong configuration_id) {
+Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode(
+    JNIEnv *env, jobject obj, jbyteArray schema_arr, jbyteArray exprs_arr,
+    jlong configuration_id) {
   jlong module_id = 0LL;
   std::shared_ptr<Projector> projector;
   std::shared_ptr<ProjectorHolder> holder;
@@ -486,8 +490,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   }
 
   // good to invoke the evaluator now
-  status = Projector::Make(schema_ptr, expr_vector, nullptr,
-                             config, &projector);
+  status = Projector::Make(schema_ptr, expr_vector, nullptr, config, &projector);
 
   if (!status.ok()) {
     std::cerr << "Failed to make LLVM module due to " << status.message() << "\n";
@@ -496,9 +499,8 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode
   }
 
   // store the result in a map
-  holder = std::shared_ptr<ProjectorHolder>(new ProjectorHolder(schema_ptr,
-                                                                ret_types,
-                                                                std::move(projector)));
+  holder = std::shared_ptr<ProjectorHolder>(
+      new ProjectorHolder(schema_ptr, ret_types, std::move(projector)));
   module_id = MapInsert(holder);
   releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
   return module_id;
@@ -508,15 +510,38 @@ err_out:
   return module_id;
 }
 
-JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate
-  (JNIEnv *env, jobject cls,
-   jlong module_id, jint num_rows,
-   jlongArray buf_addrs, jlongArray buf_sizes,
-   jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
+#define CHECK_IN_BUFFER_IDX_AND_BREAK(idx, len)                               \
+  if (idx >= len) {                                                           \
+    status = gandiva::Status::Invalid("insufficient number of in_buf_addrs"); \
+    break;                                                                    \
+  }
+
+#define CHECK_OUT_BUFFER_IDX_AND_BREAK(idx, len)                               \
+  if (idx >= len) {                                                            \
+    status = gandiva::Status::Invalid("insufficient number of out_buf_addrs"); \
+    break;                                                                     \
+  }
+
+JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate(
+    JNIEnv *env, jobject cls, jlong module_id, jint num_rows, jlongArray buf_addrs,
+    jlongArray buf_sizes, jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
+  gandiva::Status status;
   std::shared_ptr<ProjectorHolder> holder = MapLookup(module_id);
   if (holder == nullptr) {
     std::cerr << "Unknown module id\n";
     ThrowException(env, "Unknown module id");
+    return;
+  }
+
+  int in_bufs_len = env->GetArrayLength(buf_addrs);
+  if (in_bufs_len != env->GetArrayLength(buf_sizes)) {
+    ThrowException(env, "mismatch in arraylen of buf_addrs and buf_sizes");
+    return;
+  }
+
+  int out_bufs_len = env->GetArrayLength(out_buf_addrs);
+  if (out_bufs_len != env->GetArrayLength(out_buf_sizes)) {
+    ThrowException(env, "mismatch in arraylen of out_buf_addrs and out_buf_sizes");
     return;
   }
 
@@ -526,68 +551,92 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
   jlong *out_bufs = env->GetLongArrayElements(out_buf_addrs, 0);
   jlong *out_sizes = env->GetLongArrayElements(out_buf_sizes, 0);
 
-  auto schema = holder->schema();
-  std::vector<std::shared_ptr<arrow::ArrayData>> columns;
-  auto num_fields = schema->num_fields();
-  int buf_idx = 0;
-  int sz_idx = 0;
+  do {
+    auto schema = holder->schema();
+    std::vector<std::shared_ptr<arrow::ArrayData>> columns;
+    auto num_fields = schema->num_fields();
+    int buf_idx = 0;
+    int sz_idx = 0;
 
-  for (int i = 0; i < num_fields; i++) {
-    auto field = schema->field(i);
-    jlong validity_addr = in_buf_addrs[buf_idx++];
-    jlong value_addr = in_buf_addrs[buf_idx++];
+    for (int i = 0; i < num_fields; i++) {
+      auto field = schema->field(i);
+      std::vector<std::shared_ptr<arrow::Buffer>> buffers;
 
-    jlong validity_size = in_buf_sizes[sz_idx++];
-    jlong value_size = in_buf_sizes[sz_idx++];
+      CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
+      jlong validity_addr = in_buf_addrs[buf_idx++];
+      jlong validity_size = in_buf_sizes[sz_idx++];
+      auto validity = std::shared_ptr<arrow::Buffer>(
+          new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
+      buffers.push_back(validity);
 
-    auto validity = std::shared_ptr<arrow::Buffer>(
-      new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
-    auto data = std::shared_ptr<arrow::Buffer>(
-      new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
+      CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
+      jlong value_addr = in_buf_addrs[buf_idx++];
+      jlong value_size = in_buf_sizes[sz_idx++];
+      auto data = std::shared_ptr<arrow::Buffer>(
+          new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
+      buffers.push_back(data);
 
-    auto array_data = arrow::ArrayData::Make(field->type(), num_rows, {validity, data});
-    columns.push_back(array_data);
-  }
+      if (arrow::is_binary_like(field->type()->id())) {
+        CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
 
-  auto ret_types = holder->rettypes();
-  ArrayDataVector output;
-  buf_idx = 0;
-  sz_idx = 0;
-  for (FieldPtr field : ret_types) {
-    uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
-    uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
+        // add offsets buffer for variable-len fields.
+        jlong offsets_addr = in_buf_addrs[buf_idx++];
+        jlong offsets_size = in_buf_sizes[sz_idx++];
+        auto offsets = std::shared_ptr<arrow::Buffer>(
+            new arrow::Buffer(reinterpret_cast<uint8_t *>(offsets_addr), offsets_size));
+        buffers.push_back(offsets);
+      }
 
-    jlong bitmap_sz = out_sizes[sz_idx++];
-    jlong data_sz = out_sizes[sz_idx++];
+      auto array_data =
+          arrow::ArrayData::Make(field->type(), num_rows, std::move(buffers));
+      columns.push_back(array_data);
+    }
+    if (!status.ok()) {
+      break;
+    }
 
-    std::shared_ptr<arrow::MutableBuffer> bitmap_buf =
-      std::make_shared<arrow::MutableBuffer>(validity_buf, bitmap_sz);
-    std::shared_ptr<arrow::MutableBuffer> data_buf =
-      std::make_shared<arrow::MutableBuffer>(value_buf, data_sz);
+    auto ret_types = holder->rettypes();
+    ArrayDataVector output;
+    buf_idx = 0;
+    sz_idx = 0;
+    for (FieldPtr field : ret_types) {
+      CHECK_OUT_BUFFER_IDX_AND_BREAK(buf_idx, out_bufs_len);
+      uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
+      jlong bitmap_sz = out_sizes[sz_idx++];
+      std::shared_ptr<arrow::MutableBuffer> bitmap_buf =
+          std::make_shared<arrow::MutableBuffer>(validity_buf, bitmap_sz);
 
-    auto array_data = arrow::ArrayData::Make(field->type(),
-                                             num_rows,
-                                             {bitmap_buf, data_buf});
-    output.push_back(array_data);
-  }
+      CHECK_OUT_BUFFER_IDX_AND_BREAK(buf_idx, out_bufs_len);
+      uint8_t *value_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
+      jlong data_sz = out_sizes[sz_idx++];
+      std::shared_ptr<arrow::MutableBuffer> data_buf =
+          std::make_shared<arrow::MutableBuffer>(value_buf, data_sz);
 
-  auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
-  gandiva::Status status = holder->projector()->Evaluate(*in_batch, output);
+      auto array_data =
+          arrow::ArrayData::Make(field->type(), num_rows, {bitmap_buf, data_buf});
+      output.push_back(array_data);
+    }
+    if (!status.ok()) {
+      break;
+    }
+
+    auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
+    status = holder->projector()->Evaluate(*in_batch, output);
+  } while (0);
 
   env->ReleaseLongArrayElements(buf_addrs, in_buf_addrs, JNI_ABORT);
   env->ReleaseLongArrayElements(buf_sizes, in_buf_sizes, JNI_ABORT);
   env->ReleaseLongArrayElements(out_buf_addrs, out_bufs, JNI_ABORT);
   env->ReleaseLongArrayElements(out_buf_sizes, out_sizes, JNI_ABORT);
 
-  if (status.ok()) {
+  if (!status.ok()) {
+    std::cerr << "Evaluate returned " << status.message() << "\n";
+    ThrowException(env, status.message());
     return;
   }
-
-  std::cerr << "Evaluate returned " << status.message() << "\n";
-  ThrowException(env, status.message());
 }
 
-JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_close
-  (JNIEnv *env, jobject cls, jlong module_id) {
+JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_close(
+    JNIEnv *env, jobject cls, jlong module_id) {
   MapErase(module_id);
 }

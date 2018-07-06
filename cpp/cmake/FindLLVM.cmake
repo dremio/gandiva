@@ -27,9 +27,11 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 # Find the libraries that correspond to the LLVM components
 llvm_map_components_to_libnames(LLVM_LIBS core mcjit native ipo bitreader target linker analysis debuginfodwarf)
 
-# Convenience function for targets to link llvm.
-function(target_link_llvm TARGET TYPE)
-  target_include_directories(${TARGET} ${TYPE} ${LLVM_INCLUDE_DIRS})
-  target_compile_definitions(${TARGET} ${TYPE} ${LLVM_DEFINITIONS})
-  target_link_libraries(${TARGET} ${TYPE} ${LLVM_LIBS})
-endfunction()
+add_library(LLVM::LLVM_INTERFACE INTERFACE IMPORTED)
+
+set_target_properties(LLVM::LLVM_INTERFACE PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES "${LLVM_INCLUDE_DIRS}"
+  INTERFACE_COMPILE_FLAGS "${LLVM_DEFINITIONS}"
+  INTERFACE_LINK_LIBRARIES "${LLVM_LIBS}"
+)
+

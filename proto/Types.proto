@@ -132,18 +132,32 @@ message LongNode {
   optional int64 value = 1;
 }
 
+message StringNode {
+  optional bytes value = 1;
+}
+
+message BinaryNode {
+  optional bytes value = 1;
+}
+
 message TreeNode {
   optional FieldNode fieldNode = 1;
   optional FunctionNode fnNode = 2;
-  optional IfNode ifNode = 3;
-  optional IntNode intNode = 4;
-  optional FloatNode floatNode = 5;
-  optional LongNode longNode = 6;
-  optional BooleanNode booleanNode = 7;
-  optional DoubleNode doubleNode = 8;
-  optional AndNode andNode = 9;
-  optional OrNode orNode = 10;
+
+  // control expressions
+  optional IfNode ifNode = 6;
+  optional AndNode andNode = 7;
+  optional OrNode orNode = 8;
+
+  // literals
   optional NullNode nullNode = 11;
+  optional IntNode intNode = 12;
+  optional FloatNode floatNode = 13;
+  optional LongNode longNode = 14;
+  optional BooleanNode booleanNode = 15;
+  optional DoubleNode doubleNode = 16;
+  optional StringNode stringNode = 17;
+  optional BinaryNode binaryNode = 18;
 }
 
 message ExpressionRoot {

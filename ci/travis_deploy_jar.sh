@@ -13,28 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Adapted from Apache Arrow
+set -e
 
 source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
-source $TRAVIS_BUILD_DIR/ci/travis_install_conda.sh
-
-# Pinning Gandiva to Arrow 0.8 version. We are seeing seg-faults with
-# 0.9 version. Will be tracked in https://dremio.atlassian.net/browse/GDV-69.
-if [ ! -e $CPP_TOOLCHAIN ]; then
-    # Set up C++ toolchain from conda-forge packages for faster builds
-    conda create -y -q -p $CPP_TOOLCHAIN python=2.7 \
-        flatbuffers \
-        libprotobuf \
-        gflags \
-        gtest \
-        ccache \
-        cmake \
-        curl \
-        ninja \
-        arrow-cpp=0.8.0 \
-        boost-cpp
-
-    conda update -y -q -p $CPP_TOOLCHAIN ca-certificates -c defaults
-fi
+mvn deploy -f $GANDIVA_JAVA_DIR/pom.xml --settings $TRAVIS_BUILD_DIR/ci/ossrh_settings.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
