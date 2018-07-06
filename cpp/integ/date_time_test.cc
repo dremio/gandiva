@@ -273,7 +273,7 @@ TEST_F(TestProjector, TestTimestampDiff) {
   EXPECT_TRUE(status.ok());
 
   // Validate results
-  for (int i = 0; i < exp_output.size(); i++) {
+  for (uint32_t i = 0; i < exp_output.size(); i++) {
     EXPECT_ARROW_ARRAY_EQUALS(exp_output.at(i), outputs.at(i));
   }
 }
