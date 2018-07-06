@@ -101,84 +101,78 @@ using std::vector;
   NUMERIC_TYPES(INNER, NAME), INNER(NAME, boolean)
 
 // Iterate the inner macro over all data types
-#define DATE_TYPES(INNER, NAME) \
-  INNER(NAME, date64), INNER(NAME, timestamp)
+#define DATE_TYPES(INNER, NAME) INNER(NAME, date64), INNER(NAME, timestamp)
 
-#define TIME_TYPES(INNER, NAME) \
-  INNER(NAME, time32)
+#define TIME_TYPES(INNER, NAME) INNER(NAME, time32)
 
 // Iterate the inner macro over all data types
 #define VAR_LEN_TYPES(INNER, NAME) INNER(NAME, utf8), INNER(NAME, binary)
 
 // list of registered native functions.
 NativeFunction FunctionRegistry::pc_registry_[] = {
-  // Arithmetic operations
-  NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, add),
-  NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, subtract),
-  NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, multiply),
-  NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, divide),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int32, int32),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int64, int64),
-  NUMERIC_AND_BOOL_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, equal),
-  NUMERIC_AND_BOOL_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, not_equal),
-  NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than),
-  NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than_or_equal_to),
-  NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than),
-  NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than_or_equal_to),
+    // Arithmetic operations
+    NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, add),
+    NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, subtract),
+    NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, multiply),
+    NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, divide),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int32, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int64, int64),
+    NUMERIC_AND_BOOL_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, equal),
+    NUMERIC_AND_BOOL_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, not_equal),
+    NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than),
+    NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than_or_equal_to),
+    NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than),
+    NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than_or_equal_to),
 
-  // cast operations
-  UNARY_SAFE_NULL_IF_NULL(castBIGINT, int32, int64),
-  UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int32, float32),
-  UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int64, float32),
-  UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int32, float64),
-  UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int64, float64),
-  UNARY_SAFE_NULL_IF_NULL(castFLOAT8, float32, float64),
+    // cast operations
+    UNARY_SAFE_NULL_IF_NULL(castBIGINT, int32, int64),
+    UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int32, float32),
+    UNARY_SAFE_NULL_IF_NULL(castFLOAT4, int64, float32),
+    UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int32, float64),
+    UNARY_SAFE_NULL_IF_NULL(castFLOAT8, int64, float64),
+    UNARY_SAFE_NULL_IF_NULL(castFLOAT8, float32, float64),
 
-  // nullable never operations
-  NUMERIC_AND_BOOL_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnull),
-  NUMERIC_AND_BOOL_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnotnull),
-  NUMERIC_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnumeric),
+    // nullable never operations
+    NUMERIC_AND_BOOL_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnull),
+    NUMERIC_AND_BOOL_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnotnull),
+    NUMERIC_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnumeric),
 
-  // date/timestamp operations
-  DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractYear),
-  DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMonth),
-  DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDay),
-  DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
-  DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
+    // date/timestamp operations
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractYear),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMonth),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDay),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
 
-  // time operations
-  TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
-  TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
+    // time operations
+    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
+    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
 
-  // timestamp diff operations
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffSecond, timestamp, timestamp, int32),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffMinute, timestamp, timestamp, int32),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffHour, timestamp, timestamp, int32),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffDay, timestamp, timestamp, int32),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffWeek, timestamp, timestamp, int32),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffMonth, timestamp, timestamp, int32),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffQuarter, timestamp, timestamp, int32),
-  BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffYear, timestamp, timestamp, int32),
+    // timestamp diff operations
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffSecond, timestamp, timestamp, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffMinute, timestamp, timestamp, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffHour, timestamp, timestamp, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffDay, timestamp, timestamp, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffWeek, timestamp, timestamp, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffMonth, timestamp, timestamp, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffQuarter, timestamp, timestamp, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffYear, timestamp, timestamp, int32),
 
-  // utf8/binary operations
-  UNARY_SAFE_NULL_IF_NULL(octet_length, utf8, int32),
-  UNARY_SAFE_NULL_IF_NULL(octet_length, binary, int32),
-  UNARY_SAFE_NULL_IF_NULL(bit_length, utf8, int32),
-  UNARY_SAFE_NULL_IF_NULL(bit_length, binary, int32),
-  VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, equal),
-  VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, not_equal),
-  VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than),
-  VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than_or_equal_to),
-  VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than),
-  VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than_or_equal_to),
+    // utf8/binary operations
+    UNARY_SAFE_NULL_IF_NULL(octet_length, utf8, int32),
+    UNARY_SAFE_NULL_IF_NULL(octet_length, binary, int32),
+    UNARY_SAFE_NULL_IF_NULL(bit_length, utf8, int32),
+    UNARY_SAFE_NULL_IF_NULL(bit_length, binary, int32),
+    VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, equal),
+    VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, not_equal),
+    VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than),
+    VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than_or_equal_to),
+    VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than),
+    VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than_or_equal_to),
 
-  // Null internal (sample)
-  NativeFunction("half_or_null",
-    DataTypeVector{int32()},
-    int32(),
-    true,
-    RESULT_NULL_INTERNAL,
-    "half_or_null_int32"),
+    // Null internal (sample)
+    NativeFunction("half_or_null", DataTypeVector{int32()}, int32(), true,
+                   RESULT_NULL_INTERNAL, "half_or_null_int32"),
 };
 
 FunctionRegistry::iterator FunctionRegistry::begin() const {

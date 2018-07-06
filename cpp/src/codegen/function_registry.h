@@ -43,9 +43,7 @@ class FunctionRegistry {
     }
   };
 
-  static DataTypePtr time32() {
-    return arrow::time32(arrow::TimeUnit::MILLI);
-  }
+  static DataTypePtr time32() { return arrow::time32(arrow::TimeUnit::MILLI); }
 
   static DataTypePtr time64() { return arrow::time64(arrow::TimeUnit::MICRO); }
 
