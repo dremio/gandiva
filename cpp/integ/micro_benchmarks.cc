@@ -14,17 +14,17 @@
 
 #include <gtest/gtest.h>
 #include "arrow/memory_pool.h"
-#include "integ/test_util.h"
-#include "integ/timed_evaluate.h"
 #include "gandiva/projector.h"
 #include "gandiva/status.h"
 #include "gandiva/tree_expr_builder.h"
+#include "integ/test_util.h"
+#include "integ/timed_evaluate.h"
 
 namespace gandiva {
 
+using arrow::boolean;
 using arrow::int32;
 using arrow::int64;
-using arrow::boolean;
 
 class TestBenchmarks : public ::testing::Test {
  public:
@@ -45,12 +45,11 @@ TEST_F(TestBenchmarks, TimedTestAdd3) {
   auto field_sum = field("add", int64());
 
   // Build expression
-  auto part_sum = TreeExprBuilder::MakeFunction("add",
-    {TreeExprBuilder::MakeField(field1), TreeExprBuilder::MakeField(field2)},
-    int64());
-  auto sum = TreeExprBuilder::MakeFunction("add",
-    {TreeExprBuilder::MakeField(field0), part_sum},
-    int64());
+  auto part_sum = TreeExprBuilder::MakeFunction(
+      "add", {TreeExprBuilder::MakeField(field1), TreeExprBuilder::MakeField(field2)},
+      int64());
+  auto sum = TreeExprBuilder::MakeFunction(
+      "add", {TreeExprBuilder::MakeField(field0), part_sum}, int64());
 
   auto sum_expr = TreeExprBuilder::MakeExpression(sum, field_sum);
 
@@ -61,12 +60,7 @@ TEST_F(TestBenchmarks, TimedTestAdd3) {
   int64_t elapsed_millis;
   Int64DataGenerator data_generator;
   status = TimedEvaluate<arrow::Int64Type, int64_t>(
-      schema,
-      projector,
-      data_generator,
-      100 * MILLION,
-      16 * THOUSAND,
-      elapsed_millis);
+      schema, projector, data_generator, 100 * MILLION, 16 * THOUSAND, elapsed_millis);
   ASSERT_TRUE(status.ok());
   std::cout << "Time taken for Add3 " << elapsed_millis << " ms\n";
 }
@@ -94,9 +88,8 @@ TEST_F(TestBenchmarks, TimedTestBigNested) {
   auto top_node = TreeExprBuilder::MakeLiteral(200);
   for (int thresh = 190; thresh > 0; thresh -= 10) {
     auto literal = TreeExprBuilder::MakeLiteral(thresh);
-    auto condition = TreeExprBuilder::MakeFunction("less_than",
-                                                   {node_a, literal},
-                                                   boolean());
+    auto condition =
+        TreeExprBuilder::MakeFunction("less_than", {node_a, literal}, boolean());
     auto if_node = TreeExprBuilder::MakeIf(condition, literal, top_node, int32());
     top_node = if_node;
   }
@@ -110,14 +103,9 @@ TEST_F(TestBenchmarks, TimedTestBigNested) {
   int64_t elapsed_millis;
   BoundedInt32DataGenerator data_generator(250);
   status = TimedEvaluate<arrow::Int32Type, int32_t>(
-      schema,
-      projector,
-      data_generator,
-      100 * MILLION,
-      16 * THOUSAND,
-      elapsed_millis);
+      schema, projector, data_generator, 100 * MILLION, 16 * THOUSAND, elapsed_millis);
   ASSERT_TRUE(status.ok());
   std::cout << "Time taken for BigNestedIf " << elapsed_millis << " ms\n";
 }
 
-} // namespace gandiva
+}  // namespace gandiva

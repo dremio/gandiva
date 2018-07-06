@@ -22,13 +22,12 @@
 #define GANDIVA_TIMED_EVALUATE_H
 
 #define THOUSAND (1024)
-#define MILLION  (1024 * 1024)
+#define MILLION (1024 * 1024)
 
 namespace gandiva {
 
-template<typename C_TYPE>
-std::vector<C_TYPE> GenerateData(int num_records,
-                                 DataGenerator<C_TYPE> &data_generator) {
+template <typename C_TYPE>
+std::vector<C_TYPE> GenerateData(int num_records, DataGenerator<C_TYPE> &data_generator) {
   std::vector<C_TYPE> data;
 
   for (int i = 0; i < num_records; i++) {
@@ -38,14 +37,10 @@ std::vector<C_TYPE> GenerateData(int num_records,
   return data;
 }
 
-template<typename TYPE, typename C_TYPE>
-Status TimedEvaluate(
-    SchemaPtr schema,
-    std::shared_ptr<Projector> projector,
-    DataGenerator<C_TYPE> &data_generator,
-    int num_records,
-    int batch_size,
-    int64_t& num_millis) {
+template <typename TYPE, typename C_TYPE>
+Status TimedEvaluate(SchemaPtr schema, std::shared_ptr<Projector> projector,
+                     DataGenerator<C_TYPE> &data_generator, int num_records,
+                     int batch_size, int64_t &num_millis) {
   int num_remaining = num_records;
   int num_fields = schema->num_fields();
   int num_calls = 0;
@@ -91,6 +86,6 @@ Status TimedEvaluate(
   return Status::OK();
 }
 
-} // namespace gandiva
+}  // namespace gandiva
 
-#endif // GANDIVA_TIMED_EVALUATE_H
+#endif  // GANDIVA_TIMED_EVALUATE_H

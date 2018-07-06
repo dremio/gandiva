@@ -152,6 +152,10 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     for (int i = 8; i < 16; i++) {
       assertTrue(intVector.isNull(i));
     }
+
+    // free buffers
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -182,16 +186,18 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
 
     int[] expected = new int[]{18, 19, 20, 21, 21, 20, 19, 18, 18, 19, 20, 21, 21, 20, 19, 18};
 
-    ArrowBuf validity_buf = buf(validity);
+    ArrowBuf validity_x = buf(validity);
     ArrowBuf data_x = intBuf(values_x);
+    ArrowBuf validity_N2x = buf(validity);
     ArrowBuf data_N2x = intBuf(values_N2x);
+    ArrowBuf validity_N3x = buf(validity);
     ArrowBuf data_N3x = intBuf(values_N3x);
 
     ArrowFieldNode fieldNode = new ArrowFieldNode(numRows, 8);
     ArrowRecordBatch batch = new ArrowRecordBatch(
             numRows,
             Lists.newArrayList(fieldNode, fieldNode, fieldNode),
-            Lists.newArrayList(validity_buf, data_x, validity_buf, data_N2x, validity_buf, data_N3x));
+            Lists.newArrayList(validity_x, data_x, validity_N2x, data_N2x, validity_N3x, data_N3x));
 
     IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
     intVector.allocateNew(numRows);
@@ -207,6 +213,9 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     for (int i = 8; i < 16; i++) {
       assertTrue(intVector.isNull(i));
     }
+
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -258,9 +267,9 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     ArrowBuf dataB = intBuf(valuesB);
 
     ArrowRecordBatch batch = new ArrowRecordBatch(
-      numRows,
-      Lists.newArrayList(new ArrowFieldNode(numRows, 0), new ArrowFieldNode(numRows, 0)),
-      Lists.newArrayList(validityA, dataA, validityX, dataBufsX.get(0), dataBufsX.get(1), validityB, dataB));
+            numRows,
+            Lists.newArrayList(new ArrowFieldNode(numRows, 0), new ArrowFieldNode(numRows, 0)),
+            Lists.newArrayList(validityA, dataA, validityX, dataBufsX.get(0), dataBufsX.get(1), validityB, dataB));
 
     IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
     intVector.allocateNew(numRows);
@@ -273,6 +282,9 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertFalse(intVector.isNull(i));
       assertEquals(expected[i], intVector.get(i));
     }
+
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -301,9 +313,9 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     List<ArrowBuf> inBufsB = binaryBufs(valuesB);
 
     ArrowRecordBatch batch = new ArrowRecordBatch(
-      numRows,
-      Lists.newArrayList(new ArrowFieldNode(numRows, 8), new ArrowFieldNode(numRows, 8)),
-      Lists.newArrayList(validitya, inBufsA.get(0), inBufsA.get(1), validityb, inBufsB.get(0), inBufsB.get(1)));
+            numRows,
+            Lists.newArrayList(new ArrowFieldNode(numRows, 8), new ArrowFieldNode(numRows, 8)),
+            Lists.newArrayList(validitya, inBufsA.get(0), inBufsA.get(1), validityb, inBufsB.get(0), inBufsB.get(1)));
 
     BitVector bitVector = new BitVector(EMPTY_SCHEMA_PATH, allocator);
     bitVector.allocateNew(numRows);
@@ -316,6 +328,9 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertFalse(bitVector.isNull(i));
       assertEquals(expected[i], bitVector.getObject(i).booleanValue());
     }
+
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -408,6 +423,8 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertEquals(expected[i], bigIntVector.get(i));
     }
 
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -456,6 +473,8 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertEquals(expected[i], bitVector.getObject(i).booleanValue());
     }
 
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -504,6 +523,8 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertEquals(expected[i], bitVector.getObject(i).booleanValue());
     }
 
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -553,6 +574,8 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     // second element should be null
     assertTrue(bigIntVector.isNull(1));
 
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -593,6 +616,8 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertTrue(bitVector.getObject(i).booleanValue());
     }
 
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -613,15 +638,16 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     int[] values_c1 = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
     int[] values_c2 = new int[]{1, 2, 3, 4, 8, 7, 6, 5, 16, 15, 14, 13, 12, 11, 10, 9};
 
-    ArrowBuf validity_buf = buf(validity);
+    ArrowBuf validity_c1 = buf(validity);
     ArrowBuf data_c1 = intBuf(values_c1);
+    ArrowBuf validity_c2 = buf(validity);
     ArrowBuf data_c2 = intBuf(values_c2);
 
     ArrowFieldNode fieldNode = new ArrowFieldNode(numRows, 0);
     ArrowRecordBatch batch = new ArrowRecordBatch(
             numRows,
             Lists.newArrayList(fieldNode, fieldNode),
-            Lists.newArrayList(validity_buf, data_c1, validity_buf, data_c2));
+            Lists.newArrayList(validity_c1, data_c1, validity_c2, data_c2));
 
     BitVector bitVector = new BitVector(EMPTY_SCHEMA_PATH, allocator);
     bitVector.allocateNew(numRows);
@@ -640,6 +666,8 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertTrue(bitVector.isNull(i));
     }
 
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -690,6 +718,9 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     for (int i = 8; i < 16; i++) {
       assertTrue(intVector.isNull(i));
     }
+
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
     eval.close();
   }
 
@@ -765,12 +796,14 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
 
     ArrowBuf validity_buf = buf(validity);
     ArrowBuf data_millis = stringToMillis(values);
+    ArrowBuf validity_buf2 = buf(validity);
+    ArrowBuf data_millis2 = stringToMillis(values);
 
     ArrowFieldNode fieldNode = new ArrowFieldNode(numRows, 0);
     ArrowRecordBatch batch = new ArrowRecordBatch(
             numRows,
             Lists.newArrayList(fieldNode, fieldNode),
-            Lists.newArrayList(validity_buf, data_millis, validity_buf, data_millis));
+            Lists.newArrayList(validity_buf, data_millis, validity_buf2, data_millis2));
 
     List<ValueVector> output = new ArrayList<ValueVector>();
     for(int i = 0; i < exprs.size(); i++) {
@@ -790,6 +823,9 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
         assertEquals(expected[j], bigIntVector.get(j));
       }
     }
+
+    releaseArrowBufs(batch.getBuffers());
+    releaseValueVectors(output);
   }
 
   // This test is ignored until the cpp layer handles errors gracefully

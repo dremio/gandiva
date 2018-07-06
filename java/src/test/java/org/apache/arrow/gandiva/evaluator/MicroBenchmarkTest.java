@@ -52,7 +52,6 @@ public class MicroBenchmarkTest extends BaseNativeEvaluatorTest {
 
   @Test
   public void testIf() throws Exception {
-    // TODO: Using int64 in testIf causes the test to fail due to lack of memory
     /*
      * when x < 10 then 0
      * when x < 20 then 1

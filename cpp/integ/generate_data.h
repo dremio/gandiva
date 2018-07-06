@@ -19,51 +19,43 @@
 
 namespace gandiva {
 
-template<typename C_TYPE>
+template <typename C_TYPE>
 class DataGenerator {
  public:
-    virtual C_TYPE GenerateData() = 0;
+  virtual C_TYPE GenerateData() = 0;
 };
 
 class Int32DataGenerator : public DataGenerator<int32_t> {
  public:
-    Int32DataGenerator()
-      : seed_(100) {}
+  Int32DataGenerator() : seed_(100) {}
 
-    int32_t GenerateData() {
-      return rand_r(&seed_);
-    }
+  int32_t GenerateData() { return rand_r(&seed_); }
 
  protected:
-    unsigned int seed_;
+  unsigned int seed_;
 };
 
 class BoundedInt32DataGenerator : public Int32DataGenerator {
  public:
-    explicit BoundedInt32DataGenerator(uint32_t upperBound)
+  explicit BoundedInt32DataGenerator(uint32_t upperBound)
       : Int32DataGenerator(), upperBound_(upperBound) {}
 
-    int32_t GenerateData() {
-      return (rand_r(&seed_) % upperBound_);
-    }
+  int32_t GenerateData() { return (rand_r(&seed_) % upperBound_); }
 
  protected:
-    uint32_t upperBound_;
+  uint32_t upperBound_;
 };
 
 class Int64DataGenerator : public DataGenerator<int64_t> {
  public:
-    Int64DataGenerator()
-      : seed_(100) {}
+  Int64DataGenerator() : seed_(100) {}
 
-    int64_t GenerateData() {
-      return rand_r(&seed_);
-    }
+  int64_t GenerateData() { return rand_r(&seed_); }
 
  protected:
-    unsigned int seed_;
+  unsigned int seed_;
 };
 
-} // namespace gandiva
+}  // namespace gandiva
 
-#endif // GANDIVA_GENERATE_DATA_H
+#endif  // GANDIVA_GENERATE_DATA_H
