@@ -12,6 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Build the gandiva library
+function(build_gandiva_lib TYPE)
+  string(TOUPPER ${TYPE} TYPE_UPPER_CASE)
+  add_library(gandiva_${TYPE} ${TYPE_UPPER_CASE} $<TARGET_OBJECTS:gandiva_obj_lib>)
+
+  target_include_directories(gandiva_${TYPE}
+    PUBLIC
+      $<INSTALL_INTERFACE:include>
+      $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    PRIVATE
+      ${CMAKE_SOURCE_DIR}/src
+  )
+
+  # ARROW is a public dependency i.e users of gandiva also will have a dependency on arrow.
+  target_link_libraries(gandiva_${TYPE}
+    PUBLIC
+      ARROW::ARROW_${TYPE_UPPER_CASE}
+    PRIVATE
+      Boost::boost
+      Boost::regex
+      Boost::system
+      Boost::filesystem
+      LLVM::LLVM_INTERFACE)
+
+  # Set version for the library.
+  set(GANDIVA_VERSION_MAJOR 0)
+  set(GANDIVA_VERSION_MINOR 1)
+  set(GANDIVA_VERSION_PATCH 0)
+  set(GANDIVA_VERSION ${GANDIVA_VERSION_MAJOR}.${GANDIVA_VERSION_MINOR}.${GANDIVA_VERSION_PATCH})
+
+  set_target_properties(gandiva_${TYPE} PROPERTIES
+    VERSION ${GANDIVA_VERSION}
+    SOVERSION ${GANDIVA_VERSION_MAJOR}
+    OUTPUT_NAME gandiva
+  )
+endfunction(build_gandiva_lib TYPE)
+
 # Add a unittest executable, with its dependencies.
 function(add_gandiva_unit_test REL_TEST_NAME)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
@@ -19,7 +56,8 @@ function(add_gandiva_unit_test REL_TEST_NAME)
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
   if(${REL_TEST_NAME} MATCHES "llvm")
     # If the unit test has llvm in its name, include llvm.
-    target_link_llvm(${TEST_NAME} PRIVATE)
+    add_dependencies(${TEST_NAME} LLVM::LLVM_INTERFACE)
+    target_link_libraries(${TEST_NAME} PRIVATE LLVM::LLVM_INTERFACE)
   endif()
 
   target_include_directories(${TEST_NAME} PRIVATE
@@ -27,7 +65,7 @@ function(add_gandiva_unit_test REL_TEST_NAME)
     ${CMAKE_SOURCE_DIR}/src
   )
   target_link_libraries(${TEST_NAME}
-    PRIVATE ${ARROW_LIB} gtest_main Boost::boost
+    PRIVATE ${ARROW_LIB_SHARED} gtest_main Boost::boost
   )
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
@@ -46,15 +84,15 @@ function(add_precompiled_unit_test REL_TEST_NAME)
 endfunction(add_precompiled_unit_test REL_TEST_NAME)
 
 # Add an integ executable, with its dependencies.
-function(add_gandiva_integ_test REL_TEST_NAME)
+function(add_gandiva_integ_test REL_TEST_NAME GANDIVA_LIB)
   get_filename_component(TEST_NAME ${REL_TEST_NAME} NAME_WE)
 
-  add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
-  target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR})
-  target_link_libraries(${TEST_NAME} PRIVATE gandiva gtest_main)
+  add_executable(${TEST_NAME}_${GANDIVA_LIB} ${REL_TEST_NAME} ${ARGN})
+  target_include_directories(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${CMAKE_SOURCE_DIR})
+  target_link_libraries(${TEST_NAME}_${GANDIVA_LIB} PRIVATE ${GANDIVA_LIB} gtest_main)
 
-  add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
-  set_property(TEST ${TEST_NAME} PROPERTY LABELS integ ${TEST_NAME})
+  add_test(NAME ${TEST_NAME}_${GANDIVA_LIB} COMMAND ${TEST_NAME}_${GANDIVA_LIB})
+  set_property(TEST ${TEST_NAME}_${GANDIVA_LIB} PROPERTY LABELS integ ${TEST_NAME}_${GANDIVA_LIB})
 endfunction(add_gandiva_integ_test REL_TEST_NAME)
 
 # Download and build external project.
@@ -83,30 +121,43 @@ function(build_external PROJ)
                    EXCLUDE_FROM_ALL)
 endfunction(build_external PROJ)
 
-# Add "make lint" target
-function(add_lint)
+find_program(CLANG_FORMAT_BIN NAMES clang-format)
+message(STATUS "Found clang-format executable at ${CLANG_FORMAT_BIN}")
+
+file(GLOB_RECURSE LINT_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
+  "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.cc"
+)
+
+# Add "make stylecheck" target
+function(add_stylecheck)
   if (UNIX)
-    file(GLOB_RECURSE LINT_FILES
-      "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
-      "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/integ/*.cc"
-      )
-
-    find_program(CPPLINT_BIN NAMES cpplint cpplint.py HINTS ${BUILD_SUPPORT_DIR})
-    message(STATUS "Found cpplint executable at ${CPPLINT_BIN}")
-
-    # Full lint
-    # Balancing act: cpplint.py takes a non-trivial time to launch,
-    # so process 12 files per invocation, while still ensuring parallelism
-    add_custom_target(lint echo ${LINT_FILES} | xargs -n12 -P8
-    ${CPPLINT_BIN}
-    --verbose=2
-    --linelength=90
-    --filter=-whitespace/comments,-readability/todo,-build/header_guard,-build/c++11,-runtime/references
+    add_custom_target(stylecheck
+      COMMENT "Performing stylecheck on all .cpp/.h files"
+      # use ! to check for no replacement
+      COMMAND !
+      ${CLANG_FORMAT_BIN}
+      -style=file
+      -output-replacements-xml
+      ${LINT_FILES}
+      | grep "replacement offset"
     )
   endif (UNIX)
-endfunction(add_lint)
+endfunction(add_stylecheck)
+
+# Add "make stylefix" target
+function(add_stylefix)
+  if (UNIX)
+    add_custom_target(stylefix
+      COMMENT "Performing stylefix on all .cpp/.h files"
+      COMMAND
+      echo ${LINT_FILES} | xargs ${CLANG_FORMAT_BIN} -style=file -i
+    )
+  endif (UNIX)
+endfunction(add_stylefix)
 
 function(prevent_in_source_builds)
  file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)

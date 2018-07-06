@@ -18,21 +18,21 @@
 
 namespace gandiva {
 
-using std::vector;
-using arrow::int8;
+using arrow::binary;
+using arrow::boolean;
+using arrow::date64;
+using arrow::float32;
+using arrow::float64;
 using arrow::int16;
 using arrow::int32;
 using arrow::int64;
-using arrow::uint8;
+using arrow::int8;
 using arrow::uint16;
 using arrow::uint32;
 using arrow::uint64;
-using arrow::float32;
-using arrow::float64;
-using arrow::boolean;
-using arrow::date64;
+using arrow::uint8;
 using arrow::utf8;
-using arrow::binary;
+using std::vector;
 
 #define STRINGIFY(a) #a
 
@@ -42,26 +42,18 @@ using arrow::binary;
 // - NULL handling is of type NULL_IF_NULL
 //
 // The pre-compiled fn name includes the base name & input type names. eg. add_int32_int32
-#define BINARY_SYMMETRIC_SAFE_NULL_IF_NULL(NAME, TYPE) \
-  NativeFunction(#NAME, \
-    DataTypeVector{TYPE(), TYPE()}, \
-    TYPE(), \
-    true, \
-    RESULT_NULL_IF_NULL, \
-    STRINGIFY(NAME##_##TYPE##_##TYPE))
+#define BINARY_SYMMETRIC_SAFE_NULL_IF_NULL(NAME, TYPE)                \
+  NativeFunction(#NAME, DataTypeVector{TYPE(), TYPE()}, TYPE(), true, \
+                 RESULT_NULL_IF_NULL, STRINGIFY(NAME##_##TYPE##_##TYPE))
 
 // Binary functions that :
 // - have different input types, or output type
 // - NULL handling is of type NULL_IF_NULL
 //
 // The pre-compiled fn name includes the base name & input type names. eg. mod_int64_int32
-#define BINARY_GENERIC_SAFE_NULL_IF_NULL(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE) \
-  NativeFunction(#NAME, \
-    DataTypeVector{IN_TYPE1(), IN_TYPE2()}, \
-    OUT_TYPE(), \
-    true, \
-    RESULT_NULL_IF_NULL, \
-    STRINGIFY(NAME##_##IN_TYPE1##_##IN_TYPE2))
+#define BINARY_GENERIC_SAFE_NULL_IF_NULL(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE)      \
+  NativeFunction(#NAME, DataTypeVector{IN_TYPE1(), IN_TYPE2()}, OUT_TYPE(), true, \
+                 RESULT_NULL_IF_NULL, STRINGIFY(NAME##_##IN_TYPE1##_##IN_TYPE2))
 
 // Binary functions that :
 // - have the same input type
@@ -70,80 +62,53 @@ using arrow::binary;
 //
 // The pre-compiled fn name includes the base name & input type names.
 // eg. equal_int32_int32
-#define BINARY_RELATIONAL_SAFE_NULL_IF_NULL(NAME, TYPE) \
-  NativeFunction(#NAME, \
-    DataTypeVector{TYPE(), TYPE()}, \
-    boolean(), \
-    true, \
-    RESULT_NULL_IF_NULL, \
-    STRINGIFY(NAME##_##TYPE##_##TYPE))
+#define BINARY_RELATIONAL_SAFE_NULL_IF_NULL(NAME, TYPE)                  \
+  NativeFunction(#NAME, DataTypeVector{TYPE(), TYPE()}, boolean(), true, \
+                 RESULT_NULL_IF_NULL, STRINGIFY(NAME##_##TYPE##_##TYPE))
 
 // Unary functions that :
 // - NULL handling is of type NULL_IF_NULL
 //
 // The pre-compiled fn name includes the base name & input type name. eg. castFloat_int32
-#define UNARY_SAFE_NULL_IF_NULL(NAME, IN_TYPE, OUT_TYPE) \
-  NativeFunction(#NAME, \
-    DataTypeVector{IN_TYPE()}, \
-    OUT_TYPE(), \
-    true, \
-    RESULT_NULL_IF_NULL, \
-    STRINGIFY(NAME##_##IN_TYPE))
+#define UNARY_SAFE_NULL_IF_NULL(NAME, IN_TYPE, OUT_TYPE)             \
+  NativeFunction(#NAME, DataTypeVector{IN_TYPE()}, OUT_TYPE(), true, \
+                 RESULT_NULL_IF_NULL, STRINGIFY(NAME##_##IN_TYPE))
 
 // Unary functions that :
 // - NULL handling is of type NULL_NEVER
 //
 // The pre-compiled fn name includes the base name & input type name. eg. isnull_int32
-#define UNARY_SAFE_NULL_NEVER_BOOL(NAME, TYPE) \
-  NativeFunction(#NAME, \
-    DataTypeVector{TYPE()}, \
-    boolean(), \
-    true, \
-    RESULT_NULL_NEVER, \
-    STRINGIFY(NAME##_##TYPE))
+#define UNARY_SAFE_NULL_NEVER_BOOL(NAME, TYPE)                                      \
+  NativeFunction(#NAME, DataTypeVector{TYPE()}, boolean(), true, RESULT_NULL_NEVER, \
+                 STRINGIFY(NAME##_##TYPE))
 
 // Extract functions (used with data/time types) that :
 // - NULL handling is of type NULL_IF_NULL
 //
 // The pre-compiled fn name includes the base name & input type name. eg. extractYear_date
-#define EXTRACT_SAFE_NULL_IF_NULL(NAME, TYPE) \
-  NativeFunction(#NAME, \
-    DataTypeVector{TYPE()}, \
-    int64(), \
-    true, \
-    RESULT_NULL_IF_NULL, \
-    STRINGIFY(NAME##_##TYPE))
+#define EXTRACT_SAFE_NULL_IF_NULL(NAME, TYPE)                                       \
+  NativeFunction(#NAME, DataTypeVector{TYPE()}, int64(), true, RESULT_NULL_IF_NULL, \
+                 STRINGIFY(NAME##_##TYPE))
 
 // Iterate the inner macro over all numeric types
-#define NUMERIC_TYPES(INNER, NAME) \
-  INNER(NAME, int8),    \
-  INNER(NAME, int16),   \
-  INNER(NAME, int32),   \
-  INNER(NAME, int64),   \
-  INNER(NAME, uint8),   \
-  INNER(NAME, uint16),  \
-  INNER(NAME, uint32),  \
-  INNER(NAME, uint64),  \
-  INNER(NAME, float32), \
-  INNER(NAME, float64)
+#define NUMERIC_TYPES(INNER, NAME)                                                       \
+  INNER(NAME, int8), INNER(NAME, int16), INNER(NAME, int32), INNER(NAME, int64),         \
+      INNER(NAME, uint8), INNER(NAME, uint16), INNER(NAME, uint32), INNER(NAME, uint64), \
+      INNER(NAME, float32), INNER(NAME, float64)
 
 // Iterate the inner macro over all numeric types and bool type
 #define NUMERIC_AND_BOOL_TYPES(INNER, NAME) \
-  NUMERIC_TYPES(INNER, NAME), \
-  INNER(NAME, boolean)
+  NUMERIC_TYPES(INNER, NAME), INNER(NAME, boolean)
 
 // Iterate the inner macro over all data types
 #define DATE_TYPES(INNER, NAME) \
-  INNER(NAME, date64), \
-  INNER(NAME, timestamp)
+  INNER(NAME, date64), INNER(NAME, timestamp)
 
 #define TIME_TYPES(INNER, NAME) \
   INNER(NAME, time32)
 
 // Iterate the inner macro over all data types
-#define VAR_LEN_TYPES(INNER, NAME) \
-  INNER(NAME, utf8), \
-  INNER(NAME, binary)
+#define VAR_LEN_TYPES(INNER, NAME) INNER(NAME, utf8), INNER(NAME, binary)
 
 // list of registered native functions.
 NativeFunction FunctionRegistry::pc_registry_[] = {
@@ -229,7 +194,7 @@ FunctionRegistry::SignatureMap FunctionRegistry::pc_registry_map_ = InitPCMap();
 FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
   SignatureMap map;
 
-  int num_entries = sizeof (pc_registry_) / sizeof (NativeFunction);
+  int num_entries = sizeof(pc_registry_) / sizeof(NativeFunction);
   printf("Registry has %d pre-compiled functions\n", num_entries);
 
   for (int i = 0; i < num_entries; i++) {
@@ -237,7 +202,7 @@ FunctionRegistry::SignatureMap FunctionRegistry::InitPCMap() {
 
     DCHECK(map.find(&entry->signature()) == map.end());
     map[&entry->signature()] = entry;
-    //printf("%s -> %s\n", entry->signature().ToString().c_str(),
+    // printf("%s -> %s\n", entry->signature().ToString().c_str(),
     //      entry->pc_name().c_str());
   }
   return map;
@@ -249,5 +214,4 @@ const NativeFunction *FunctionRegistry::LookupSignature(
   return got == pc_registry_map_.end() ? NULL : got->second;
 }
 
-} // namespace gandiva
-
+}  // namespace gandiva

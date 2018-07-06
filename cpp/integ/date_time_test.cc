@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <time.h>
-#include <math.h>
 #include <gtest/gtest.h>
+#include <math.h>
+#include <time.h>
 #include "arrow/memory_pool.h"
-#include "integ/test_util.h"
 #include "gandiva/projector.h"
 #include "gandiva/tree_expr_builder.h"
+#include "integ/test_util.h"
 
 namespace gandiva {
 
-using arrow::int32;
-using arrow::int64;
-using arrow::float32;
 using arrow::boolean;
 using arrow::date64;
+using arrow::float32;
+using arrow::int32;
+using arrow::int64;
 
 class TestProjector : public ::testing::Test {
  public:
@@ -69,33 +69,29 @@ TEST_F(TestProjector, TestDateTime) {
   auto field_hour = field("hh", int64());
 
   // extract year and month from date
-  auto date2year_expr = TreeExprBuilder::MakeExpression(
-    "extractYear",
-    {field0},
-    field_year);
-  auto date2month_expr = TreeExprBuilder::MakeExpression(
-    "extractMonth",
-    {field0},
-    field_month);
+  auto date2year_expr =
+      TreeExprBuilder::MakeExpression("extractYear", {field0}, field_year);
+  auto date2month_expr =
+      TreeExprBuilder::MakeExpression("extractMonth", {field0}, field_month);
 
   // extract month and day from timestamp
-  auto ts2month_expr = TreeExprBuilder::MakeExpression
-    ("extractMonth",
-    {field2},
-    field_month);
+  auto ts2month_expr =
+      TreeExprBuilder::MakeExpression("extractMonth", {field2}, field_month);
   auto ts2day_expr = TreeExprBuilder::MakeExpression("extractDay", {field2}, field_day);
 
   std::shared_ptr<Projector> projector;
   Status status = Projector::Make(
-    schema,
-    {date2year_expr, date2month_expr, ts2month_expr, ts2day_expr},
-    pool_,
-    &projector);
+      schema, {date2year_expr, date2month_expr, ts2month_expr, ts2day_expr}, pool_,
+      &projector);
   ASSERT_TRUE(status.ok());
 
   struct tm y1970 = {0};
-  y1970.tm_year = 70; y1970.tm_mon = 0; y1970.tm_mday = 1;
-  y1970.tm_hour = 0; y1970.tm_min = 0; y1970.tm_sec = 0;
+  y1970.tm_year = 70;
+  y1970.tm_mon = 0;
+  y1970.tm_mday = 1;
+  y1970.tm_hour = 0;
+  y1970.tm_min = 0;
+  y1970.tm_sec = 0;
   time_t epoch = mktime(&y1970);
 
   // Create a row-batch with some sample data
@@ -119,14 +115,12 @@ TEST_F(TestProjector, TestDateTime) {
   };
 
   auto array2 = MakeArrowTypeArray<arrow::TimestampType, int64_t>(
-    arrow::timestamp(arrow::TimeUnit::MILLI),
-    field2_data,
-    validity);
+      arrow::timestamp(arrow::TimeUnit::MILLI), field2_data, validity);
 
   // expected output
   // date 2 year and date 2 month
-  auto exp_yy_from_date = MakeArrowArrayInt64({ 2000, 1999, 2015, 2015 }, validity);
-  auto exp_mm_from_date = MakeArrowArrayInt64({ 1, 12, 6, 7 }, validity);
+  auto exp_yy_from_date = MakeArrowArrayInt64({2000, 1999, 2015, 2015}, validity);
+  auto exp_mm_from_date = MakeArrowArrayInt64({1, 12, 6, 7}, validity);
 
   // ts 2 month and ts 2 day
   auto exp_mm_from_ts = MakeArrowArrayInt64({12, 1, 7, 6}, validity);
