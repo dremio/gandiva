@@ -291,10 +291,11 @@ public class NativeEvaluatorTest {
     Schema schema = new Schema(Lists.newArrayList(x));
     NativeEvaluator eval = NativeEvaluator.makeProjector(schema, Lists.newArrayList(expr));
 
-    int numRows = 4;
+    int numRows = 5;
     byte[] validity = new byte[]{(byte) 255, 0};
-    String[] valuesX = new String[]{"hell", "abc", "hellox", "ijk" };
-    int[] expected = new int[]{4, 3, 48, 24};
+    // "A função" means "The function" in portugese
+    String[] valuesX = new String[]{"hell", "abc", "hellox", "ijk", "A função" };
+    int[] expected = new int[]{4, 3, 48, 24, 10};
 
     ArrowBuf validitya = buf(validity);
     List<ArrowBuf> inBufsA = stringBufs(valuesX);
@@ -331,11 +332,11 @@ public class NativeEvaluatorTest {
     Schema schema = new Schema(Lists.newArrayList(args));
     NativeEvaluator eval = NativeEvaluator.makeProjector(schema, Lists.newArrayList(expr));
 
-    int numRows = 4;
+    int numRows = 5;
     byte[] validity = new byte[]{(byte) 255, 0};
-    String[] valuesA = new String[]{"a", "aa", "aaa", "aaaa"};
-    String[] valuesB = new String[]{"a", "bb", "aaa", "bbbbb"};
-    boolean[] expected = new boolean[]{true, false, true, false};
+    String[] valuesA = new String[]{"a", "aa", "aaa", "aaaa", "A função"};
+    String[] valuesB = new String[]{"a", "bb", "aaa", "bbbbb", "A função"};
+    boolean[] expected = new boolean[]{true, false, true, false, true};
 
     ArrowBuf validitya = buf(validity);
     ArrowBuf validityb = buf(validity);
