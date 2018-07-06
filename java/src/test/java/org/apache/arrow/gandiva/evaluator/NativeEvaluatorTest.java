@@ -268,11 +268,14 @@ public class NativeEvaluatorTest {
   @Test
   public void testStringFields() throws GandivaException {
     /*
-     * when x < "hello" then octet_length(x)
-     * else bit_length(x)
+     * when x < "hello" then octet_length(x) + a
+     * else octet_length(x) + b
      */
 
-    Field x = Field.nullable("a", new ArrowType.Utf8());
+    Field x = Field.nullable("x", new ArrowType.Utf8());
+    Field a = Field.nullable("a", new ArrowType.Int(32, true));
+    Field b = Field.nullable("b", new ArrowType.Int(32, true));
+
     ArrowType retType = new ArrowType.Int(32, true);
 
     TreeNode cond = TreeBuilder.makeFunction("less_than",
@@ -281,29 +284,38 @@ public class NativeEvaluatorTest {
     TreeNode octetLenFuncNode = TreeBuilder.makeFunction("octet_length",
       Lists.newArrayList(TreeBuilder.makeField(x)),
       retType);
-    TreeNode bitLenFuncNode = TreeBuilder.makeFunction("bit_length",
-      Lists.newArrayList(TreeBuilder.makeField(x)),
+    TreeNode octetLenPlusANode = TreeBuilder.makeFunction("add",
+      Lists.newArrayList(TreeBuilder.makeField(a), octetLenFuncNode),
+      retType);
+    TreeNode octetLenPlusBNode = TreeBuilder.makeFunction("add",
+      Lists.newArrayList(TreeBuilder.makeField(b), octetLenFuncNode),
       retType);
 
-    TreeNode ifHello = TreeBuilder.makeIf(cond, octetLenFuncNode, bitLenFuncNode, retType);
+    TreeNode ifHello = TreeBuilder.makeIf(cond, octetLenPlusANode, octetLenPlusBNode, retType);
 
     ExpressionTree expr = TreeBuilder.makeExpression(ifHello, Field.nullable("res", retType));
-    Schema schema = new Schema(Lists.newArrayList(x));
+    Schema schema = new Schema(Lists.newArrayList(a, x, b));
     NativeEvaluator eval = NativeEvaluator.makeProjector(schema, Lists.newArrayList(expr));
 
     int numRows = 5;
     byte[] validity = new byte[]{(byte) 255, 0};
     // "A função" means "The function" in portugese
     String[] valuesX = new String[]{"hell", "abc", "hellox", "ijk", "A função" };
-    int[] expected = new int[]{4, 3, 48, 24, 10};
+    int[] valuesA = new int[]{10, 20, 30, 40, 50};
+    int[] valuesB = new int[]{110, 120, 130, 140, 150};
+    int[] expected = new int[]{14, 23, 136, 143, 60};
 
-    ArrowBuf validitya = buf(validity);
-    List<ArrowBuf> inBufsA = stringBufs(valuesX);
+    ArrowBuf validityX = buf(validity);
+    List<ArrowBuf> dataBufsX = stringBufs(valuesX);
+    ArrowBuf validityA = buf(validity);
+    ArrowBuf dataA = intBuf(valuesA);
+    ArrowBuf validityB = buf(validity);
+    ArrowBuf dataB = intBuf(valuesB);
 
     ArrowRecordBatch batch = new ArrowRecordBatch(
       numRows,
       Lists.newArrayList(new ArrowFieldNode(numRows, 0), new ArrowFieldNode(numRows, 0)),
-      Lists.newArrayList(validitya, inBufsA.get(0), inBufsA.get(1)));
+      Lists.newArrayList(validityA, dataA, validityX, dataBufsX.get(0), dataBufsX.get(1), validityB, dataB));
 
     IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
     intVector.allocateNew(numRows);
