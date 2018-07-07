@@ -154,7 +154,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     }
 
     // free buffers
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -214,7 +214,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertTrue(intVector.isNull(i));
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -283,7 +283,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertEquals(expected[i], intVector.get(i));
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -329,7 +329,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertEquals(expected[i], bitVector.getObject(i).booleanValue());
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -423,7 +423,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertEquals(expected[i], bigIntVector.get(i));
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -473,7 +473,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertEquals(expected[i], bitVector.getObject(i).booleanValue());
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -523,7 +523,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertEquals(expected[i], bitVector.getObject(i).booleanValue());
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -574,7 +574,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
     // second element should be null
     assertTrue(bigIntVector.isNull(1));
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -616,7 +616,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertTrue(bitVector.getObject(i).booleanValue());
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -666,7 +666,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertTrue(bitVector.isNull(i));
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -719,7 +719,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       assertTrue(intVector.isNull(i));
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
   }
@@ -824,7 +824,7 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
       }
     }
 
-    releaseArrowBufs(batch.getBuffers());
+    releaseRecordBatch(batch);
     releaseValueVectors(output);
   }
 

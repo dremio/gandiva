@@ -31,7 +31,6 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import org.joda.time.Instant;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -157,16 +156,20 @@ class BaseNativeEvaluatorTest {
     return buffer;
   }
 
-  void releaseArrowBufs(List<ArrowBuf> buffers) {
+  void releaseRecordBatch(ArrowRecordBatch recordBatch) {
+    // There are 2 references to the buffers
+    // One in the recordBatch - release that by calling close()
+    // One in the allocator - release that explicitly
+    List<ArrowBuf> buffers = recordBatch.getBuffers();
+    recordBatch.close();
     for(ArrowBuf buf : buffers) {
-      buf.release(2);
+      buf.release();
     }
   }
 
   void releaseValueVectors(List<ValueVector> valueVectors) {
     for(ValueVector valueVector : valueVectors) {
-      valueVector.getValidityBuffer().release();
-      valueVector.getDataBuffer().release();
+      valueVector.close();
     }
   }
 
@@ -184,7 +187,6 @@ class BaseNativeEvaluatorTest {
     throws GandivaException, Exception {
     int numRemaining = numRows;
     List<ArrowBuf> inputData = new ArrayList<ArrowBuf>();
-    List<ArrowBuf> buffersToRelease = new ArrayList<ArrowBuf>();
     List<ArrowFieldNode> fieldNodes = new ArrayList<ArrowFieldNode>();
     List<ValueVector> outputVectors = new ArrayList<ValueVector>();
 
@@ -193,7 +195,6 @@ class BaseNativeEvaluatorTest {
     long elapsedTime = 0;
 
     // set the bitmap
-    ArrowBuf validity = arrowBufWithAllValid(maxRowsInBatch);
     while (numRemaining > 0) {
       int numRowsInBatch = maxRowsInBatch;
       if (numRowsInBatch > numRemaining) {
@@ -203,12 +204,12 @@ class BaseNativeEvaluatorTest {
       // generate data
       for (int i = 0; i < numFields; i++) {
         ArrowBuf buf = allocator.buffer(numRowsInBatch * inputFieldSize);
+        ArrowBuf validity = arrowBufWithAllValid(maxRowsInBatch);
         generateData(generator, numRowsInBatch, buf);
 
         fieldNodes.add(new ArrowFieldNode(numRowsInBatch, 0));
         inputData.add(validity);
         inputData.add(buf);
-        buffersToRelease.add(buf);
       }
 
       // create record batch
@@ -230,22 +231,14 @@ class BaseNativeEvaluatorTest {
       numRemaining -= numRowsInBatch;
 
       // release refs
-      for(ArrowBuf buf : buffersToRelease) {
-        buf.release(2);
-      }
-      validity.release(numFields);
-      for(ValueVector valueVector : outputVectors) {
-        valueVector.getDataBuffer().release();
-        valueVector.getValidityBuffer().release();
-      }
+      releaseRecordBatch(recordBatch);
+      releaseValueVectors(outputVectors);
 
       inputData.clear();
-      buffersToRelease.clear();
       fieldNodes.clear();
       outputVectors.clear();
     }
 
-    validity.release();
     return (elapsedTime / MILLION);
   }
 
