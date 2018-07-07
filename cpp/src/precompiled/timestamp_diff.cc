@@ -42,8 +42,8 @@ extern "C" {
 // diff_in_months = year_diff * 12 + month_diff
 // This is approximately correct, except when the last month has not fully elapsed
 //
-// a) If end_day > start_day, return diff_in_months     e.g. diff(2017-03-31, 2015-09-10)
-// b) If end_day < start_day, return diff_in_months - 1 e.g. diff(2017-03-10, 2015-09-30)
+// a) If end_day > start_day, return diff_in_months     e.g. diff(2015-09-10, 2017-03-31)
+// b) If end_day < start_day, return diff_in_months - 1 e.g. diff(2015-09-30, 2017-03-10)
 // c) If end_day = start_day, check for millis          e.g. diff(2017-03-10, 2015-03-10)
 // Need to check if end_millis_in_day > start_millis_in_day
 // c1) If end_millis_in_day >= start_millis_in_day, return diff_in_months
