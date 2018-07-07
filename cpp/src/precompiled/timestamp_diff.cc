@@ -40,11 +40,11 @@ extern "C" {
 
 // Assuming end_millis > start_millis, the algorithm to find the diff in months is:
 // diff_in_months = year_diff * 12 + month_diff
-// This is approximately correct, except when the last month has fully elapsed
+// This is approximately correct, except when the last month has not fully elapsed
 //
 // a) If end_day > start_day, return diff_in_months     e.g. diff(2017-03-31, 2015-09-10)
 // b) If end_day < start_day, return diff_in_months - 1 e.g. diff(2017-03-10, 2015-09-30)
-// c) If end_day = start_day, check for millis          e.g. diff(2017-03-10, 2015-09-30)
+// c) If end_day = start_day, check for millis          e.g. diff(2017-03-10, 2015-03-10)
 // Need to check if end_millis_in_day > start_millis_in_day
 // c1) If end_millis_in_day >= start_millis_in_day, return diff_in_months
 // c2) else return diff_in_months - 1
