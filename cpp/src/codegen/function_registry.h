@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 #include "codegen/native_function.h"
+#include "gandiva/gandiva_aliases.h"
 
 namespace gandiva {
 
@@ -31,6 +32,8 @@ class FunctionRegistry {
 
   iterator begin() const;
   iterator end() const;
+
+  FuncSignatureVector GetSupportedFunctions();
 
  private:
   struct KeyHash {
@@ -56,6 +59,7 @@ class FunctionRegistry {
 
   static NativeFunction pc_registry_[];
   static SignatureMap pc_registry_map_;
+  static FuncSignatureVector function_signatures;
 };
 
 }  // namespace gandiva
