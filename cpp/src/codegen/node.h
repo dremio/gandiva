@@ -25,8 +25,6 @@
 #include "gandiva/gandiva_aliases.h"
 #include "gandiva/status.h"
 
-#define TAB_SPACE (2)
-
 namespace gandiva {
 
 /// \brief Represents a node in the expression tree. Validity and value are
@@ -40,10 +38,7 @@ class Node {
   /// Derived classes should simply invoke the Visit api of the visitor.
   virtual Status Accept(NodeVisitor &visitor) const = 0;
 
-  // for debugging purposes
-  virtual std::string to_string(uint32_t indent) = 0;
-
-  std::string nspaces(uint32_t indent) { return std::string(indent, ' '); }
+  virtual std::string ToString() = 0;
 
  protected:
   DataTypePtr return_type_;
@@ -61,7 +56,7 @@ class LiteralNode : public Node {
 
   bool is_null() const { return is_null_; }
 
-  std::string to_string(uint32_t indent) override {
+  std::string ToString() override {
     if (is_null()) {
       return std::string("null");
     }
@@ -85,7 +80,7 @@ class FieldNode : public Node {
 
   const FieldPtr &field() const { return field_; }
 
-  std::string to_string(uint32_t indent) override { return field()->type()->name(); }
+  std::string ToString() override { return field()->type()->name(); }
 
  private:
   FieldPtr field_;
@@ -103,16 +98,16 @@ class FunctionNode : public Node {
   const FuncDescriptorPtr &descriptor() const { return descriptor_; }
   const NodeVector &children() const { return children_; }
 
-  std::string to_string(uint32_t indent) override {
+  std::string ToString() override {
     std::stringstream ss;
     ss << descriptor()->name() << "(";
     bool skip_comma = true;
     for (auto child : children()) {
       if (skip_comma) {
-        ss << child->to_string(indent);
+        ss << child->ToString();
         skip_comma = false;
       } else {
-        ss << ", " << child->to_string(indent);
+        ss << ", " << child->ToString();
       }
     }
     ss << ")";
@@ -156,15 +151,11 @@ class IfNode : public Node {
   const NodePtr &then_node() const { return then_node_; }
   const NodePtr &else_node() const { return else_node_; }
 
-  std::string to_string(uint32_t indent) override {
+  std::string ToString() override {
     std::stringstream ss;
-    ss << "if (" << condition()->to_string(indent) << ") {\n";
-    ss << nspaces(indent + TAB_SPACE) << then_node()->to_string(indent + TAB_SPACE)
-       << "\n";
-    ss << nspaces(indent) << "} else {\n";
-    ss << nspaces(indent + TAB_SPACE) << else_node()->to_string(indent + TAB_SPACE)
-       << "\n";
-    ss << nspaces(indent) << "}";
+    ss << "if (" << condition()->ToString() << ") { ";
+    ss << then_node()->ToString() << " } else { ";
+    ss << else_node()->ToString() << "}";
     return ss.str();
   }
 
@@ -188,15 +179,15 @@ class BooleanNode : public Node {
 
   const NodeVector &children() const { return children_; }
 
-  std::string to_string(uint32_t indent) override {
+  std::string ToString() override {
     std::stringstream ss;
-    ss << children_.at(0)->to_string(indent);
+    ss << children_.at(0)->ToString();
     if (expr_type() == BooleanNode::AND) {
       ss << " && ";
     } else {
       ss << " || ";
     }
-    ss << children_.at(1)->to_string(indent);
+    ss << children_.at(1)->ToString();
     return ss.str();
   }
 

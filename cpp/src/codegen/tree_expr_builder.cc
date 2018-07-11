@@ -120,7 +120,7 @@ ExpressionPtr TreeExprBuilder::MakeExpression(NodePtr root_node, FieldPtr result
     return nullptr;
   }
   if (print_expr) {
-    std::cout << "Expression: \n" << root_node->to_string(0) << "\n";
+    std::cout << "Expression: " << root_node->ToString() << "\n";
   }
   return ExpressionPtr(new Expression(root_node, result_field));
 }
