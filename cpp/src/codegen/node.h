@@ -100,7 +100,7 @@ class FunctionNode : public Node {
 
   std::string ToString() override {
     std::stringstream ss;
-    ss << descriptor()->name() << "(";
+    ss << descriptor()->return_type()->name() << " " << descriptor()->name() << "(";
     bool skip_comma = true;
     for (auto child : children()) {
       if (skip_comma) {
@@ -155,7 +155,7 @@ class IfNode : public Node {
     std::stringstream ss;
     ss << "if (" << condition()->ToString() << ") { ";
     ss << then_node()->ToString() << " } else { ";
-    ss << else_node()->ToString() << "}";
+    ss << else_node()->ToString() << " }";
     return ss.str();
   }
 
