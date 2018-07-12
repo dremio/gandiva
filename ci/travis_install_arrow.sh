@@ -26,7 +26,7 @@ fi
 wget https://github.com/apache/arrow/archive/apache-arrow-${ARROW_VERSION}.zip
 unzip apache-arrow-${ARROW_VERSION}.zip
 
-ARROW_SRC_DIR=apache-arrow-${ARROW_VERSION}
+ARROW_SRC_DIR=arrow-apache-arrow-${ARROW_VERSION}
 mkdir $ARROW_SRC_DIR/cpp/build
 
 pushd $ARROW_SRC_DIR/cpp/build
