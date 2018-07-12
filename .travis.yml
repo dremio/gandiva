@@ -4,14 +4,14 @@ addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
-    - llvm-toolchain-trusty-6.0
+    - llvm-toolchain-trusty-5.0
     packages:
     - gdb
     - ccache
-    - clang-6.0
-    - clang-format-6.0
-    - clang-tidy-6.0
-    - llvm-6.0-dev
+    - clang-5.0
+    - clang-format-5.0
+    - clang-tidy-5.0
+    - llvm-5.0-dev
 cache:
   ccache: true
 before_install:
