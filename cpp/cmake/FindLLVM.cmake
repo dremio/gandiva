@@ -17,7 +17,7 @@
 #  find_package(LLVM)
 #
 
-set(GANDIVA_LLVM_VERSION 5.0)
+set(GANDIVA_LLVM_VERSION 5.0.2)
 find_package(LLVM ${GANDIVA_LLVM_VERSION} REQUIRED CONFIG HINTS
              /usr/local/opt/llvm
              /usr/share)
