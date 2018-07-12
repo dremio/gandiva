@@ -36,7 +36,7 @@ function(build_gandiva_lib TYPE)
       Boost::filesystem
       LLVM::LLVM_INTERFACE)
 
-  if (${TYPE} MATCHES "static")
+  if (${TYPE} MATCHES "static" AND NOT APPLE)
     target_link_libraries(gandiva_${TYPE}
       LINK_PRIVATE
         -static-libstdc++ -static-libgcc)

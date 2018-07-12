@@ -20,6 +20,7 @@ source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
 pushd $CPP_BUILD_DIR
 
+ldd ./src/jni/libgandiva_jni.so
 mvn test -f $GANDIVA_JAVA_DIR/pom.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
 
 popd

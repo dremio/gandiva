@@ -29,8 +29,6 @@ matrix:
   include:
   - os: linux
     language: cpp
-    compiler:
-    - gcc
     env:
     - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
     - GANDIVA_TRAVIS_USE_TOOLCHAIN=1
