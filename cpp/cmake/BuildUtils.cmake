@@ -36,6 +36,12 @@ function(build_gandiva_lib TYPE)
       Boost::filesystem
       LLVM::LLVM_INTERFACE)
 
+  if (${TYPE} MATCHES "static")
+    target_link_libraries(gandiva_${TYPE}
+      LINK_PRIVATE
+        -static-libstdc++ -static-libgcc)
+  endif()
+
   # Set version for the library.
   set(GANDIVA_VERSION_MAJOR 0)
   set(GANDIVA_VERSION_MINOR 1)

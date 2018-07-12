@@ -25,4 +25,5 @@ pushd $CPP_BUILD_DIR
 ctest -VV -L unittest
 ctest -VV -L integ
 
+ldd src/jni/libgandiva_jni.so
 popd
