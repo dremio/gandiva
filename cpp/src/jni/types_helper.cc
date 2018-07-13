@@ -31,8 +31,8 @@ types::TimeUnit MapTimeUnit(arrow::TimeUnit::type &unit) {
     case arrow::TimeUnit::NANO:
       return types::TimeUnit::NANOSEC;
   }
-  // satifsy gcc.
-  return nullptr;
+  // satifsy gcc. should be unreachable.
+  return types::TimeUnit::SEC;
 }
 
 void ArrowToProtobuf(DataTypePtr type, types::ExtGandivaType *gandiva_data_type) {
@@ -127,8 +127,6 @@ void ArrowToProtobuf(DataTypePtr type, types::ExtGandivaType *gandiva_data_type)
       // when one of these are added build breaks.
       DCHECK(false);
   }
-  // satifsy gcc.
-  return nullptr;
 }
 
 JNIEXPORT jbyteArray JNICALL
