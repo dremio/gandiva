@@ -137,7 +137,7 @@ Java_org_apache_arrow_gandiva_evaluator_TypesJniHelper_getGandivaSupportedDataTy
     ArrowToProtobuf(type, gandiva_data_type);
   }
   size_t size = gandiva_data_types.ByteSizeLong();
-  const jbyte *buffer = (jbyte *)malloc(size);
+  jbyte buffer[size];
   gandiva_data_types.SerializeToArray((void *)buffer, size);
   jbyteArray ret = env->NewByteArray(size);
   env->SetByteArrayRegion(ret, 0, size, buffer);
@@ -165,7 +165,7 @@ Java_org_apache_arrow_gandiva_evaluator_TypesJniHelper_getGandivaSupportedFuncti
     }
   }
   size_t size = gandiva_functions.ByteSizeLong();
-  const jbyte *buffer = (jbyte *)malloc(size);
+  jbyte buffer[size];
   gandiva_functions.SerializeToArray((void *)buffer, size);
   jbyteArray ret = env->NewByteArray(size);
   env->SetByteArrayRegion(ret, 0, size, buffer);
