@@ -97,10 +97,11 @@ using std::vector;
       INNER(NAME, float32), INNER(NAME, float64)
 
 // Iterate the inner macro over all numeric types and bool type
-#define NUMERIC_AND_BOOL_TYPES(INNER, NAME) \
-  NUMERIC_TYPES(INNER, NAME), INNER(NAME, boolean)
+#define NUMERIC_BOOL_DATE_TYPES(INNER, NAME)                                    \
+  NUMERIC_TYPES(INNER, NAME), DATE_TYPES(INNER, NAME), TIME_TYPES(INNER, NAME), \
+      INNER(NAME, boolean)
 
-// Iterate the inner macro over all data types
+// Iterate the inner macro over all date types
 #define DATE_TYPES(INNER, NAME) INNER(NAME, date64), INNER(NAME, timestamp)
 
 #define TIME_TYPES(INNER, NAME) INNER(NAME, time32)
@@ -117,8 +118,8 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, divide),
     BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int32, int32),
     BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int64, int64),
-    NUMERIC_AND_BOOL_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, equal),
-    NUMERIC_AND_BOOL_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, not_equal),
+    NUMERIC_BOOL_DATE_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, equal),
+    NUMERIC_BOOL_DATE_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, not_equal),
     NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than),
     NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than_or_equal_to),
     NUMERIC_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than),
@@ -133,8 +134,8 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     UNARY_SAFE_NULL_IF_NULL(castFLOAT8, float32, float64),
 
     // nullable never operations
-    NUMERIC_AND_BOOL_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnull),
-    NUMERIC_AND_BOOL_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnotnull),
+    NUMERIC_BOOL_DATE_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnull),
+    NUMERIC_BOOL_DATE_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnotnull),
     NUMERIC_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnumeric),
 
     // date/timestamp operations
