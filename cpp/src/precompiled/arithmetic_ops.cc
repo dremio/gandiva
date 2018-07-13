@@ -34,6 +34,10 @@ extern "C" {
   INNER(NAME, timestamp, OP)        \
   INNER(NAME, time32, OP)
 
+#define NUMERIC_DATE_TYPES(INNER, NAME, OP) \
+  NUMERIC_TYPES(INNER, NAME, OP)            \
+  DATE_TYPES(INNER, NAME, OP)
+
 #define NUMERIC_BOOL_DATE_TYPES(INNER, NAME, OP) \
   NUMERIC_TYPES(INNER, NAME, OP)                 \
   DATE_TYPES(INNER, NAME, OP)                    \
@@ -65,10 +69,10 @@ BINARY_GENERIC_OP(mod, int64, int64, int64, %)
 
 NUMERIC_BOOL_DATE_TYPES(BINARY_RELATIONAL, equal, ==)
 NUMERIC_BOOL_DATE_TYPES(BINARY_RELATIONAL, not_equal, !=)
-NUMERIC_TYPES(BINARY_RELATIONAL, less_than, <)
-NUMERIC_TYPES(BINARY_RELATIONAL, less_than_or_equal_to, <=)
-NUMERIC_TYPES(BINARY_RELATIONAL, greater_than, >)
-NUMERIC_TYPES(BINARY_RELATIONAL, greater_than_or_equal_to, >=)
+NUMERIC_DATE_TYPES(BINARY_RELATIONAL, less_than, <)
+NUMERIC_DATE_TYPES(BINARY_RELATIONAL, less_than_or_equal_to, <=)
+NUMERIC_DATE_TYPES(BINARY_RELATIONAL, greater_than, >)
+NUMERIC_DATE_TYPES(BINARY_RELATIONAL, greater_than_or_equal_to, >=)
 
 // cast fns : takes one param type, returns another type.
 #define CAST_UNARY(NAME, IN_TYPE, OUT_TYPE) \
