@@ -6,7 +6,6 @@ addons:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-trusty-6.0
     packages:
-    - g++-4.9
     - gdb
     - ccache
     - clang-6.0
@@ -23,7 +22,7 @@ matrix:
   - os: linux
     language: cpp
     env:
-    - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+    - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
     - GANDIVA_TRAVIS_USE_TOOLCHAIN=1
     - GANDIVA_BUILD_WARNING_LEVEL=CHECKIN
 
