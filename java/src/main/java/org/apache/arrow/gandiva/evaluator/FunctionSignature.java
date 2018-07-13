@@ -16,6 +16,9 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 import org.apache.arrow.vector.types.pojo.ArrowType;
 
 import java.util.List;
@@ -51,4 +54,39 @@ public class FunctionSignature {
     this.returnType = returnType;
     this.paramTypes = paramTypes;
   }
+
+  /**
+   * Override equals.
+   * @param signature - signature to compare
+   * @return true if equal and false if not.
+   */
+  public boolean equals(Object signature) {
+    if (signature == null) {
+      return false;
+    }
+    if (getClass() != signature.getClass()) {
+      return false;
+    }
+    final FunctionSignature other = (FunctionSignature) signature;
+    return Objects.equal(this.name, other.name)
+            && Objects.equal(this.returnType, other.returnType)
+            && Objects.equal(this.paramTypes, other.paramTypes);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(this.name, this.returnType, this.paramTypes);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+            .add("name ", name)
+            .add("return type ", returnType)
+            .add("param types ", paramTypes)
+            .toString();
+
+  }
+
+
 }

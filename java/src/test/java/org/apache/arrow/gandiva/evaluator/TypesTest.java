@@ -16,19 +16,30 @@
 
 package org.apache.arrow.gandiva.evaluator;
 
-import org.apache.arrow.gandiva.evaluator.Types;
+import com.google.common.collect.Lists;
+
 import org.apache.arrow.gandiva.exceptions.GandivaException;
+import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.List;
 
 public class TypesTest {
 
   @Test
   public void testTypes() throws GandivaException {
-    Types.getInstance().getSupportedTypes();
+    List<ArrowType> types = Types.getInstance().getSupportedTypes();
+    ArrowType.Int UINT8 = new ArrowType.Int(8, false);
+    Assert.assertTrue(types.contains(UINT8));
+
   }
 
   @Test
   public void testFunctions() throws GandivaException {
-    Types.getInstance().getSupportedFunctions();
+    ArrowType.Int UINT8 = new ArrowType.Int(8, false);
+    FunctionSignature signature = new FunctionSignature("add", UINT8,Lists.newArrayList(UINT8,UINT8));
+    List<FunctionSignature> functions = Types.getInstance().getSupportedFunctions();
+    Assert.assertTrue(functions.contains(signature));
   }
 }
