@@ -224,7 +224,9 @@ const NativeFunction *FunctionRegistry::LookupSignature(
   return got == pc_registry_map_.end() ? NULL : got->second;
 }
 
-FuncSignatureVector FunctionRegistry::GetSupportedFunctions() {
+FuncSignatureVector FunctionRegistry::function_signatures = InitSupportedFunctions();
+
+FuncSignatureVector FunctionRegistry::InitSupportedFunctions() {
   FuncSignatureVector func_descriptor;
   for (auto &iter : pc_registry_map_) {
     FuncSignaturePtr function_signature =

@@ -31,7 +31,8 @@ namespace gandiva {
 class Types {
  public:
   static DataTypeVector supported_types() { return supported_types_; }
-  // making a copy so as to not expose internal state.
+  // make the vector immutable.
+  // compiler should use move, so no need for returning a ref.
   static const FuncSignatureVector supported_functions();
 
  private:

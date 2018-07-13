@@ -22,10 +22,7 @@ namespace gandiva {
 DataTypeVector Types::supported_types_ = Types::InitSupportedTypes();
 
 const FuncSignatureVector Types::supported_functions() {
-  static FunctionRegistry func_registry;
-  static const FuncSignatureVector supported_functions =
-      func_registry.GetSupportedFunctions();
-  return supported_functions;
+  return FunctionRegistry::GetSupportedFunctions();
 }
 
 DataTypeVector Types::InitSupportedTypes() {

@@ -140,7 +140,7 @@ Java_org_apache_arrow_gandiva_evaluator_TypesJniHelper_getGandivaSupportedDataTy
   const jbyte *buffer = (jbyte *)malloc(size);
   gandiva_data_types.SerializeToArray((void *)buffer, size);
   jbyteArray ret = env->NewByteArray(size);
-  env->SetByteArrayRegion (ret, 0, size, buffer);
+  env->SetByteArrayRegion(ret, 0, size, buffer);
   return ret;
 }
 
@@ -168,6 +168,6 @@ Java_org_apache_arrow_gandiva_evaluator_TypesJniHelper_getGandivaSupportedFuncti
   const jbyte *buffer = (jbyte *)malloc(size);
   gandiva_functions.SerializeToArray((void *)buffer, size);
   jbyteArray ret = env->NewByteArray(size);
-  env->SetByteArrayRegion (ret, 0, size, buffer);
+  env->SetByteArrayRegion(ret, 0, size, buffer);
   return ret;
 }
