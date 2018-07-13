@@ -34,7 +34,7 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
         curl \
         ninja \
         boost-cpp \
-        arrow-cpp
+        arrow-cpp=0.8.0
 
     conda update -y -q -p $CPP_TOOLCHAIN ca-certificates -c defaults
 fi
