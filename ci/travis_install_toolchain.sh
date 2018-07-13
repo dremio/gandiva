@@ -33,7 +33,8 @@ if [ ! -e $CPP_TOOLCHAIN ]; then
         cmake \
         curl \
         ninja \
-        boost-cpp
+        boost-cpp \
+        arrow-cpp
 
     conda update -y -q -p $CPP_TOOLCHAIN ca-certificates -c defaults
 fi
