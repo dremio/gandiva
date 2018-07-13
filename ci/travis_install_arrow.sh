@@ -16,17 +16,18 @@
 
 set -ex
 
-ARROW_VERSION=0.9.0
+#TAG=apache-arrow-0.9.0
+TAG=master
+ARROW_SRC_DIR=arrow-${TAG}
 
 # Use Ninja for faster builds when using toolchain
 if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
   CMAKE_ARROW_FLAGS="$CMAKE_COMMON_FLAGS -GNinja"
 fi
 
-wget https://github.com/apache/arrow/archive/apache-arrow-${ARROW_VERSION}.zip
-unzip -qq apache-arrow-${ARROW_VERSION}.zip
+wget https://github.com/apache/arrow/archive/${TAG}.zip
+unzip -qq ${TAG}.zip
 
-ARROW_SRC_DIR=arrow-apache-arrow-${ARROW_VERSION}
 mkdir $ARROW_SRC_DIR/cpp/build
 
 pushd $ARROW_SRC_DIR/cpp/build
