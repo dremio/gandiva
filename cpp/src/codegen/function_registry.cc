@@ -142,15 +142,25 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     NUMERIC_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnumeric),
 
     // date/timestamp operations
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMillennium),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractCentury),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDecade),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractYear),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDoy),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractQuarter),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMonth),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractWeek),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDow),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDay),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractSecond),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractEpoch),
 
     // time operations
     TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
     TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
+    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractSecond),
 
     // timestamp diff operations
     BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffSecond, timestamp, timestamp, int32),
