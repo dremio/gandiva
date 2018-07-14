@@ -82,4 +82,7 @@ $TRAVIS_MAKE -j4
 
 $TRAVIS_MAKE install
 
+echo "ldd ./src/jni/libgandiva_jni.so"
+ldd ./src/jni/libgandiva_jni.so
+
 popd
