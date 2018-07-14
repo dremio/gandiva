@@ -96,6 +96,7 @@ using std::vector;
       INNER(NAME, uint8), INNER(NAME, uint16), INNER(NAME, uint32), INNER(NAME, uint64), \
       INNER(NAME, float32), INNER(NAME, float64)
 
+// Iterate the inner macro over numeric and date/time types
 #define NUMERIC_DATE_TYPES(INNER, NAME) \
   NUMERIC_TYPES(INNER, NAME), DATE_TYPES(INNER, NAME), TIME_TYPES(INNER, NAME)
 
@@ -107,6 +108,7 @@ using std::vector;
 // Iterate the inner macro over all date types
 #define DATE_TYPES(INNER, NAME) INNER(NAME, date64), INNER(NAME, timestamp)
 
+// Iterate the inner macro over all time types
 #define TIME_TYPES(INNER, NAME) INNER(NAME, time32)
 
 // Iterate the inner macro over all data types
