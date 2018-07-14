@@ -346,7 +346,7 @@ TEST(TestTime, TestExtractWeek) {
   data.push_back("2024-12-31 10:10:10");
   data.push_back("1");
 
-  for (int i = 0; i < data.size(); i += 2) {
+  for (uint32_t i = 0; i < data.size(); i += 2) {
     timestamp ts = StringToTimestamp(data.at(i).c_str());
     int64 exp = atol(data.at(i + 1).c_str());
     EXPECT_EQ(extractWeek_timestamp(ts), exp);
