@@ -104,4 +104,39 @@ extern "C" {
 
 TIMESTAMP_DIFF(timestamp)
 
+#define TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, NAME, TO_MILLIS) \
+  FORCE_INLINE                                               \
+  TYPE NAME##_##TYPE##_int32(TYPE millis, int32 count) {     \
+    return millis + TO_MILLIS * (TYPE)count;                 \
+  }
+
+// Documentation of mktime suggests that it handles
+// tm_mon being negative, and also tm_mon being >= 12 by
+// adjusting tm_year accordingly
+//
+// Using gmtime_r() and timegm() instead of localtime_r() and mktime()
+// since the input millis are since epoch
+#define TIMESTAMP_ADD_INT_MONTH_UNITS(TYPE, NAME, N_MONTHS) \
+  FORCE_INLINE                                              \
+  TYPE NAME##_##TYPE##_int32(TYPE millis, int32 count) {    \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);            \
+    struct tm tm;                                           \
+    gmtime_r(&tsec, &tm);                                   \
+    tm.tm_mon += count * N_MONTHS;                          \
+    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;               \
+  }
+
+#define TIMESTAMP_ADD_INT(TYPE)                                          \
+  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddSecond, MILLIS_IN_SEC) \
+  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddMinute, MILLIS_IN_MIN) \
+  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddHour, MILLIS_IN_HOUR)  \
+  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddDay, MILLIS_IN_DAY)    \
+  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddWeek, MILLIS_IN_WEEK)  \
+  TIMESTAMP_ADD_INT_MONTH_UNITS(TYPE, timestampaddMonth, 1)              \
+  TIMESTAMP_ADD_INT_MONTH_UNITS(TYPE, timestampaddQuarter, 3)            \
+  TIMESTAMP_ADD_INT_MONTH_UNITS(TYPE, timestampaddYear, 12)
+
+TIMESTAMP_ADD_INT(date64)
+TIMESTAMP_ADD_INT(timestamp)
+
 }  // extern "C"

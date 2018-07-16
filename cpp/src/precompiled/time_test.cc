@@ -41,6 +41,38 @@ TEST(TestTime, TestExtractTimestamp) {
   EXPECT_EQ(extractSecond_timestamp(ts), 33);
 }
 
+TEST(TestTime, TimeStampAdd) {
+  EXPECT_EQ(
+      timestampaddSecond_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 30),
+      StringToTimestamp("2000-05-01 10:21:04"));
+
+  EXPECT_EQ(
+      timestampaddMinute_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -30),
+      StringToTimestamp("2000-05-01 09:50:34"));
+
+  EXPECT_EQ(
+      timestampaddHour_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 20),
+      StringToTimestamp("2000-05-02 06:20:34"));
+
+  EXPECT_EQ(
+      timestampaddDay_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -35),
+      StringToTimestamp("2000-03-27 10:20:34"));
+
+  EXPECT_EQ(timestampaddWeek_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 4),
+            StringToTimestamp("2000-05-29 10:20:34"));
+
+  EXPECT_EQ(
+      timestampaddMonth_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 10),
+      StringToTimestamp("2001-03-01 10:20:34"));
+
+  EXPECT_EQ(
+      timestampaddQuarter_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -2),
+      StringToTimestamp("1999-11-01 10:20:34"));
+
+  EXPECT_EQ(timestampaddYear_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 2),
+            StringToTimestamp("2002-05-01 10:20:34"));
+}
+
 // test cases from http://www.staff.science.uu.nl/~gent0113/calendar/isocalendar.htm
 TEST(TestTime, TestExtractWeek) {
   std::vector<std::string> data;

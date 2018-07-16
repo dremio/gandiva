@@ -64,6 +64,15 @@ int64 extractHour_timestamp(timestamp millis);
 int64 extractMinute_timestamp(timestamp millis);
 int64 extractSecond_timestamp(timestamp millis);
 
+int64 timestampaddSecond_timestamp_int32(timestamp, int32);
+int64 timestampaddMinute_timestamp_int32(timestamp, int32);
+int64 timestampaddHour_timestamp_int32(timestamp, int32);
+int64 timestampaddDay_timestamp_int32(timestamp, int32);
+int64 timestampaddWeek_timestamp_int32(timestamp, int32);
+int64 timestampaddMonth_timestamp_int32(timestamp, int32);
+int64 timestampaddQuarter_timestamp_int32(timestamp, int32);
+int64 timestampaddYear_timestamp_int32(timestamp, int32);
+
 int32 mem_compare(const char *left, int32 left_len, const char *right, int32 right_len);
 
 }  // extern "C"
