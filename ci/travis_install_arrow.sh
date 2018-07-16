@@ -14,12 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -ex
 
-source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
+#TAG=apache-arrow-0.9.0
+TAG=master
+ARROW_SRC_DIR=arrow-${TAG}
 
-pushd $CPP_BUILD_DIR
+# Use Ninja for faster builds when using toolchain
+if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
+  CMAKE_ARROW_FLAGS="$CMAKE_COMMON_FLAGS -GNinja"
+fi
 
-mvn test -f $GANDIVA_JAVA_DIR/pom.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
+wget https://github.com/apache/arrow/archive/${TAG}.zip
+unzip -qq ${TAG}.zip
+
+mkdir $ARROW_SRC_DIR/cpp/build
+
+pushd $ARROW_SRC_DIR/cpp/build
+
+cmake $CMAKE_ARROW_FLAGS ..
+
+# Build and install libraries
+$TRAVIS_MAKE -j4
+
+$TRAVIS_MAKE install
 
 popd
+

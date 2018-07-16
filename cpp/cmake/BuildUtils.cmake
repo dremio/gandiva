@@ -36,6 +36,12 @@ function(build_gandiva_lib TYPE)
       Boost::filesystem
       LLVM::LLVM_INTERFACE)
 
+  if (${TYPE} MATCHES "static" AND NOT APPLE)
+    target_link_libraries(gandiva_${TYPE}
+      LINK_PRIVATE
+        -static-libstdc++ -static-libgcc)
+  endif()
+
   # Set version for the library.
   set(GANDIVA_VERSION_MAJOR 0)
   set(GANDIVA_VERSION_MINOR 1)
@@ -65,7 +71,7 @@ function(add_gandiva_unit_test REL_TEST_NAME)
     ${CMAKE_SOURCE_DIR}/src
   )
   target_link_libraries(${TEST_NAME}
-    PRIVATE ${ARROW_LIB_SHARED} gtest_main Boost::boost
+    PRIVATE ARROW::ARROW_SHARED gtest_main Boost::boost
   )
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
