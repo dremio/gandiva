@@ -55,7 +55,7 @@ target_include_directories(gandiva_obj_lib
     ${CMAKE_SOURCE_DIR}/src
     $<TARGET_PROPERTY:LLVM::LLVM_INTERFACE,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:ARROW::ARROW_SHARED,INTERFACE_INCLUDE_DIRECTORIES>
-    ${CMAKE_BINARY_DIR}/googletest-src/googletest/include
+    $<TARGET_PROPERTY:gtest_main,INCLUDE_DIRECTORIES>
 )
 
 build_gandiva_lib("shared")
