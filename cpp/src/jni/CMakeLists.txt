@@ -32,7 +32,7 @@ add_library(gandiva_jni SHARED
   native_builder.cc
   config_builder.cc
   config_holder.cc
-  types_helper.cc
+  expression_registry_helper.cc
   ${PROTO_SRCS}
   ${PROTO_HDRS})
 add_dependencies(gandiva_jni gandiva_java)

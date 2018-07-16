@@ -11,14 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "jni/org_apache_arrow_gandiva_evaluator_TypesJniHelper.h"
+#include "jni/org_apache_arrow_gandiva_evaluator_ExpressionRegistryJniHelper.h"
+
+#include <memory>
 
 #include "Types.pb.h"
 #include "gandiva/arrow.h"
-#include "gandiva/types.h"
+#include "gandiva/expression_registry.h"
 
 using gandiva::DataTypePtr;
-using gandiva::Types;
+using gandiva::ExpressionRegistry;
 
 types::TimeUnit MapTimeUnit(arrow::TimeUnit::type &unit) {
   switch (unit) {
@@ -76,7 +78,6 @@ void ArrowToProtobuf(DataTypePtr type, types::ExtGandivaType *gandiva_data_type)
     case arrow::Type::type::STRING:
       gandiva_data_type->set_type(types::GandivaType::UTF8);
       break;
-    case arrow::Type::type::FIXED_SIZE_BINARY:
     case arrow::Type::type::BINARY:
       gandiva_data_type->set_type(types::GandivaType::BINARY);
       break;
@@ -116,6 +117,7 @@ void ArrowToProtobuf(DataTypePtr type, types::ExtGandivaType *gandiva_data_type)
     case arrow::Type::type::NA:
       gandiva_data_type->set_type(types::GandivaType::NONE);
       break;
+    case arrow::Type::type::FIXED_SIZE_BINARY:
     case arrow::Type::type::MAP:
     case arrow::Type::type::INTERVAL:
     case arrow::Type::type::DECIMAL:
@@ -130,31 +132,31 @@ void ArrowToProtobuf(DataTypePtr type, types::ExtGandivaType *gandiva_data_type)
 }
 
 JNIEXPORT jbyteArray JNICALL
-Java_org_apache_arrow_gandiva_evaluator_TypesJniHelper_getGandivaSupportedDataTypes(
+Java_org_apache_arrow_gandiva_evaluator_ExpressionRegistryJniHelper_getGandivaSupportedDataTypes(
     JNIEnv *env, jobject types_helper) {
   types::GandivaDataTypes gandiva_data_types;
-  auto supported_types = Types::supported_types();
+  auto supported_types = ExpressionRegistry::supported_types();
   for (auto const &type : supported_types) {
     types::ExtGandivaType *gandiva_data_type = gandiva_data_types.add_datatype();
     ArrowToProtobuf(type, gandiva_data_type);
   }
   size_t size = gandiva_data_types.ByteSizeLong();
-  jbyte buffer[size];
-  gandiva_data_types.SerializeToArray((void *)buffer, size);
+  std::unique_ptr<jbyte[]> buffer{new jbyte[size]};
+  gandiva_data_types.SerializeToArray((void *)buffer.get(), size);
   jbyteArray ret = env->NewByteArray(size);
-  env->SetByteArrayRegion(ret, 0, size, buffer);
+  env->SetByteArrayRegion(ret, 0, size, buffer.get());
   return ret;
 }
 
 /*
- * Class:     org_apache_arrow_gandiva_types_TypesJNIHelper
+ * Class:     org_apache_arrow_gandiva_types_ExpressionRegistryJniHelper
  * Method:    getGandivaSupportedFunctions
  * Signature: ()[B
  */
 JNIEXPORT jbyteArray JNICALL
-Java_org_apache_arrow_gandiva_evaluator_TypesJniHelper_getGandivaSupportedFunctions(
+Java_org_apache_arrow_gandiva_evaluator_ExpressionRegistryJniHelper_getGandivaSupportedFunctions(
     JNIEnv *env, jobject types_helper) {
-  auto supported_functions = Types::supported_functions();
+  auto supported_functions = ExpressionRegistry::supported_functions();
   types::GandivaFunctions gandiva_functions;
   for (auto &function : supported_functions) {
     types::FunctionSignature *function_signature = gandiva_functions.add_function();
@@ -167,9 +169,9 @@ Java_org_apache_arrow_gandiva_evaluator_TypesJniHelper_getGandivaSupportedFuncti
     }
   }
   size_t size = gandiva_functions.ByteSizeLong();
-  jbyte buffer[size];
-  gandiva_functions.SerializeToArray((void *)buffer, size);
+  std::unique_ptr<jbyte[]> buffer{new jbyte[size]};
+  gandiva_functions.SerializeToArray((void *)buffer.get(), size);
   jbyteArray ret = env->NewByteArray(size);
-  env->SetByteArrayRegion(ret, 0, size, buffer);
+  env->SetByteArrayRegion(ret, 0, size, buffer.get());
   return ret;
 }

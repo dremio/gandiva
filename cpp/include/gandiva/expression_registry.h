@@ -28,18 +28,16 @@ namespace gandiva {
 ///
 /// Has helper methods for clients to programatically discover
 /// data types and functions supported by Gandiva.
-class Types {
+class ExpressionRegistry {
  public:
   static DataTypeVector supported_types() { return supported_types_; }
-  // make the vector immutable.
-  // compiler should use move, so no need for returning a ref.
   static const FuncSignatureVector supported_functions();
 
  private:
   static DataTypeVector supported_types_;
   static FuncSignatureVector supported_functions_;
   static DataTypeVector InitSupportedTypes();
-  static void AddArrowTypeToVector(arrow::Type::type &type, DataTypeVector &vector);
+  static void AddArrowTypesToVector(arrow::Type::type &type, DataTypeVector &vector);
 };
 }  // namespace gandiva
 #endif  // GANDIVA_TYPES_H

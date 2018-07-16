@@ -25,11 +25,11 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class TypesTest {
+public class ExpressionRegistryTest {
 
   @Test
   public void testTypes() throws GandivaException {
-    List<ArrowType> types = Types.getInstance().getSupportedTypes();
+    List<ArrowType> types = ExpressionRegistry.getInstance().getSupportedTypes();
     ArrowType.Int UINT8 = new ArrowType.Int(8, false);
     Assert.assertTrue(types.contains(UINT8));
 
@@ -39,7 +39,7 @@ public class TypesTest {
   public void testFunctions() throws GandivaException {
     ArrowType.Int UINT8 = new ArrowType.Int(8, false);
     FunctionSignature signature = new FunctionSignature("add", UINT8,Lists.newArrayList(UINT8,UINT8));
-    List<FunctionSignature> functions = Types.getInstance().getSupportedFunctions();
+    List<FunctionSignature> functions = ExpressionRegistry.getInstance().getSupportedFunctions();
     Assert.assertTrue(functions.contains(signature));
   }
 }

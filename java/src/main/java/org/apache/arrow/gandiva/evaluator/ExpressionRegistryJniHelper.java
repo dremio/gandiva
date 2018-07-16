@@ -20,7 +20,7 @@ package org.apache.arrow.gandiva.evaluator;
  * JNI Adapter used to get supported types and functions
  * from Gandiva.
  */
-class TypesJniHelper {
+class ExpressionRegistryJniHelper {
 
   native byte[] getGandivaSupportedDataTypes();
 

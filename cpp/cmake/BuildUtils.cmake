@@ -61,7 +61,7 @@ function(add_gandiva_unit_test REL_TEST_NAME)
 
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
   if(${REL_TEST_NAME} MATCHES "llvm" OR
-     ${REL_TEST_NAME} MATCHES "types")
+     ${REL_TEST_NAME} MATCHES "expression_registry")
     # If the unit test has llvm in its name, include llvm.
     add_dependencies(${TEST_NAME} LLVM::LLVM_INTERFACE)
     target_link_libraries(${TEST_NAME} PRIVATE LLVM::LLVM_INTERFACE)

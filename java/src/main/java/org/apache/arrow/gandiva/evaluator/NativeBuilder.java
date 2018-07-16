@@ -115,7 +115,7 @@ class NativeBuilder {
    * Generates the LLVM module to evaluate the expressions with
    * custom configuration.
    *
-   * @param schemaBuf   The schema serialized as a protobuf. See Types.proto
+   * @param schemaBuf   The schema serialized as a protobuf. See ExpressionRegistry.proto
    *                    to see the protobuf specification
    * @param exprListBuf The serialized protobuf of the expression vector. Each
    *                    expression is created using TreeBuilder::MakeExpression

@@ -12,31 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "gandiva/types.h"
+#include "gandiva/expression_registry.h"
 
 #include "codegen/function_registry.h"
 #include "codegen/llvm_types.h"
 
 namespace gandiva {
 
-DataTypeVector Types::supported_types_ = Types::InitSupportedTypes();
-
-const FuncSignatureVector Types::supported_functions() {
+const FuncSignatureVector ExpressionRegistry::supported_functions() {
   return FunctionRegistry::GetSupportedFunctions();
 }
 
-DataTypeVector Types::InitSupportedTypes() {
+DataTypeVector ExpressionRegistry::supported_types_ =
+    ExpressionRegistry::InitSupportedTypes();
+
+DataTypeVector ExpressionRegistry::InitSupportedTypes() {
   DataTypeVector data_type_vector;
   llvm::LLVMContext llvm_context;
   LLVMTypes llvm_types(llvm_context);
   auto supported_arrow_types = llvm_types.GetSupportedArrowTypes();
   for (auto &type_id : supported_arrow_types) {
-    AddArrowTypeToVector(type_id, data_type_vector);
+    AddArrowTypesToVector(type_id, data_type_vector);
   }
   return data_type_vector;
 }
 
-void Types::AddArrowTypeToVector(arrow::Type::type &type, DataTypeVector &vector) {
+void ExpressionRegistry::AddArrowTypesToVector(arrow::Type::type &type,
+                                               DataTypeVector &vector) {
   switch (type) {
     case arrow::Type::type::BOOL:
       vector.push_back(arrow::boolean());
@@ -77,7 +79,6 @@ void Types::AddArrowTypeToVector(arrow::Type::type &type, DataTypeVector &vector
     case arrow::Type::type::STRING:
       vector.push_back(arrow::utf8());
       break;
-    case arrow::Type::type::FIXED_SIZE_BINARY:
     case arrow::Type::type::BINARY:
       vector.push_back(arrow::binary());
       break;
@@ -99,11 +100,12 @@ void Types::AddArrowTypeToVector(arrow::Type::type &type, DataTypeVector &vector
       break;
     case arrow::Type::type::TIME64:
       vector.push_back(arrow::time64(arrow::TimeUnit::MICRO));
-      vector.push_back(arrow::time32(arrow::TimeUnit::NANO));
+      vector.push_back(arrow::time64(arrow::TimeUnit::NANO));
       break;
     case arrow::Type::type::NA:
       vector.push_back(arrow::null());
       break;
+    case arrow::Type::type::FIXED_SIZE_BINARY:
     case arrow::Type::type::MAP:
     case arrow::Type::type::INTERVAL:
     case arrow::Type::type::DECIMAL:

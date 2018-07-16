@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "gandiva/types.h"
+#include "gandiva/expression_registry.h"
 
 #include <algorithm>
 #include <vector>
@@ -33,7 +33,7 @@ class TestTypes : public ::testing::Test {
 
 // Verify all functions in registry are exported.
 TEST_F(TestTypes, VerifySupportedFunctions) {
-  FuncSignatureVector functions = Types::supported_functions();
+  FuncSignatureVector functions = ExpressionRegistry::supported_functions();
   for (auto &iter : registry_) {
     auto function = iter.signature();
     auto element =
@@ -46,7 +46,7 @@ TEST_F(TestTypes, VerifySupportedFunctions) {
 
 // Verify all types are supported.
 TEST_F(TestTypes, VerifyDataTypes) {
-  DataTypeVector data_types = Types::supported_types();
+  DataTypeVector data_types = ExpressionRegistry::supported_types();
   llvm::LLVMContext llvm_context;
   LLVMTypes llvm_types(llvm_context);
   auto supported_arrow_types = llvm_types.GetSupportedArrowTypes();

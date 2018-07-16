@@ -37,7 +37,7 @@ import java.util.List;
  * Gandiva.
  * All types are in Arrow namespace.
  */
-public class Types {
+public class ExpressionRegistry {
 
   private static final int BIT_WIDTH8 = 8;
   private static final int BIT_WIDTH_16 = 16;
@@ -49,9 +49,10 @@ public class Types {
   private final List<ArrowType> supportedTypes;
   private final List<FunctionSignature> functionSignatures;
 
-  private static volatile Types INSTANCE;
+  private static volatile ExpressionRegistry INSTANCE;
 
-  private Types(List<ArrowType> supportedTypes, List<FunctionSignature> functionSignatures) {
+  private ExpressionRegistry(List<ArrowType> supportedTypes,
+                             List<FunctionSignature> functionSignatures) {
     this.supportedTypes = supportedTypes;
     this.functionSignatures = functionSignatures;
   }
@@ -61,15 +62,15 @@ public class Types {
    * @return singleton instance
    * @throws GandivaException if error in Gandiva Library integration.
    */
-  public static Types getInstance() throws GandivaException {
+  public static ExpressionRegistry getInstance() throws GandivaException {
     if (INSTANCE == null) {
-      synchronized (Types.class) {
+      synchronized (ExpressionRegistry.class) {
         if (INSTANCE == null) {
           // ensure library is setup.
           NativeBuilder.getInstance();
           List<ArrowType> typesFromGandiva = getSupportedTypesFromGandiva();
           List<FunctionSignature> functionsFromGandiva = getSupportedFunctionsFromGandiva();
-          INSTANCE = new Types(typesFromGandiva, functionsFromGandiva);
+          INSTANCE = new ExpressionRegistry(typesFromGandiva, functionsFromGandiva);
         }
       }
     }
@@ -87,7 +88,8 @@ public class Types {
   private static List<ArrowType> getSupportedTypesFromGandiva() throws GandivaException {
     List<ArrowType> supportedTypes = Lists.newArrayList();
     try {
-      byte[] gandivaSupportedDataTypes = new TypesJniHelper().getGandivaSupportedDataTypes();
+      byte[] gandivaSupportedDataTypes = new ExpressionRegistryJniHelper()
+              .getGandivaSupportedDataTypes();
       GandivaDataTypes gandivaDataTypes = GandivaDataTypes.parseFrom(gandivaSupportedDataTypes);
       for (ExtGandivaType type : gandivaDataTypes.getDataTypeList()) {
         supportedTypes.add(getArrowType(type));
@@ -102,7 +104,8 @@ public class Types {
           GandivaException {
     List<FunctionSignature> supportedTypes = Lists.newArrayList();
     try {
-      byte[] gandivaSupportedFunctions = new TypesJniHelper().getGandivaSupportedFunctions();
+      byte[] gandivaSupportedFunctions = new ExpressionRegistryJniHelper()
+              .getGandivaSupportedFunctions();
       GandivaFunctions gandivaFunctions = GandivaFunctions.parseFrom(gandivaSupportedFunctions);
       for (GandivaTypes.FunctionSignature protoFunctionSignature
               : gandivaFunctions.getFunctionList()) {
@@ -152,7 +155,6 @@ public class Types {
       case GandivaType.UTF8_VALUE:
         return new ArrowType.Utf8();
       case GandivaType.BINARY_VALUE:
-      case GandivaType.FIXED_SIZE_BINARY_VALUE:
         return new ArrowType.Binary();
       case GandivaType.DATE32_VALUE:
         return new ArrowType.Date(DateUnit.DAY);
@@ -168,6 +170,7 @@ public class Types {
                 BIT_WIDTH_64);
       case GandivaType.NONE_VALUE:
         return new ArrowType.Null();
+      case GandivaType.FIXED_SIZE_BINARY_VALUE:
       case GandivaType.MAP_VALUE:
       case GandivaType.INTERVAL_VALUE:
       case GandivaType.DECIMAL_VALUE:
