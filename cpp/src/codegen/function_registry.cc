@@ -82,6 +82,15 @@ using std::vector;
   NativeFunction(#NAME, DataTypeVector{TYPE()}, boolean(), true, RESULT_NULL_NEVER, \
                  STRINGIFY(NAME##_##TYPE))
 
+// Binary functions that :
+// - NULL handling is of type NULL_NEVER
+//
+// The pre-compiled fn name includes the base name & input type names,
+// eg. is_distinct_from_int32_int32
+#define BINARY_SAFE_NULL_NEVER_BOOL(NAME, TYPE)                          \
+  NativeFunction(#NAME, DataTypeVector{TYPE(), TYPE()}, boolean(), true, \
+                 RESULT_NULL_NEVER, STRINGIFY(NAME##_##TYPE##_##TYPE))
+
 // Extract functions (used with data/time types) that :
 // - NULL handling is of type NULL_IF_NULL
 //
@@ -142,6 +151,10 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     NUMERIC_BOOL_DATE_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnull),
     NUMERIC_BOOL_DATE_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnotnull),
     NUMERIC_TYPES(UNARY_SAFE_NULL_NEVER_BOOL, isnumeric),
+
+    // nullable never binary operations
+    NUMERIC_BOOL_DATE_TYPES(BINARY_SAFE_NULL_NEVER_BOOL, is_distinct_from),
+    NUMERIC_BOOL_DATE_TYPES(BINARY_SAFE_NULL_NEVER_BOOL, is_not_distinct_from),
 
     // date/timestamp operations
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMillennium),

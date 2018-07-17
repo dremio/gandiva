@@ -73,6 +73,9 @@ int64 timestampaddMonth_timestamp_int32(timestamp, int32);
 int64 timestampaddQuarter_timestamp_int32(timestamp, int32);
 int64 timestampaddYear_timestamp_int32(timestamp, int32);
 
+bool is_distinct_from_timestamp_timestamp(int64, bool, int64, bool);
+bool is_not_distinct_from_int32_int32(int32, bool, int32, bool);
+
 int32 mem_compare(const char *left, int32 left_len, const char *right, int32 right_len);
 
 }  // extern "C"
