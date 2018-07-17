@@ -249,6 +249,24 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, int64, timestamp, timestamp),
     BINARY_GENERIC_SAFE_NULL_IF_NULL(add, int64, timestamp, timestamp),
 
+    // date_sub(date64, int32), subtract and date_diff
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_sub, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(subtract, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_diff, date64, int32, date64),
+    // date_sub(timestamp, int32), subtract and date_diff
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_sub, timestamp, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(subtract, timestamp, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_diff, timestamp, int32, date64),
+
+    // date_sub(date64, int64), subtract and date_diff
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_sub, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(subtract, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_diff, date64, int64, date64),
+    // date_sub(timestamp, int64), subtract and date_diff
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_sub, timestamp, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(subtract, timestamp, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_diff, timestamp, int64, date64),
+
     // utf8/binary operations
     UNARY_SAFE_NULL_IF_NULL(octet_length, utf8, int32),
     UNARY_SAFE_NULL_IF_NULL(octet_length, binary, int32),

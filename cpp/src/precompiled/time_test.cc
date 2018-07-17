@@ -85,6 +85,17 @@ TEST(TestTime, TimeStampAdd) {
 
   EXPECT_EQ(date_add_int64_timestamp((int64)4, StringToTimestamp("2000-05-01 00:00:00")),
             StringToTimestamp("2000-05-05 00:00:00"));
+
+  // date_sub
+  EXPECT_EQ(date_sub_timestamp_int32(StringToTimestamp("2000-05-01 00:00:00"), 7),
+            StringToTimestamp("2000-04-24 00:00:00"));
+
+  EXPECT_EQ(subtract_timestamp_int32(StringToTimestamp("2000-05-01 00:00:00"), -7),
+            StringToTimestamp("2000-05-08 00:00:00"));
+
+  EXPECT_EQ(
+      date_diff_timestamp_int64(StringToTimestamp("2000-05-01 00:00:00"), (int64)365),
+      StringToTimestamp("1999-05-02 00:00:00"));
 }
 
 // test cases from http://www.staff.science.uu.nl/~gent0113/calendar/isocalendar.htm

@@ -182,6 +182,22 @@ ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(date64, add, MILLIS_IN_DAY)
 ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(timestamp, date_add, MILLIS_IN_DAY)
 ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(timestamp, add, MILLIS_IN_DAY)
 
+// date_sub, subtract, date_diff on int32
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(date64, date_sub, -1 * MILLIS_IN_DAY)
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(date64, subtract, -1 * MILLIS_IN_DAY)
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(date64, date_diff, -1 * MILLIS_IN_DAY)
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(timestamp, date_sub, -1 * MILLIS_IN_DAY)
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(timestamp, subtract, -1 * MILLIS_IN_DAY)
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(timestamp, date_diff, -1 * MILLIS_IN_DAY)
+
+// date_sub, subtract, date_diff on int64
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(date64, date_sub, -1 * MILLIS_IN_DAY)
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(date64, subtract, -1 * MILLIS_IN_DAY)
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(date64, date_diff, -1 * MILLIS_IN_DAY)
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(timestamp, date_sub, -1 * MILLIS_IN_DAY)
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(timestamp, subtract, -1 * MILLIS_IN_DAY)
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(timestamp, date_diff, -1 * MILLIS_IN_DAY)
+
 #define ADD_TIMESTAMP_TO_INT32_FIXED_UNITS(TYPE, NAME, TO_MILLIS) \
   FORCE_INLINE                                                    \
   TYPE NAME##_int32_##TYPE(int32 count, TYPE millis) {            \
