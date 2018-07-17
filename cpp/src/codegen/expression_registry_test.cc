@@ -33,17 +33,15 @@ class TestExpressionRegistry : public ::testing::Test {
 
 // Verify all functions in registry are exported.
 TEST_F(TestExpressionRegistry, VerifySupportedFunctions) {
-  FuncSignatureVector functions;
+  std::vector<FunctionSignature> functions;
   ExpressionRegistry expr_registry;
   for (auto iter = expr_registry.function_signature_begin();
        iter != expr_registry.function_signature_end(); iter++) {
-    functions.push_back((*iter)->signature());
+    functions.push_back((*iter));
   }
   for (auto &iter : registry_) {
     auto function = iter.signature();
-    auto element =
-        std::find_if(functions.begin(), functions.end(),
-                     [function](FuncSignaturePtr e) { return *e == function; });
+    auto element = std::find(functions.begin(), functions.end(), function);
     EXPECT_NE(element, functions.end())
         << "function " << iter.pc_name() << " missing in supported functions.\n";
   }

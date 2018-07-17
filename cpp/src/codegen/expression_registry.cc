@@ -22,7 +22,7 @@
 namespace gandiva {
 
 ExpressionRegistry::ExpressionRegistry() {
-  std::unique_ptr<FunctionRegistry> function_registry_(new FunctionRegistry());
+  function_registry_.reset(new FunctionRegistry());
 }
 
 ExpressionRegistry::~ExpressionRegistry() {}

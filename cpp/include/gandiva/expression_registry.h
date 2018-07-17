@@ -58,7 +58,7 @@ class ExpressionRegistry {
   static DataTypeVector supported_types_;
   static DataTypeVector InitSupportedTypes();
   static void AddArrowTypesToVector(arrow::Type::type &type, DataTypeVector &vector);
-  const std::unique_ptr<FunctionRegistry> function_registry_;
+  std::unique_ptr<FunctionRegistry> function_registry_;
 };
 }  // namespace gandiva
 #endif  // GANDIVA_TYPES_H
