@@ -104,10 +104,10 @@ extern "C" {
 
 TIMESTAMP_DIFF(timestamp)
 
-#define TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, NAME, TO_MILLIS) \
-  FORCE_INLINE                                               \
-  TYPE NAME##_##TYPE##_int32(TYPE millis, int32 count) {     \
-    return millis + TO_MILLIS * (TYPE)count;                 \
+#define ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(TYPE, NAME, TO_MILLIS) \
+  FORCE_INLINE                                                    \
+  TYPE NAME##_##TYPE##_int32(TYPE millis, int32 count) {          \
+    return millis + TO_MILLIS * (TYPE)count;                      \
   }
 
 // Documentation of mktime suggests that it handles
@@ -116,27 +116,94 @@ TIMESTAMP_DIFF(timestamp)
 //
 // Using gmtime_r() and timegm() instead of localtime_r() and mktime()
 // since the input millis are since epoch
-#define TIMESTAMP_ADD_INT_MONTH_UNITS(TYPE, NAME, N_MONTHS) \
-  FORCE_INLINE                                              \
-  TYPE NAME##_##TYPE##_int32(TYPE millis, int32 count) {    \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis);            \
-    struct tm tm;                                           \
-    gmtime_r(&tsec, &tm);                                   \
-    tm.tm_mon += count * N_MONTHS;                          \
-    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;               \
+#define ADD_INT32_TO_TIMESTAMP_MONTH_UNITS(TYPE, NAME, N_MONTHS) \
+  FORCE_INLINE                                                   \
+  TYPE NAME##_##TYPE##_int32(TYPE millis, int32 count) {         \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                 \
+    struct tm tm;                                                \
+    gmtime_r(&tsec, &tm);                                        \
+    tm.tm_mon += count * N_MONTHS;                               \
+    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                    \
   }
 
-#define TIMESTAMP_ADD_INT(TYPE)                                          \
-  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddSecond, MILLIS_IN_SEC) \
-  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddMinute, MILLIS_IN_MIN) \
-  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddHour, MILLIS_IN_HOUR)  \
-  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddDay, MILLIS_IN_DAY)    \
-  TIMESTAMP_ADD_INT_FIXED_UNITS(TYPE, timestampaddWeek, MILLIS_IN_WEEK)  \
-  TIMESTAMP_ADD_INT_MONTH_UNITS(TYPE, timestampaddMonth, 1)              \
-  TIMESTAMP_ADD_INT_MONTH_UNITS(TYPE, timestampaddQuarter, 3)            \
-  TIMESTAMP_ADD_INT_MONTH_UNITS(TYPE, timestampaddYear, 12)
+// TODO: Handle overflow while converting int64 to millis
+#define ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(TYPE, NAME, TO_MILLIS) \
+  FORCE_INLINE                                                    \
+  TYPE NAME##_##TYPE##_int64(TYPE millis, int64 count) {          \
+    return millis + TO_MILLIS * (TYPE)count;                      \
+  }
+
+#define ADD_INT64_TO_TIMESTAMP_MONTH_UNITS(TYPE, NAME, N_MONTHS) \
+  FORCE_INLINE                                                   \
+  TYPE NAME##_##TYPE##_int64(TYPE millis, int64 count) {         \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                 \
+    struct tm tm;                                                \
+    gmtime_r(&tsec, &tm);                                        \
+    tm.tm_mon += count * N_MONTHS;                               \
+    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                    \
+  }
+
+#define TIMESTAMP_ADD_INT32(TYPE)                                             \
+  ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddSecond, MILLIS_IN_SEC) \
+  ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddMinute, MILLIS_IN_MIN) \
+  ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddHour, MILLIS_IN_HOUR)  \
+  ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddDay, MILLIS_IN_DAY)    \
+  ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddWeek, MILLIS_IN_WEEK)  \
+  ADD_INT32_TO_TIMESTAMP_MONTH_UNITS(TYPE, timestampaddMonth, 1)              \
+  ADD_INT32_TO_TIMESTAMP_MONTH_UNITS(TYPE, timestampaddQuarter, 3)            \
+  ADD_INT32_TO_TIMESTAMP_MONTH_UNITS(TYPE, timestampaddYear, 12)
+
+#define TIMESTAMP_ADD_INT64(TYPE)                                             \
+  ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddSecond, MILLIS_IN_SEC) \
+  ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddMinute, MILLIS_IN_MIN) \
+  ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddHour, MILLIS_IN_HOUR)  \
+  ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddDay, MILLIS_IN_DAY)    \
+  ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(TYPE, timestampaddWeek, MILLIS_IN_WEEK)  \
+  ADD_INT64_TO_TIMESTAMP_MONTH_UNITS(TYPE, timestampaddMonth, 1)              \
+  ADD_INT64_TO_TIMESTAMP_MONTH_UNITS(TYPE, timestampaddQuarter, 3)            \
+  ADD_INT64_TO_TIMESTAMP_MONTH_UNITS(TYPE, timestampaddYear, 12)
+
+#define TIMESTAMP_ADD_INT(TYPE) \
+  TIMESTAMP_ADD_INT32(TYPE)     \
+  TIMESTAMP_ADD_INT64(TYPE)
 
 TIMESTAMP_ADD_INT(date64)
 TIMESTAMP_ADD_INT(timestamp)
+
+// add int32 to timestamp
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(date64, date_add, MILLIS_IN_DAY)
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(date64, add, MILLIS_IN_DAY)
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(timestamp, date_add, MILLIS_IN_DAY)
+ADD_INT32_TO_TIMESTAMP_FIXED_UNITS(timestamp, add, MILLIS_IN_DAY)
+
+// add int64 to timestamp
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(date64, date_add, MILLIS_IN_DAY)
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(date64, add, MILLIS_IN_DAY)
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(timestamp, date_add, MILLIS_IN_DAY)
+ADD_INT64_TO_TIMESTAMP_FIXED_UNITS(timestamp, add, MILLIS_IN_DAY)
+
+#define ADD_TIMESTAMP_TO_INT32_FIXED_UNITS(TYPE, NAME, TO_MILLIS) \
+  FORCE_INLINE                                                    \
+  TYPE NAME##_int32_##TYPE(int32 count, TYPE millis) {            \
+    return millis + TO_MILLIS * (TYPE)count;                      \
+  }
+
+#define ADD_TIMESTAMP_TO_INT64_FIXED_UNITS(TYPE, NAME, TO_MILLIS) \
+  FORCE_INLINE                                                    \
+  TYPE NAME##_int64_##TYPE(int64 count, TYPE millis) {            \
+    return millis + TO_MILLIS * (TYPE)count;                      \
+  }
+
+// add timestamp to int32
+ADD_TIMESTAMP_TO_INT32_FIXED_UNITS(date64, date_add, MILLIS_IN_DAY)
+ADD_TIMESTAMP_TO_INT32_FIXED_UNITS(date64, add, MILLIS_IN_DAY)
+ADD_TIMESTAMP_TO_INT32_FIXED_UNITS(timestamp, date_add, MILLIS_IN_DAY)
+ADD_TIMESTAMP_TO_INT32_FIXED_UNITS(timestamp, add, MILLIS_IN_DAY)
+
+// add timestamp to int64
+ADD_TIMESTAMP_TO_INT64_FIXED_UNITS(date64, date_add, MILLIS_IN_DAY)
+ADD_TIMESTAMP_TO_INT64_FIXED_UNITS(date64, add, MILLIS_IN_DAY)
+ADD_TIMESTAMP_TO_INT64_FIXED_UNITS(timestamp, date_add, MILLIS_IN_DAY)
+ADD_TIMESTAMP_TO_INT64_FIXED_UNITS(timestamp, add, MILLIS_IN_DAY)
 
 }  // extern "C"

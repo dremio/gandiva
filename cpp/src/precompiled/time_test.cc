@@ -46,31 +46,45 @@ TEST(TestTime, TimeStampAdd) {
       timestampaddSecond_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 30),
       StringToTimestamp("2000-05-01 10:21:04"));
 
-  EXPECT_EQ(
-      timestampaddMinute_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -30),
-      StringToTimestamp("2000-05-01 09:50:34"));
+  EXPECT_EQ(timestampaddMinute_timestamp_int64(StringToTimestamp("2000-05-01 10:20:34"),
+                                               (int64)-30),
+            StringToTimestamp("2000-05-01 09:50:34"));
 
   EXPECT_EQ(
       timestampaddHour_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 20),
       StringToTimestamp("2000-05-02 06:20:34"));
 
-  EXPECT_EQ(
-      timestampaddDay_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -35),
-      StringToTimestamp("2000-03-27 10:20:34"));
+  EXPECT_EQ(timestampaddDay_timestamp_int64(StringToTimestamp("2000-05-01 10:20:34"),
+                                            (int64)-35),
+            StringToTimestamp("2000-03-27 10:20:34"));
 
   EXPECT_EQ(timestampaddWeek_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 4),
             StringToTimestamp("2000-05-29 10:20:34"));
 
-  EXPECT_EQ(
-      timestampaddMonth_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 10),
-      StringToTimestamp("2001-03-01 10:20:34"));
+  EXPECT_EQ(timestampaddMonth_timestamp_int64(StringToTimestamp("2000-05-01 10:20:34"),
+                                              (int64)10),
+            StringToTimestamp("2001-03-01 10:20:34"));
 
   EXPECT_EQ(
       timestampaddQuarter_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -2),
       StringToTimestamp("1999-11-01 10:20:34"));
 
-  EXPECT_EQ(timestampaddYear_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 2),
+  EXPECT_EQ(timestampaddYear_timestamp_int64(StringToTimestamp("2000-05-01 10:20:34"),
+                                             (int64)2),
             StringToTimestamp("2002-05-01 10:20:34"));
+
+  // date_add
+  EXPECT_EQ(date_add_timestamp_int32(StringToTimestamp("2000-05-01 00:00:00"), 7),
+            StringToTimestamp("2000-05-08 00:00:00"));
+
+  EXPECT_EQ(add_int32_timestamp(4, StringToTimestamp("2000-05-01 00:00:00")),
+            StringToTimestamp("2000-05-05 00:00:00"));
+
+  EXPECT_EQ(add_timestamp_int64(StringToTimestamp("2000-05-01 00:00:00"), (int64)7),
+            StringToTimestamp("2000-05-08 00:00:00"));
+
+  EXPECT_EQ(date_add_int64_timestamp((int64)4, StringToTimestamp("2000-05-01 00:00:00")),
+            StringToTimestamp("2000-05-05 00:00:00"));
 }
 
 // test cases from http://www.staff.science.uu.nl/~gent0113/calendar/isocalendar.htm
