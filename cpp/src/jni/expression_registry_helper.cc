@@ -156,14 +156,15 @@ Java_org_apache_arrow_gandiva_evaluator_ExpressionRegistryJniHelper_getGandivaSu
 JNIEXPORT jbyteArray JNICALL
 Java_org_apache_arrow_gandiva_evaluator_ExpressionRegistryJniHelper_getGandivaSupportedFunctions(
     JNIEnv *env, jobject types_helper) {
-  auto supported_functions = ExpressionRegistry::supported_functions();
+  ExpressionRegistry expr_registry;
   types::GandivaFunctions gandiva_functions;
-  for (auto &function : supported_functions) {
+  for (auto function = expr_registry.function_signature_begin();
+       function != expr_registry.function_signature_end(); function++) {
     types::FunctionSignature *function_signature = gandiva_functions.add_function();
-    function_signature->set_name(function->base_name());
+    function_signature->set_name((*function).base_name());
     types::ExtGandivaType *return_type = function_signature->mutable_returntype();
-    ArrowToProtobuf(function->ret_type(), return_type);
-    for (auto &param_type : function->param_types()) {
+    ArrowToProtobuf((*function).ret_type(), return_type);
+    for (auto &param_type : (*function).param_types()) {
       types::ExtGandivaType *proto_param_type = function_signature->add_paramtypes();
       ArrowToProtobuf(param_type, proto_param_type);
     }

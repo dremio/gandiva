@@ -14,13 +14,42 @@
 
 #include "gandiva/expression_registry.h"
 
+#include "boost/iterator/transform_iterator.hpp"
+
 #include "codegen/function_registry.h"
 #include "codegen/llvm_types.h"
 
 namespace gandiva {
 
-const FuncSignatureVector ExpressionRegistry::supported_functions() {
-  return FunctionRegistry::GetSupportedFunctions();
+ExpressionRegistry::ExpressionRegistry() {
+  std::unique_ptr<FunctionRegistry> function_registry_(new FunctionRegistry());
+}
+
+ExpressionRegistry::~ExpressionRegistry() {}
+
+const ExpressionRegistry::FunctionSignatureIterator
+ExpressionRegistry::function_signature_begin() {
+  return FunctionSignatureIterator(function_registry_->begin(),
+                                   function_registry_->end());
+}
+
+const ExpressionRegistry::FunctionSignatureIterator
+ExpressionRegistry::function_signature_end() const {
+  return FunctionSignatureIterator(function_registry_->end(), function_registry_->end());
+}
+
+bool ExpressionRegistry::FunctionSignatureIterator::operator!=(
+    const FunctionSignatureIterator &func_sign_it) {
+  return func_sign_it.it != this->it;
+}
+
+FunctionSignature ExpressionRegistry::FunctionSignatureIterator::operator*() {
+  return (*it).signature();
+}
+
+ExpressionRegistry::iterator ExpressionRegistry::FunctionSignatureIterator::operator++(
+    int increment) {
+  return it++;
 }
 
 DataTypeVector ExpressionRegistry::supported_types_ =

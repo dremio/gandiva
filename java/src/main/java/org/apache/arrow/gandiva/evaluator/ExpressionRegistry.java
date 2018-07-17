@@ -17,6 +17,7 @@
 package org.apache.arrow.gandiva.evaluator;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.arrow.gandiva.exceptions.GandivaException;
@@ -31,6 +32,7 @@ import org.apache.arrow.vector.types.TimeUnit;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Used to get the functions and data types supported by
@@ -46,13 +48,13 @@ public class ExpressionRegistry {
   private static final boolean IS_SIGNED_FALSE = false;
   private static final boolean IS_SIGNED_TRUE = true;
 
-  private final List<ArrowType> supportedTypes;
-  private final List<FunctionSignature> functionSignatures;
+  private final Set<ArrowType> supportedTypes;
+  private final Set<FunctionSignature> functionSignatures;
 
   private static volatile ExpressionRegistry INSTANCE;
 
-  private ExpressionRegistry(List<ArrowType> supportedTypes,
-                             List<FunctionSignature> functionSignatures) {
+  private ExpressionRegistry(Set<ArrowType> supportedTypes,
+                             Set<FunctionSignature> functionSignatures) {
     this.supportedTypes = supportedTypes;
     this.functionSignatures = functionSignatures;
   }
@@ -68,8 +70,8 @@ public class ExpressionRegistry {
         if (INSTANCE == null) {
           // ensure library is setup.
           NativeBuilder.getInstance();
-          List<ArrowType> typesFromGandiva = getSupportedTypesFromGandiva();
-          List<FunctionSignature> functionsFromGandiva = getSupportedFunctionsFromGandiva();
+          Set<ArrowType> typesFromGandiva = getSupportedTypesFromGandiva();
+          Set<FunctionSignature> functionsFromGandiva = getSupportedFunctionsFromGandiva();
           INSTANCE = new ExpressionRegistry(typesFromGandiva, functionsFromGandiva);
         }
       }
@@ -77,16 +79,16 @@ public class ExpressionRegistry {
     return INSTANCE;
   }
 
-  public List<FunctionSignature> getSupportedFunctions() {
+  public Set<FunctionSignature> getSupportedFunctions() {
     return functionSignatures;
   }
 
-  public List<ArrowType> getSupportedTypes() {
+  public Set<ArrowType> getSupportedTypes() {
     return supportedTypes;
   }
 
-  private static List<ArrowType> getSupportedTypesFromGandiva() throws GandivaException {
-    List<ArrowType> supportedTypes = Lists.newArrayList();
+  private static Set<ArrowType> getSupportedTypesFromGandiva() throws GandivaException {
+    Set<ArrowType> supportedTypes = Sets.newHashSet();
     try {
       byte[] gandivaSupportedDataTypes = new ExpressionRegistryJniHelper()
               .getGandivaSupportedDataTypes();
@@ -100,9 +102,9 @@ public class ExpressionRegistry {
     return supportedTypes;
   }
 
-  private static List<FunctionSignature> getSupportedFunctionsFromGandiva() throws
+  private static Set<FunctionSignature> getSupportedFunctionsFromGandiva() throws
           GandivaException {
-    List<FunctionSignature> supportedTypes = Lists.newArrayList();
+    Set<FunctionSignature> supportedTypes = Sets.newHashSet();
     try {
       byte[] gandivaSupportedFunctions = new ExpressionRegistryJniHelper()
               .getGandivaSupportedFunctions();

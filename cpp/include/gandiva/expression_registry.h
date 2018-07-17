@@ -16,6 +16,7 @@
 #ifndef GANDIVA_TYPES_H
 #define GANDIVA_TYPES_H
 
+#include <memory>
 #include <vector>
 
 #include "gandiva/arrow.h"
@@ -24,20 +25,40 @@
 
 namespace gandiva {
 
+class NativeFunction;
+class FunctionRegistry;
 /// \brief Exports types supported by Gandiva for processing.
 ///
 /// Has helper methods for clients to programatically discover
 /// data types and functions supported by Gandiva.
 class ExpressionRegistry {
  public:
+  using iterator = const NativeFunction *;
+  ExpressionRegistry();
+  ~ExpressionRegistry();
   static DataTypeVector supported_types() { return supported_types_; }
-  static const FuncSignatureVector supported_functions();
+  class FunctionSignatureIterator {
+   public:
+    FunctionSignatureIterator(iterator begin, iterator end) : it(begin), end(end) {}
+
+    bool operator!=(const FunctionSignatureIterator &func_sign_it);
+
+    FunctionSignature operator*();
+
+    iterator operator++(int);
+
+   private:
+    iterator it;
+    iterator end;
+  };
+  const FunctionSignatureIterator function_signature_begin();
+  const FunctionSignatureIterator function_signature_end() const;
 
  private:
   static DataTypeVector supported_types_;
-  static FuncSignatureVector supported_functions_;
   static DataTypeVector InitSupportedTypes();
   static void AddArrowTypesToVector(arrow::Type::type &type, DataTypeVector &vector);
+  const std::unique_ptr<FunctionRegistry> function_registry_;
 };
 }  // namespace gandiva
 #endif  // GANDIVA_TYPES_H

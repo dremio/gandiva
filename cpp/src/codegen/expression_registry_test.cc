@@ -26,14 +26,19 @@ namespace gandiva {
 
 typedef int64_t (*add_vector_func_t)(int64_t *elements, int nelements);
 
-class TestTypes : public ::testing::Test {
+class TestExpressionRegistry : public ::testing::Test {
  protected:
   FunctionRegistry registry_;
 };
 
 // Verify all functions in registry are exported.
-TEST_F(TestTypes, VerifySupportedFunctions) {
-  FuncSignatureVector functions = ExpressionRegistry::supported_functions();
+TEST_F(TestExpressionRegistry, VerifySupportedFunctions) {
+  FuncSignatureVector functions;
+  ExpressionRegistry expr_registry;
+  for (auto iter = expr_registry.function_signature_begin();
+       iter != expr_registry.function_signature_end(); iter++) {
+    functions.push_back((*iter)->signature());
+  }
   for (auto &iter : registry_) {
     auto function = iter.signature();
     auto element =
@@ -45,7 +50,7 @@ TEST_F(TestTypes, VerifySupportedFunctions) {
 }
 
 // Verify all types are supported.
-TEST_F(TestTypes, VerifyDataTypes) {
+TEST_F(TestExpressionRegistry, VerifyDataTypes) {
   DataTypeVector data_types = ExpressionRegistry::supported_types();
   llvm::LLVMContext llvm_context;
   LLVMTypes llvm_types(llvm_context);

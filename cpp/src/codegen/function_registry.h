@@ -33,8 +33,6 @@ class FunctionRegistry {
   iterator begin() const;
   iterator end() const;
 
-  static const FuncSignatureVector GetSupportedFunctions() { return function_signatures; }
-
  private:
   struct KeyHash {
     std::size_t operator()(const FunctionSignature *k) const { return k->Hash(); }
@@ -59,8 +57,6 @@ class FunctionRegistry {
 
   static NativeFunction pc_registry_[];
   static SignatureMap pc_registry_map_;
-  static FuncSignatureVector function_signatures;
-  static FuncSignatureVector InitSupportedFunctions();
 };
 
 }  // namespace gandiva

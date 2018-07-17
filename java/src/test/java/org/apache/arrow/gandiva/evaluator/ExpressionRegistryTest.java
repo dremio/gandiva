@@ -23,13 +23,13 @@ import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
+import java.util.Set;
 
 public class ExpressionRegistryTest {
 
   @Test
   public void testTypes() throws GandivaException {
-    List<ArrowType> types = ExpressionRegistry.getInstance().getSupportedTypes();
+    Set<ArrowType> types = ExpressionRegistry.getInstance().getSupportedTypes();
     ArrowType.Int UINT8 = new ArrowType.Int(8, false);
     Assert.assertTrue(types.contains(UINT8));
 
@@ -39,7 +39,7 @@ public class ExpressionRegistryTest {
   public void testFunctions() throws GandivaException {
     ArrowType.Int UINT8 = new ArrowType.Int(8, false);
     FunctionSignature signature = new FunctionSignature("add", UINT8,Lists.newArrayList(UINT8,UINT8));
-    List<FunctionSignature> functions = ExpressionRegistry.getInstance().getSupportedFunctions();
+    Set<FunctionSignature> functions = ExpressionRegistry.getInstance().getSupportedFunctions();
     Assert.assertTrue(functions.contains(signature));
   }
 }

@@ -224,17 +224,4 @@ const NativeFunction *FunctionRegistry::LookupSignature(
   return got == pc_registry_map_.end() ? NULL : got->second;
 }
 
-FuncSignatureVector FunctionRegistry::function_signatures = InitSupportedFunctions();
-
-FuncSignatureVector FunctionRegistry::InitSupportedFunctions() {
-  FuncSignatureVector func_descriptor;
-  for (auto &iter : pc_registry_map_) {
-    FuncSignaturePtr function_signature =
-        std::shared_ptr<FunctionSignature>(new FunctionSignature(
-            iter.first->base_name(), iter.first->param_types(), iter.first->ret_type()));
-    func_descriptor.push_back(function_signature);
-  }
-  return func_descriptor;
-}
-
 }  // namespace gandiva
