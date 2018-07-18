@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright (C) 2017-2018 Dremio Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(gandiva_java)
+set -ex
 
-# Find java/jni
-include(FindJava)
-include(UseJava)
-include(FindJNI)
+#TAG=apache-arrow-0.9.0
+TAG=master
+ARROW_SRC_DIR=arrow-${TAG}
 
-message("generating headers to ${JNI_HEADERS_DIR}/jni")
-add_jar(
-  gandiva_java
-    src/main/java/org/apache/arrow/gandiva/evaluator/ConfigurationBuilder.java
-    src/main/java/org/apache/arrow/gandiva/evaluator/NativeBuilder.java
-    src/main/java/org/apache/arrow/gandiva/evaluator/ExpressionRegistryJniHelper.java
-    src/main/java/org/apache/arrow/gandiva/exceptions/GandivaException.java
-  GENERATE_NATIVE_HEADERS gandivajni_headers
-    DESTINATION ${JNI_HEADERS_DIR}/jni
-)
+# Use Ninja for faster builds when using toolchain
+if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
+  CMAKE_ARROW_FLAGS="$CMAKE_COMMON_FLAGS -GNinja"
+fi
+
+wget https://github.com/apache/arrow/archive/${TAG}.zip
+unzip -qq ${TAG}.zip
+
+mkdir $ARROW_SRC_DIR/cpp/build
+
+pushd $ARROW_SRC_DIR/cpp/build
+
+cmake $CMAKE_ARROW_FLAGS ..
+
+# Build and install libraries
+$TRAVIS_MAKE -j4
+
+$TRAVIS_MAKE install
+
+popd
+

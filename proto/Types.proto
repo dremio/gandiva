@@ -172,3 +172,17 @@ message ExpressionList {
 message Schema {
   repeated Field columns = 1;
 }
+
+message GandivaDataTypes {
+  repeated ExtGandivaType dataType = 1;
+}
+
+message GandivaFunctions {
+  repeated FunctionSignature function = 1;
+}
+
+message FunctionSignature {
+  optional string name = 1;
+  optional ExtGandivaType returnType = 2;
+  repeated ExtGandivaType paramTypes = 3;
+}
