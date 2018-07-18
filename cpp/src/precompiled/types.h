@@ -64,6 +64,12 @@ int64 extractHour_timestamp(timestamp millis);
 int64 extractMinute_timestamp(timestamp millis);
 int64 extractSecond_timestamp(timestamp millis);
 
+int32 hash32(double val, int32 seed);
+int32 hash32_buf(const uint8 *buf, int len, int32 seed);
+
+int64 hash64(double val, int64 seed);
+int64 hash64_buf(const uint8 *buf, int len, int64 seed);
+
 int32 mem_compare(const char *left, int32 left_len, const char *right, int32 right_len);
 
 }  // extern "C"
