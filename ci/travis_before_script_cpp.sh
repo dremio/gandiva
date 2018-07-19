@@ -78,7 +78,7 @@ fi
 $TRAVIS_MAKE stylefix
 if ! git diff-index --quiet HEAD --; then
   # The syle fix required some changes
-  echho "Stylecheck failed, requires the following fix"
+  echo "Stylecheck failed, requires the following fix"
   git diff
   exit 1
 fi

@@ -14,9 +14,6 @@
 
 project(gandiva)
 
-set(CLANG_EXECUTABLE ${LLVM_TOOLS_BINARY_DIR}/clang)
-set(LINK_EXECUTABLE ${LLVM_TOOLS_BINARY_DIR}/llvm-link)
-
 set(PRECOMPILED_SRCS
     arithmetic_ops.cc
     bitmap.cc
