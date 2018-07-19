@@ -87,13 +87,13 @@ FORCE_INLINE int32 hash32(double val, int32 seed) {
 #define HASH64_WITH_SEED_OP(NAME, TYPE)                                              \
   FORCE_INLINE                                                                       \
   int64 NAME##_##TYPE(TYPE in, boolean is_valid, int64 seed, boolean seed_isvalid) { \
-    return is_valid ? hash64((double)in, seed) : 0;                                  \
+    return is_valid && seed_isvalid ? hash64((double)in, seed) : 0;                  \
   }
 
 #define HASH32_WITH_SEED_OP(NAME, TYPE)                                              \
   FORCE_INLINE                                                                       \
   int32 NAME##_##TYPE(TYPE in, boolean is_valid, int32 seed, boolean seed_isvalid) { \
-    return is_valid ? hash32((double)in, seed) : 0;                                  \
+    return is_valid && seed_isvalid ? hash32((double)in, seed) : 0;                  \
   }
 
 #define HASH64_OP(NAME, TYPE)                      \
@@ -235,18 +235,18 @@ FORCE_INLINE int32 hash32_buf(const uint8 *buf, int len, int32 seed) {
 
 // Wrappers for the varlen types
 
-#define HASH64_BUF_WITH_SEED_OP(NAME, TYPE)                             \
-  FORCE_INLINE                                                          \
-  int64 NAME##_##TYPE(TYPE in, int32 len, boolean is_valid, int64 seed, \
-                      boolean seed_isvalid) {                           \
-    return is_valid ? hash64_buf((const uint8 *)in, len, seed) : 0;     \
+#define HASH64_BUF_WITH_SEED_OP(NAME, TYPE)                                         \
+  FORCE_INLINE                                                                      \
+  int64 NAME##_##TYPE(TYPE in, int32 len, boolean is_valid, int64 seed,             \
+                      boolean seed_isvalid) {                                       \
+    return is_valid && seed_isvalid ? hash64_buf((const uint8 *)in, len, seed) : 0; \
   }
 
-#define HASH32_BUF_WITH_SEED_OP(NAME, TYPE)                             \
-  FORCE_INLINE                                                          \
-  int32 NAME##_##TYPE(TYPE in, int32 len, boolean is_valid, int32 seed, \
-                      boolean seed_isvalid) {                           \
-    return is_valid ? hash32_buf((const uint8 *)in, len, seed) : 0;     \
+#define HASH32_BUF_WITH_SEED_OP(NAME, TYPE)                                         \
+  FORCE_INLINE                                                                      \
+  int32 NAME##_##TYPE(TYPE in, int32 len, boolean is_valid, int32 seed,             \
+                      boolean seed_isvalid) {                                       \
+    return is_valid && seed_isvalid ? hash32_buf((const uint8 *)in, len, seed) : 0; \
   }
 
 #define HASH64_BUF_OP(NAME, TYPE)                                \
