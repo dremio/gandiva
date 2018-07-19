@@ -15,19 +15,8 @@
 extern "C" {
 
 #include <time.h>
+#include "./time_constants.h"
 #include "./types.h"
-
-#define MILLIS_IN_SEC (1000)
-#define MILLIS_IN_MIN (60 * MILLIS_IN_SEC)
-#define MILLIS_IN_HOUR (60 * MILLIS_IN_MIN)
-#define MILLIS_IN_DAY (24 * MILLIS_IN_HOUR)
-#define MILLIS_IN_WEEK (7 * MILLIS_IN_DAY)
-
-#define MILLIS_TO_SEC(millis) ((millis) / MILLIS_IN_SEC)
-#define MILLIS_TO_MINS(millis) ((millis) / MILLIS_IN_MIN)
-#define MILLIS_TO_HOUR(millis) ((millis) / MILLIS_IN_HOUR)
-#define MILLIS_TO_DAY(millis) ((millis) / MILLIS_IN_DAY)
-#define MILLIS_TO_WEEK(millis) ((millis) / MILLIS_IN_WEEK)
 
 #define TIMESTAMP_DIFF_FIXED_UNITS(TYPE, NAME, FROM_MILLIS)          \
   FORCE_INLINE                                                       \

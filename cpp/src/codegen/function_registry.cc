@@ -172,6 +172,19 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractSecond),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractEpoch),
 
+    // date_trunc operations on date/timestamp
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Millennium),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Century),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Decade),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Year),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Quarter),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Month),
+    // DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Week),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Day),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Hour),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Minute),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Second),
+
     // time operations
     TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
     TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),

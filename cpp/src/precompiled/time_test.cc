@@ -41,6 +41,29 @@ TEST(TestTime, TestExtractTimestamp) {
   EXPECT_EQ(extractSecond_timestamp(ts), 33);
 }
 
+TEST(TestTime, TimeStampTrunc) {
+  EXPECT_EQ(date_trunc_Second_date64(StringToTimestamp("2015-05-05 10:20:34")),
+            StringToTimestamp("2015-05-05 10:20:34"));
+  EXPECT_EQ(date_trunc_Minute_date64(StringToTimestamp("2015-05-05 10:20:34")),
+            StringToTimestamp("2015-05-05 10:20:00"));
+  EXPECT_EQ(date_trunc_Hour_date64(StringToTimestamp("2015-05-05 10:20:34")),
+            StringToTimestamp("2015-05-05 10:00:00"));
+  EXPECT_EQ(date_trunc_Day_date64(StringToTimestamp("2015-05-05 10:20:34")),
+            StringToTimestamp("2015-05-05 00:00:00"));
+  EXPECT_EQ(date_trunc_Month_date64(StringToTimestamp("2015-05-05 10:20:34")),
+            StringToTimestamp("2015-05-01 00:00:00"));
+  EXPECT_EQ(date_trunc_Quarter_date64(StringToTimestamp("2015-05-05 10:20:34")),
+            StringToTimestamp("2015-04-01 00:00:00"));
+  EXPECT_EQ(date_trunc_Year_date64(StringToTimestamp("2015-05-05 10:20:34")),
+            StringToTimestamp("2015-01-01 00:00:00"));
+  EXPECT_EQ(date_trunc_Decade_date64(StringToTimestamp("2015-05-05 10:20:34")),
+            StringToTimestamp("2010-01-01 00:00:00"));
+  EXPECT_EQ(date_trunc_Century_date64(StringToTimestamp("2115-05-05 10:20:34")),
+            StringToTimestamp("2100-01-01 00:00:00"));
+  EXPECT_EQ(date_trunc_Millennium_date64(StringToTimestamp("2115-05-05 10:20:34")),
+            StringToTimestamp("2000-01-01 00:00:00"));
+}
+
 TEST(TestTime, TimeStampAdd) {
   EXPECT_EQ(
       timestampaddSecond_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), 30),
