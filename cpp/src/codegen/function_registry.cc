@@ -214,7 +214,7 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Year),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Quarter),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Month),
-    // DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Week),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Week),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Day),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Hour),
     DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Minute),

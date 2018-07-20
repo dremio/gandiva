@@ -288,7 +288,7 @@ int getDecWeekOfYear(struct tm *ptm) {
 // If day is Dec 29-21, see getDecWeekOfYear
 //
 int64 weekOfYear(struct tm *ptm) {
-  if ((ptm->tm_mon == 0) && (ptm->tm_mday <= 3)) {
+  if (ptm->tm_yday < 3) {
     // Jan 1-3
     return getJanWeekOfYear(ptm);
   }
@@ -405,6 +405,25 @@ EXTRACT_HOUR_TIME(time32)
     return ((millis / NMILLIS_IN_UNIT) * NMILLIS_IN_UNIT); \
   }
 
+#define DATE_TRUNC_WEEK(TYPE)                    \
+  FORCE_INLINE                                   \
+  TYPE date_trunc_Week_##TYPE(TYPE millis) {     \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
+    struct tm tm;                                \
+    gmtime_r(&tsec, &tm);                        \
+    tm.tm_sec = 0;                               \
+    tm.tm_min = 0;                               \
+    tm.tm_hour = 0;                              \
+    if (tm.tm_wday == 0) {                       \
+      /* Sunday */                               \
+      tm.tm_mday -= 6;                           \
+    } else {                                     \
+      /* All other days */                       \
+      tm.tm_mday -= (tm.tm_wday - 1);            \
+    }                                            \
+    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;    \
+  }
+
 #define DATE_TRUNC_MONTH_UNITS(NAME, TYPE, NMONTHS_IN_UNIT)      \
   FORCE_INLINE                                                   \
   TYPE NAME##_##TYPE(TYPE millis) {                              \
@@ -441,6 +460,7 @@ EXTRACT_HOUR_TIME(time32)
   DATE_TRUNC_FIXED_UNIT(date_trunc_Minute, TYPE, MILLIS_IN_MIN) \
   DATE_TRUNC_FIXED_UNIT(date_trunc_Hour, TYPE, MILLIS_IN_HOUR)  \
   DATE_TRUNC_FIXED_UNIT(date_trunc_Day, TYPE, MILLIS_IN_DAY)    \
+  DATE_TRUNC_WEEK(TYPE)                                         \
   DATE_TRUNC_MONTH_UNITS(date_trunc_Month, TYPE, 1)             \
   DATE_TRUNC_MONTH_UNITS(date_trunc_Quarter, TYPE, 3)           \
   DATE_TRUNC_MONTH_UNITS(date_trunc_Year, TYPE, 12)             \

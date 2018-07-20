@@ -71,6 +71,25 @@ TEST(TestTime, TimeStampTrunc) {
             StringToTimestamp("2101-01-01 00:00:00"));
   EXPECT_EQ(date_trunc_Millennium_date64(StringToTimestamp("2115-05-05 10:20:34")),
             StringToTimestamp("2001-01-01 00:00:00"));
+
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-01 10:10:10")),
+            StringToTimestamp("2010-12-27 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-02 10:10:10")),
+            StringToTimestamp("2010-12-27 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-03 10:10:10")),
+            StringToTimestamp("2011-01-03 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-04 10:10:10")),
+            StringToTimestamp("2011-01-03 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-05 10:10:10")),
+            StringToTimestamp("2011-01-03 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-06 10:10:10")),
+            StringToTimestamp("2011-01-03 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-07 10:10:10")),
+            StringToTimestamp("2011-01-03 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-08 10:10:10")),
+            StringToTimestamp("2011-01-03 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-09 10:10:10")),
+            StringToTimestamp("2011-01-03 00:00:00"));
 }
 
 TEST(TestTime, TimeStampAdd) {

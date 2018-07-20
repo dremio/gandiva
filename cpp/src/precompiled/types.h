@@ -113,6 +113,8 @@ int64 date_trunc_Decade_date64(date64);
 int64 date_trunc_Century_date64(date64);
 int64 date_trunc_Millennium_date64(date64);
 
+int64 date_trunc_Week_timestamp(timestamp);
+
 int32 mem_compare(const char *left, int32 left_len, const char *right, int32 right_len);
 
 }  // extern "C"
