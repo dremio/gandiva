@@ -75,14 +75,19 @@ else
 fi
 
 # Do the style checks
-$TRAVIS_MAKE stylecheck
+$TRAVIS_MAKE stylefix
+if ! git diff-index --quiet HEAD --; then
+  # The syle fix required some changes
+  echo "Stylecheck failed, requires the following fix"
+  git diff
+  exit 1
+fi
 
 # Build and install libraries
 $TRAVIS_MAKE -j4
 
 $TRAVIS_MAKE install
 
-echo "ldd ./src/jni/libgandiva_jni.so"
 ldd ./src/jni/libgandiva_jni.so
 
 popd

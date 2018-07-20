@@ -128,9 +128,6 @@ function(build_external PROJ)
                    EXCLUDE_FROM_ALL)
 endfunction(build_external PROJ)
 
-find_program(CLANG_FORMAT_BIN NAMES clang-format)
-message(STATUS "Found clang-format executable at ${CLANG_FORMAT_BIN}")
-
 file(GLOB_RECURSE LINT_FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
@@ -146,7 +143,7 @@ function(add_stylecheck)
       COMMENT "Performing stylecheck on all .cpp/.h files"
       # use ! to check for no replacement
       COMMAND !
-      ${CLANG_FORMAT_BIN}
+      ${CLANG_FORMAT_EXECUTABLE}
       -style=file
       -output-replacements-xml
       ${LINT_FILES}
@@ -161,7 +158,7 @@ function(add_stylefix)
     add_custom_target(stylefix
       COMMENT "Performing stylefix on all .cpp/.h files"
       COMMAND
-      echo ${LINT_FILES} | xargs ${CLANG_FORMAT_BIN} -style=file -i
+      echo ${LINT_FILES} | xargs ${CLANG_FORMAT_EXECUTABLE} -style=file -i
     )
   endif (UNIX)
 endfunction(add_stylefix)
