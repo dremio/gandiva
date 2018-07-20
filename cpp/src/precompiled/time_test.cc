@@ -68,9 +68,9 @@ TEST(TestTime, TimeStampTrunc) {
   EXPECT_EQ(date_trunc_Decade_date64(StringToTimestamp("2015-05-05 10:20:34")),
             StringToTimestamp("2010-01-01 00:00:00"));
   EXPECT_EQ(date_trunc_Century_date64(StringToTimestamp("2115-05-05 10:20:34")),
-            StringToTimestamp("2100-01-01 00:00:00"));
+            StringToTimestamp("2101-01-01 00:00:00"));
   EXPECT_EQ(date_trunc_Millennium_date64(StringToTimestamp("2115-05-05 10:20:34")),
-            StringToTimestamp("2000-01-01 00:00:00"));
+            StringToTimestamp("2001-01-01 00:00:00"));
 }
 
 TEST(TestTime, TimeStampAdd) {

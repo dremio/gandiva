@@ -419,21 +419,21 @@ EXTRACT_HOUR_TIME(time32)
     return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                    \
   }
 
-#define DATE_TRUNC_YEAR_UNITS(NAME, TYPE, NYEARS_IN_UNIT, OFF_BY) \
-  FORCE_INLINE                                                    \
-  TYPE NAME##_##TYPE(TYPE millis) {                               \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                  \
-    struct tm tm;                                                 \
-    gmtime_r(&tsec, &tm);                                         \
-    tm.tm_sec = 0;                                                \
-    tm.tm_min = 0;                                                \
-    tm.tm_hour = 0;                                               \
-    tm.tm_mday = 1;                                               \
-    tm.tm_mon = 0;                                                \
-    int year = 1900 + tm.tm_year;                                 \
-    year = ((year - OFF_BY) / NYEARS_IN_UNIT) * NYEARS_IN_UNIT;   \
-    tm.tm_year = year - 1900;                                     \
-    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                     \
+#define DATE_TRUNC_YEAR_UNITS(NAME, TYPE, NYEARS_IN_UNIT, OFF_BY)        \
+  FORCE_INLINE                                                           \
+  TYPE NAME##_##TYPE(TYPE millis) {                                      \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                         \
+    struct tm tm;                                                        \
+    gmtime_r(&tsec, &tm);                                                \
+    tm.tm_sec = 0;                                                       \
+    tm.tm_min = 0;                                                       \
+    tm.tm_hour = 0;                                                      \
+    tm.tm_mday = 1;                                                      \
+    tm.tm_mon = 0;                                                       \
+    int year = 1900 + tm.tm_year;                                        \
+    year = ((year - OFF_BY) / NYEARS_IN_UNIT) * NYEARS_IN_UNIT + OFF_BY; \
+    tm.tm_year = year - 1900;                                            \
+    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                            \
   }
 
 #define DATE_TRUNC_FUNCTIONS(TYPE)                              \

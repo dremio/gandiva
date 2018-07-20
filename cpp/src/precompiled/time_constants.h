@@ -27,4 +27,4 @@
 #define MILLIS_TO_DAY(millis) ((millis) / MILLIS_IN_DAY)
 #define MILLIS_TO_WEEK(millis) ((millis) / MILLIS_IN_WEEK)
 
-#endif // TIME_CONSTANTS_H
+#endif  // TIME_CONSTANTS_H
