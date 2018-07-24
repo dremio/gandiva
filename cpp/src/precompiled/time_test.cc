@@ -173,8 +173,9 @@ TEST(TestTime, TimeStampAdd) {
   EXPECT_EQ(date_diff_timestamp_int64(StringToTimestamp("2000-03-01 00:00:00"), (int64)1),
             StringToTimestamp("2000-02-29 00:00:00"));
 
-  EXPECT_EQ(date_diff_timestamp_int64(StringToTimestamp("2000-02-29 00:00:00"), (int64)365),
-            StringToTimestamp("1999-03-01 00:00:00"));
+  EXPECT_EQ(
+      date_diff_timestamp_int64(StringToTimestamp("2000-02-29 00:00:00"), (int64)365),
+      StringToTimestamp("1999-03-01 00:00:00"));
 }
 
 // test cases from http://www.staff.science.uu.nl/~gent0113/calendar/isocalendar.htm
