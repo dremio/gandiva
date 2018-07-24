@@ -72,7 +72,6 @@ jmethodID byte_code_accessor_method_id_;
 static jclass gandiva_exception_;
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-  std::cout << "test me!!!!!!";
   JNIEnv *env;
   if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION) != JNI_OK) {
     return JNI_ERR;

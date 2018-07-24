@@ -22,8 +22,6 @@ using gandiva::ConfigHolder;
 using gandiva::Configuration;
 using gandiva::ConfigurationBuilder;
 
-extern jmethodID byte_code_accessor_method_id_;
-
 /*
  * Class:     org_apache_arrow_gandiva_evaluator_ConfigBuilder
  * Method:    buildConfigInstance
