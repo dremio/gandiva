@@ -72,6 +72,7 @@ TEST(TestTime, TimeStampTrunc) {
   EXPECT_EQ(date_trunc_Millennium_date64(StringToTimestamp("2115-05-05 10:20:34")),
             StringToTimestamp("2001-01-01 00:00:00"));
 
+  // truncate week going to previous year
   EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-01 10:10:10")),
             StringToTimestamp("2010-12-27 00:00:00"));
   EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-02 10:10:10")),
@@ -90,6 +91,24 @@ TEST(TestTime, TimeStampTrunc) {
             StringToTimestamp("2011-01-03 00:00:00"));
   EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2011-01-09 10:10:10")),
             StringToTimestamp("2011-01-03 00:00:00"));
+
+  // truncate week for Feb in a leap year
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2000-02-28 10:10:10")),
+            StringToTimestamp("2000-02-28 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2000-02-29 10:10:10")),
+            StringToTimestamp("2000-02-28 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2000-03-01 10:10:10")),
+            StringToTimestamp("2000-02-28 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2000-03-02 10:10:10")),
+            StringToTimestamp("2000-02-28 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2000-03-03 10:10:10")),
+            StringToTimestamp("2000-02-28 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2000-03-04 10:10:10")),
+            StringToTimestamp("2000-02-28 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2000-03-05 10:10:10")),
+            StringToTimestamp("2000-02-28 00:00:00"));
+  EXPECT_EQ(date_trunc_Week_timestamp(StringToTimestamp("2000-03-06 10:10:10")),
+            StringToTimestamp("2000-03-06 00:00:00"));
 }
 
 TEST(TestTime, TimeStampAdd) {
@@ -137,6 +156,9 @@ TEST(TestTime, TimeStampAdd) {
   EXPECT_EQ(date_add_int64_timestamp((int64)4, StringToTimestamp("2000-05-01 00:00:00")),
             StringToTimestamp("2000-05-05 00:00:00"));
 
+  EXPECT_EQ(date_add_int64_timestamp((int64)4, StringToTimestamp("2000-02-27 00:00:00")),
+            StringToTimestamp("2000-03-02 00:00:00"));
+
   // date_sub
   EXPECT_EQ(date_sub_timestamp_int32(StringToTimestamp("2000-05-01 00:00:00"), 7),
             StringToTimestamp("2000-04-24 00:00:00"));
@@ -147,6 +169,12 @@ TEST(TestTime, TimeStampAdd) {
   EXPECT_EQ(
       date_diff_timestamp_int64(StringToTimestamp("2000-05-01 00:00:00"), (int64)365),
       StringToTimestamp("1999-05-02 00:00:00"));
+
+  EXPECT_EQ(date_diff_timestamp_int64(StringToTimestamp("2000-03-01 00:00:00"), (int64)1),
+            StringToTimestamp("2000-02-29 00:00:00"));
+
+  EXPECT_EQ(date_diff_timestamp_int64(StringToTimestamp("2000-02-29 00:00:00"), (int64)365),
+            StringToTimestamp("1999-03-01 00:00:00"));
 }
 
 // test cases from http://www.staff.science.uu.nl/~gent0113/calendar/isocalendar.htm
