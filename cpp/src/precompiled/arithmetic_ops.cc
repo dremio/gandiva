@@ -47,6 +47,9 @@ extern "C" {
 #define BINARY_GENERIC_OP(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE, OP)          \
   FORCE_INLINE                                                             \
   OUT_TYPE NAME##_##IN_TYPE1##_##IN_TYPE2(IN_TYPE1 left, IN_TYPE2 right) { \
+    if (right == 0) {                                                      \
+      return left;                                                         \
+    }                                                                      \
     return left OP right;                                                  \
   }
 
