@@ -31,6 +31,7 @@ TEST(TestArithmeticOps, TestIsDistinctFrom) {
   EXPECT_EQ(is_not_distinct_from_int32_int32(1000, false, 1000, true), false);
   EXPECT_EQ(is_not_distinct_from_int32_int32(1000, false, 1000, false), true);
   EXPECT_EQ(is_not_distinct_from_int32_int32(1000, true, 1000, true), true);
+  EXPECT_EQ(mod_int64_int32(10, 0), 10);
 }
 
 }  // namespace gandiva

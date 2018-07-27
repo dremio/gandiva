@@ -258,41 +258,6 @@ public class NativeEvaluatorTest extends BaseNativeEvaluatorTest {
   }
 
   @Test
-  public void testModZero() throws GandivaException, Exception {
-    Field x = Field.nullable("x", int32);
-
-    // 10 mod 0
-    TreeNode mod = TreeBuilder.makeFunction("mod", Lists.newArrayList(TreeBuilder.makeLiteral(10L),
-            TreeBuilder.makeLiteral(0)), int32);
-    ExpressionTree expr = TreeBuilder.makeExpression(mod, x);
-
-    List<Field> cols = Lists.newArrayList();
-    Schema schema = new Schema(cols);
-
-    NativeEvaluator eval = NativeEvaluator.makeProjector(schema, Lists.newArrayList(expr));
-
-    int numRows = 1;
-    byte[] validity = new byte[]{(byte) 255, 0};
-
-
-    IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
-    intVector.allocateNew(numRows);
-    ArrowRecordBatch batch = new ArrowRecordBatch(
-            numRows,
-            Lists.newArrayList(),
-            Lists.newArrayList());
-    List<ValueVector> output = new ArrayList<ValueVector>();
-    output.add(intVector);
-    eval.evaluate(batch, output);
-
-    assertTrue(intVector.get(0) == (10));
-
-    releaseRecordBatch(batch);
-    releaseValueVectors(output);
-    eval.close();
-  }
-
-  @Test
   public void testStringFields() throws GandivaException {
     /*
      * when x < "hello" then octet_length(x) + a
