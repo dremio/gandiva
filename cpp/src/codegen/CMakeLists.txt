@@ -30,6 +30,7 @@ set(SRC_FILES annotator.cc
       expr_validator.cc
       expression.cc
       expression_registry.cc
+      filter.cc
       function_registry.cc
       function_signature.cc
       llvm_generator.cc

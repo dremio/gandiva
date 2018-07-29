@@ -43,11 +43,11 @@ Status Projector::Make(SchemaPtr schema, const ExpressionVector &exprs,
                        arrow::MemoryPool *pool,
                        std::shared_ptr<Configuration> configuration,
                        std::shared_ptr<Projector> *projector) {
-  GANDIVA_RETURN_FAILURE_IF_FALSE((schema != nullptr),
+  GANDIVA_RETURN_FAILURE_IF_FALSE(schema != nullptr,
                                   Status::Invalid("schema cannot be null"));
   GANDIVA_RETURN_FAILURE_IF_FALSE(!exprs.empty(),
                                   Status::Invalid("expressions need to be non-empty"));
-  GANDIVA_RETURN_FAILURE_IF_FALSE((configuration != nullptr),
+  GANDIVA_RETURN_FAILURE_IF_FALSE(configuration != nullptr,
                                   Status::Invalid("configuration cannot be null"));
   // Build LLVM generator, and generate code for the specified expressions
   std::unique_ptr<LLVMGenerator> llvm_gen;
@@ -63,7 +63,8 @@ Status Projector::Make(SchemaPtr schema, const ExpressionVector &exprs,
     GANDIVA_RETURN_NOT_OK(status);
   }
 
-  llvm_gen->Build(exprs);
+  status = llvm_gen->Build(exprs);
+  GANDIVA_RETURN_NOT_OK(status);
 
   // save the output field types. Used for validation at Evaluate() time.
   std::vector<FieldPtr> output_fields;
