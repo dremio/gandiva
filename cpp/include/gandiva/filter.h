@@ -24,6 +24,7 @@
 #include "gandiva/arrow.h"
 #include "gandiva/condition.h"
 #include "gandiva/configuration.h"
+#include "gandiva/selection_vector.h"
 #include "gandiva/status.h"
 
 namespace gandiva {
@@ -34,74 +35,98 @@ class LLVMGenerator;
 ///
 /// A filter is built for a specific schema and condition. Once the filter is built, it
 /// can be used to evaluate many row batches.
+template <typename SELECT_TYPE>
 class Filter {
  public:
+  Filter(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
+         std::shared_ptr<Configuration> config);
+
+  ~Filter() = default;
+
+ protected:
+  static Status MakeGenerator(SchemaPtr schema, ConditionPtr cond,
+                              std::shared_ptr<Configuration> configuration,
+                              std::unique_ptr<LLVMGenerator> *generator);
+
+  /// Evaluate the specified record batch, and populate output selection vector.
+  ///
+  /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
+  /// \param[in/out]: out_selection the output selection array.
+  Status EvaluateCommon(const arrow::RecordBatch &batch,
+                        std::shared_ptr<SELECT_TYPE> out_selection);
+
+  const std::unique_ptr<LLVMGenerator> llvm_generator_;
+  const SchemaPtr schema_;
+  arrow::MemoryPool *pool_;
+  const std::shared_ptr<Configuration> configuration_;
+};
+
+class FilterWithSVInt16 : public Filter<SelectionVectorInt16> {
+ public:
+  FilterWithSVInt16(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
+                    std::shared_ptr<Configuration> config);
+
   /// Build a default filter for the given schema and condition.
   ///
   /// \param[in] : schema schema for the record batches, and the condition.
   /// \param[in] : cond filter condition.
-  /// \param[in] : pool memory pool used to allocate selection vector (if required).
   /// \param[out]: filter the returned filter object
-  static Status Make(SchemaPtr schema, ConditionPtr cond, arrow::MemoryPool *pool,
-                     std::shared_ptr<Filter> *filter);
+  static Status Make(SchemaPtr schema, ConditionPtr cond,
+                     std::shared_ptr<FilterWithSVInt16> *filter) {
+    return Make(schema, cond, ConfigurationBuilder::DefaultConfiguration(), filter);
+  }
 
   /// \brief Build a default filter for the given schema and condition.
   /// Customize the filter with runtime configuration.
   ///
   /// \param[in] : schema schema for the record batches, and the condition.
   /// \param[in] : cond filter conditions.
-  /// \param[in] : pool memory pool used to allocate output arrays (if required).
   /// \param[in] : config run time configuration.
   /// \param[out]: filter the returned filter object
-  static Status Make(SchemaPtr schema, ConditionPtr cond, arrow::MemoryPool *pool,
+  static Status Make(SchemaPtr schema, ConditionPtr cond,
                      std::shared_ptr<Configuration> config,
-                     std::shared_ptr<Filter> *filter);
+                     std::shared_ptr<FilterWithSVInt16> *filter);
 
-  /// Evaluate the specified record batch, and return the allocated and populated output
-  /// selection array. The output array will be allocated from the memory pool 'pool',
+  /// Evaluate the specified record batch, and populate output selection vector.
   ///
   /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
-  /// \param[out]: out_selection the vector of allocated/populated output selection array.
+  /// \param[in/out]: out_selection the output selection array.
   Status Evaluate(const arrow::RecordBatch &batch,
-                  std::shared_ptr<arrow::Array> *out_selection);
+                  std::shared_ptr<SelectionVectorInt16> out_selection);
+};
 
-  /// Evaluate the specified record batch, and populate the output selection arrays. The
-  /// output array of sufficient capacity must be allocated by the caller.
+class FilterWithSVInt32 : public Filter<SelectionVectorInt32> {
+ public:
+  FilterWithSVInt32(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
+                    std::shared_ptr<Configuration> config);
+
+  /// Build a default filter for the given schema and condition.
+  ///
+  /// \param[in] : schema schema for the record batches, and the condition.
+  /// \param[in] : cond filter condition.
+  /// \param[out]: filter the returned filter object
+  static Status Make(SchemaPtr schema, ConditionPtr cond,
+                     std::shared_ptr<FilterWithSVInt32> *filter) {
+    return Make(schema, cond, ConfigurationBuilder::DefaultConfiguration(), filter);
+  }
+
+  /// \brief Build a default filter for the given schema and condition.
+  /// Customize the filter with runtime configuration.
+  ///
+  /// \param[in] : schema schema for the record batches, and the condition.
+  /// \param[in] : cond filter conditions.
+  /// \param[in] : config run time configuration.
+  /// \param[out]: filter the returned filter object
+  static Status Make(SchemaPtr schema, ConditionPtr cond,
+                     std::shared_ptr<Configuration> config,
+                     std::shared_ptr<FilterWithSVInt32> *filter);
+
+  /// Evaluate the specified record batch, and populate output selection vector.
   ///
   /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
-  /// \param[in/out]: out_selection_buffer, the array data is allocated by the caller and
-  ///                 populated by Evaluate.
-  /// \param[out]: out_selection the vector of populated output selection array.
-  Status Evaluate(const arrow::RecordBatch &batch, ArrayDataPtr out_selection_buffer,
-                  std::shared_ptr<arrow::Array> *out_selection);
-
- private:
-  Filter(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
-         arrow::MemoryPool *pool, std::shared_ptr<Configuration> config);
-
-  Status EvaluateCommon(const arrow::RecordBatch &batch,
-                        ArrayDataPtr out_selection_buffer,
-                        std::shared_ptr<arrow::Array> *out_selection);
-
-  /// Validate the common args for Evaluate() APIs.
-  Status ValidateEvaluateArgsCommon(const arrow::RecordBatch &batch);
-
-  /// Allocate ArrayData for a selection vector of capacity 'length'.
-  Status AllocSelectionVectorData(int length, ArrayDataPtr *array_data);
-
-  /// Validate that the ArrayData has sufficient capacity to accomodate 'num_records'.
-  Status ValidateSelectionVectorCapacity(const arrow::ArrayData &selection_data,
-                                         int num_records);
-
-  std::shared_ptr<arrow::Array> BitMapToSelectionVector(const uint8_t *bitmap,
-                                                        int bitmap_size, int num_rows,
-                                                        ArrayDataPtr selection_data);
-
-  const std::unique_ptr<LLVMGenerator> llvm_generator_;
-  const SchemaPtr schema_;
-  const FieldVector output_fields_;
-  arrow::MemoryPool *pool_;
-  const std::shared_ptr<Configuration> configuration_;
+  /// \param[in/out]: out_selection the output selection array.
+  Status Evaluate(const arrow::RecordBatch &batch,
+                  std::shared_ptr<SelectionVectorInt32> out_selection);
 };
 
 }  // namespace gandiva

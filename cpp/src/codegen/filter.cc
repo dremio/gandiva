@@ -26,22 +26,18 @@
 
 namespace gandiva {
 
-Filter::Filter(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
-               arrow::MemoryPool *pool, std::shared_ptr<Configuration> configuration)
+template <typename SELECT_TYPE>
+Filter<SELECT_TYPE>::Filter(std::unique_ptr<LLVMGenerator> llvm_generator,
+                            SchemaPtr schema,
+                            std::shared_ptr<Configuration> configuration)
     : llvm_generator_(std::move(llvm_generator)),
       schema_(schema),
-      pool_(pool),
       configuration_(configuration) {}
 
-Status Filter::Make(SchemaPtr schema, ConditionPtr cond, arrow::MemoryPool *pool,
-                    std::shared_ptr<Filter> *filter) {
-  return Filter::Make(schema, cond, pool, ConfigurationBuilder::DefaultConfiguration(),
-                      filter);
-}
-
-Status Filter::Make(SchemaPtr schema, ConditionPtr cond, arrow::MemoryPool *pool,
-                    std::shared_ptr<Configuration> configuration,
-                    std::shared_ptr<Filter> *filter) {
+template <typename SELECT_TYPE>
+Status Filter<SELECT_TYPE>::MakeGenerator(SchemaPtr schema, ConditionPtr cond,
+                                          std::shared_ptr<Configuration> configuration,
+                                          std::unique_ptr<LLVMGenerator> *generator) {
   GANDIVA_RETURN_FAILURE_IF_FALSE(schema != nullptr,
                                   Status::Invalid("schema cannot be null"));
   GANDIVA_RETURN_FAILURE_IF_FALSE(cond != nullptr,
@@ -62,51 +58,29 @@ Status Filter::Make(SchemaPtr schema, ConditionPtr cond, arrow::MemoryPool *pool
   status = llvm_gen->Build({cond});
   GANDIVA_RETURN_NOT_OK(status);
 
-  // Instantiate the filter with the completely built llvm generator
-  *filter = std::shared_ptr<Filter>(
-      new Filter(std::move(llvm_gen), schema, pool, configuration));
+  *generator = std::move(llvm_gen);
   return Status::OK();
 }
 
-Status Filter::Evaluate(const arrow::RecordBatch &batch, ArrayDataPtr out_selection_data,
-                        std::shared_ptr<arrow::Array> *out_selection) {
-  Status status = ValidateEvaluateArgsCommon(batch);
-  GANDIVA_RETURN_NOT_OK(status);
-
-  if (out_selection_data == nullptr) {
-    return Status::Invalid("out_selection_buffer is null.");
+template <typename SELECT_TYPE>
+Status Filter<SELECT_TYPE>::EvaluateCommon(const arrow::RecordBatch &batch,
+                                           std::shared_ptr<SELECT_TYPE> out_selection) {
+  if (!batch.schema()->Equals(*schema_)) {
+    return Status::Invalid("Schema in RecordBatch must match the schema in Make()");
   }
-
-  status = ValidateSelectionVectorCapacity(*out_selection_data, batch.num_rows());
-  GANDIVA_RETURN_NOT_OK(status);
-
-  return EvaluateCommon(batch, out_selection_data, out_selection);
-}
-
-Status Filter::Evaluate(const arrow::RecordBatch &batch,
-                        std::shared_ptr<arrow::Array> *out_selection) {
-  Status status = ValidateEvaluateArgsCommon(batch);
-  GANDIVA_RETURN_NOT_OK(status);
-
+  if (batch.num_rows() == 0) {
+    return Status::Invalid("RecordBatch must be non-empty.");
+  }
   if (out_selection == nullptr) {
     return Status::Invalid("out_selection must be non-null.");
   }
-
-  if (pool_ == nullptr) {
-    return Status::Invalid("memory pool must be non-null.");
+  if (out_selection->GetMaxSlots() < batch.num_rows()) {
+    std::stringstream ss;
+    ss << "out_selection has " << out_selection->GetMaxSlots()
+       << " slots, which is less than the batch size " << batch.num_rows();
+    return Status::Invalid(ss.str());
   }
 
-  // Allocate the array_data for the selection vector.
-  ArrayDataPtr array_data;
-  status = AllocSelectionVectorData(batch.num_rows(), &array_data);
-  GANDIVA_RETURN_NOT_OK(status);
-
-  return EvaluateCommon(batch, array_data, out_selection);
-}
-
-Status Filter::EvaluateCommon(const arrow::RecordBatch &batch,
-                              ArrayDataPtr out_selection_data,
-                              std::shared_ptr<arrow::Array> *out_selection) {
   // Allocate three local_bitmaps (one for output, one for validity, one to compute the
   // intersection).
   LocalBitMapsHolder bitmaps(batch.num_rows(), 3 /*local_bitmaps*/);
@@ -126,94 +100,61 @@ Status Filter::EvaluateCommon(const arrow::RecordBatch &batch,
   BitMapAccumulator::IntersectBitMaps(
       result, {bitmaps.GetLocalBitMap(0), bitmaps.GetLocalBitMap((1))}, bitmap_size);
 
-  *out_selection =
-      BitMapToSelectionVector(result, bitmap_size, batch.num_rows(), out_selection_data);
+  return out_selection->PopulateFromBitMap(result, bitmap_size, batch.num_rows() - 1);
+}
+
+FilterWithSVInt16::FilterWithSVInt16(std::unique_ptr<LLVMGenerator> llvm_generator,
+                                     SchemaPtr schema,
+                                     std::shared_ptr<Configuration> config)
+    : Filter(std::move(llvm_generator), schema, config) {}
+
+Status FilterWithSVInt16::Make(SchemaPtr schema, ConditionPtr cond,
+                               std::shared_ptr<Configuration> configuration,
+                               std::shared_ptr<FilterWithSVInt16> *filter) {
+  std::unique_ptr<LLVMGenerator> llvm_gen;
+  auto status = MakeGenerator(schema, cond, configuration, &llvm_gen);
+  GANDIVA_RETURN_NOT_OK(status);
+
+  // Instantiate the filter with the completely built llvm generator
+  *filter =
+      std::make_shared<FilterWithSVInt16>(std::move(llvm_gen), schema, configuration);
   return Status::OK();
 }
 
-Status Filter::ValidateSelectionVectorCapacity(const arrow::ArrayData &selection_data,
-                                               int num_records) {
-  // verify that there is only one buffer (no validity).
-  if (selection_data.buffers.size() != 2) {
-    std::stringstream ss;
-    ss << "number of buffers in selection_data is " << selection_data.buffers.size()
-       << ", must be 2.";
-    return Status::Invalid(ss.str());
-  }
-
-  if (selection_data.type != arrow::int16()) {
-    std::stringstream ss;
-    ss << "selection_data is of type " << selection_data.type->ToString()
-       << ", must be Int16Type.";
-    return Status::Invalid(ss.str());
-  }
-  // verify size of data buffer.
-  auto min_data_len =
-      arrow::BitUtil::BytesForBits(num_records * arrow::Int16Type().bit_width());
-  int64_t data_len = selection_data.buffers.at(1)->capacity();
-  if (data_len < min_data_len) {
-    std::stringstream ss;
-    ss << "data buffer for selection_data has size " << data_len
-       << ", must have minimum size " << min_data_len;
-    return Status::Invalid(ss.str());
-  }
-  return Status::OK();
-}
-
-Status Filter::ValidateEvaluateArgsCommon(const arrow::RecordBatch &batch) {
-  if (!batch.schema()->Equals(*schema_)) {
-    return Status::Invalid("Schema in RecordBatch must match the schema in Make()");
-  }
-  if (batch.num_rows() == 0) {
-    return Status::Invalid("RecordBatch must be non-empty.");
-  }
+Status FilterWithSVInt16::Evaluate(const arrow::RecordBatch &batch,
+                                   std::shared_ptr<SelectionVectorInt16> out_selection) {
   if (batch.num_rows() > INT16_MAX) {
-    return Status::Invalid("RecordBatch size must be <= INT16_MAX.");
+    return Status::Invalid("batch size must be <= INT16_MAX.");
   }
+
+  return EvaluateCommon(batch, out_selection);
+}
+
+FilterWithSVInt32::FilterWithSVInt32(std::unique_ptr<LLVMGenerator> llvm_generator,
+                                     SchemaPtr schema,
+                                     std::shared_ptr<Configuration> config)
+    : Filter(std::move(llvm_generator), schema, config) {}
+
+Status FilterWithSVInt32::Make(SchemaPtr schema, ConditionPtr cond,
+                               std::shared_ptr<Configuration> configuration,
+                               std::shared_ptr<FilterWithSVInt32> *filter) {
+  std::unique_ptr<LLVMGenerator> llvm_gen;
+  auto status = MakeGenerator(schema, cond, configuration, &llvm_gen);
+  GANDIVA_RETURN_NOT_OK(status);
+
+  // Instantiate the filter with the completely built llvm generator
+  *filter =
+      std::make_shared<FilterWithSVInt32>(std::move(llvm_gen), schema, configuration);
   return Status::OK();
 }
 
-Status Filter::AllocSelectionVectorData(int num_records, ArrayDataPtr *selection_data) {
-  auto data = std::make_shared<arrow::PoolBuffer>(pool_);
-  auto data_len =
-      arrow::BitUtil::BytesForBits(num_records * arrow::Int16Type().bit_width());
-  auto status = data->Resize(data_len);
-  GANDIVA_RETURN_ARROW_NOT_OK(status);
-
-  *selection_data = arrow::ArrayData::Make(arrow::int16(), num_records, {nullptr, data});
-  return Status::OK();
-}
-
-std::shared_ptr<arrow::Array> Filter::BitMapToSelectionVector(
-    const uint8_t *bitmap, int bitmap_size, int num_rows, ArrayDataPtr selection_data) {
-  int16_t *selection_buf =
-      reinterpret_cast<int16_t *>(selection_data->buffers.at(1)->mutable_data());
-  int selection_count = 0;
-
-  // jump  8-bytes at a time, add the index corresponding to each valid bit to the
-  // the selection vector.
-  const uint64_t *bitmap_64 = reinterpret_cast<const uint64_t *>(bitmap);
-  for (int i = 0; i < bitmap_size; i += 8) {
-    uint64_t current_word = bitmap_64[i];
-
-    while (current_word != 0) {
-      uint64_t highest_only = current_word & -current_word;
-      int pos_in_word = __builtin_ctzl(highest_only);
-
-      int pos_in_bitmap = i * 64 + pos_in_word;
-      if (pos_in_bitmap >= num_rows) {
-        // the bitmap may be slighly larger for alignment/padding.
-        break;
-      }
-
-      selection_buf[selection_count] = pos_in_bitmap;
-      ++selection_count;
-
-      current_word ^= highest_only;
-    }
+Status FilterWithSVInt32::Evaluate(const arrow::RecordBatch &batch,
+                                   std::shared_ptr<SelectionVectorInt32> out_selection) {
+  if (batch.num_rows() > INT32_MAX) {
+    return Status::Invalid("batch size must be <= INT32_MAX.");
   }
 
-  return arrow::MakeArray(selection_data)->Slice(0, selection_count);
+  return EvaluateCommon(batch, out_selection);
 }
 
 }  // namespace gandiva

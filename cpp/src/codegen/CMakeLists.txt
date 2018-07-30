@@ -36,6 +36,7 @@ set(SRC_FILES annotator.cc
       llvm_generator.cc
       llvm_types.cc
       projector.cc
+      selection_vector.cc
       status.cc
       tree_expr_builder.cc
       ${BC_FILE_PATH_CC})
@@ -94,4 +95,5 @@ add_gandiva_unit_test(tree_expr_test.cc tree_expr_builder.cc expr_decomposer.cc 
 add_gandiva_unit_test(expr_decomposer_test.cc expr_decomposer.cc tree_expr_builder.cc annotator.cc function_registry.cc function_signature.cc)
 add_gandiva_unit_test(status_test.cc status.cc)
 add_gandiva_unit_test(expression_registry_test.cc llvm_types.cc expression_registry.cc function_signature.cc function_registry.cc)
+add_gandiva_unit_test(selection_vector_test.cc selection_vector.cc status.cc)
 

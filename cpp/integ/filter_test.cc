@@ -48,8 +48,8 @@ TEST_F(TestFilter, TestSimple) {
                                                     arrow::boolean());
   auto condition = TreeExprBuilder::MakeCondition(less_than_10);
 
-  std::shared_ptr<Filter> filter;
-  Status status = Filter::Make(schema, condition, pool_, &filter);
+  std::shared_ptr<FilterWithSVInt16> filter;
+  Status status = FilterWithSVInt16::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -62,13 +62,16 @@ TEST_F(TestFilter, TestSimple) {
   // prepare input record batch
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
+  std::shared_ptr<SelectionVectorInt16> selection_vector;
+  status = SelectionVectorInt16::Make(num_records, pool_, &selection_vector);
+  EXPECT_TRUE(status.ok());
+
   // Evaluate expression
-  ArrayPtr output;
-  status = filter->Evaluate(*in_batch, &output);
+  status = filter->Evaluate(*in_batch, selection_vector);
   EXPECT_TRUE(status.ok());
 
   // Validate results
-  EXPECT_ARROW_ARRAY_EQUALS(exp, output);
+  EXPECT_ARROW_ARRAY_EQUALS(exp, selection_vector->ToArray());
 }
 
 TEST_F(TestFilter, TestSimpleCustomConfig) {
@@ -80,12 +83,11 @@ TEST_F(TestFilter, TestSimpleCustomConfig) {
   // Build condition f0 != f1
   auto condition = TreeExprBuilder::MakeCondition("not_equal", {field0, field1});
 
-  std::shared_ptr<Filter> projector;
   ConfigurationBuilder config_builder;
   std::shared_ptr<Configuration> config = config_builder.build();
 
-  std::shared_ptr<Filter> filter;
-  Status status = Filter::Make(schema, condition, pool_, config, &filter);
+  std::shared_ptr<FilterWithSVInt16> filter;
+  Status status = FilterWithSVInt16::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -98,13 +100,16 @@ TEST_F(TestFilter, TestSimpleCustomConfig) {
   // prepare input record batch
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
+  std::shared_ptr<SelectionVectorInt16> selection_vector;
+  status = SelectionVectorInt16::Make(num_records, pool_, &selection_vector);
+  EXPECT_TRUE(status.ok());
+
   // Evaluate expression
-  ArrayPtr output;
-  status = filter->Evaluate(*in_batch, &output);
+  status = filter->Evaluate(*in_batch, selection_vector);
   EXPECT_TRUE(status.ok());
 
   // Validate results
-  EXPECT_ARROW_ARRAY_EQUALS(exp, output);
+  EXPECT_ARROW_ARRAY_EQUALS(exp, selection_vector->ToArray());
 }
 
 TEST_F(TestFilter, TestZeroCopy) {
@@ -115,8 +120,8 @@ TEST_F(TestFilter, TestZeroCopy) {
   // Build condition
   auto condition = TreeExprBuilder::MakeCondition("isnotnull", {field0});
 
-  std::shared_ptr<Filter> filter;
-  Status status = Filter::Make(schema, condition, pool_, &filter);
+  std::shared_ptr<FilterWithSVInt16> filter;
+  Status status = FilterWithSVInt16::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -133,16 +138,16 @@ TEST_F(TestFilter, TestZeroCopy) {
   std::shared_ptr<arrow::MutableBuffer> data_buf =
       std::make_shared<arrow::MutableBuffer>(data.get(), data_sz);
 
-  auto array_data =
-      arrow::ArrayData::Make(arrow::int16(), num_records, {nullptr, data_buf});
+  std::shared_ptr<SelectionVectorInt16> selection_vector;
+  status = SelectionVectorInt16::Make(num_records, data_buf, &selection_vector);
+  EXPECT_TRUE(status.ok());
 
   // Evaluate expression
-  ArrayPtr output;
-  status = filter->Evaluate(*in_batch, {array_data}, &output);
+  status = filter->Evaluate(*in_batch, selection_vector);
   EXPECT_TRUE(status.ok());
 
   // Validate results
-  EXPECT_ARROW_ARRAY_EQUALS(exp, output);
+  EXPECT_ARROW_ARRAY_EQUALS(exp, selection_vector->ToArray());
 }
 
 TEST_F(TestFilter, TestZeroCopyNegative) {
@@ -155,8 +160,8 @@ TEST_F(TestFilter, TestZeroCopyNegative) {
   // Build expression
   auto condition = TreeExprBuilder::MakeCondition("isnotnull", {field0});
 
-  std::shared_ptr<Filter> filter;
-  Status status = Filter::Make(schema, {condition}, nullptr /*pool*/, &filter);
+  std::shared_ptr<FilterWithSVInt16> filter;
+  Status status = FilterWithSVInt16::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -173,36 +178,69 @@ TEST_F(TestFilter, TestZeroCopyNegative) {
   std::shared_ptr<arrow::MutableBuffer> data_buf =
       std::make_shared<arrow::MutableBuffer>(data.get(), data_sz);
 
-  auto array_data = arrow::ArrayData::Make(arrow::int16(), num_records, {nullptr, data_buf});
+  std::shared_ptr<SelectionVectorInt16> selection_vector;
+  status = SelectionVectorInt16::Make(num_records, data_buf, &selection_vector);
+  EXPECT_TRUE(status.ok());
 
   // the batch can't be empty.
   auto bad_batch = arrow::RecordBatch::Make(schema, 0 /*num_records*/, {array0});
-  status = filter->Evaluate(*bad_batch, {array_data}, &output);
+  status = filter->Evaluate(*bad_batch, selection_vector);
   EXPECT_EQ(status.code(), StatusCode::Invalid);
 
-  // the output array can't be null.
-  std::shared_ptr<arrow::ArrayData> null_array_data;
-  status = filter->Evaluate(*in_batch, {null_array_data}, &output);
+  // the selection_vector can't be null.
+  std::shared_ptr<SelectionVectorInt16> null_selection;
+  status = filter->Evaluate(*in_batch, null_selection);
   EXPECT_EQ(status.code(), StatusCode::Invalid);
 
-  // the output array must have atleast two buffers.
-  auto bad_array_data = arrow::ArrayData::Make(arrow::int16(), num_records, {data_buf});
-  status = filter->Evaluate(*in_batch, {bad_array_data}, &output);
-  EXPECT_EQ(status.code(), StatusCode::Invalid);
+  // the selection vector must be suitably sized.
+  std::shared_ptr<SelectionVectorInt16> bad_selection;
+  status = SelectionVectorInt16::Make(num_records - 1, data_buf, &bad_selection);
+  EXPECT_TRUE(status.ok());
 
-  // the output buffer must have sufficiently sized data_buf.
-  std::shared_ptr<arrow::MutableBuffer> bad_data_buf =
-      std::make_shared<arrow::MutableBuffer>(data.get(), data_sz - 1);
-  auto bad_array_data2 =
-      arrow::ArrayData::Make(arrow::int16(), num_records, {nullptr, bad_data_buf});
-  status = filter->Evaluate(*in_batch, {bad_array_data2}, &output);
+  status = filter->Evaluate(*in_batch, bad_selection);
   EXPECT_EQ(status.code(), StatusCode::Invalid);
+}
 
-  // the output buffer must be of type int16.
-  auto bad_array_data3 =
-      arrow::ArrayData::Make(arrow::int8(), num_records, {nullptr, data_buf});
-  status = filter->Evaluate(*in_batch, {bad_array_data3}, &output);
-  EXPECT_EQ(status.code(), StatusCode::Invalid);
+TEST_F(TestFilter, TestSimpleSVInt32) {
+  // schema for input fields
+  auto field0 = field("f0", int32());
+  auto field1 = field("f1", int32());
+  auto schema = arrow::schema({field0, field1});
+
+  // Build condition f0 + f1 < 10
+  auto node_f0 = TreeExprBuilder::MakeField(field0);
+  auto node_f1 = TreeExprBuilder::MakeField(field1);
+  auto sum_func =
+      TreeExprBuilder::MakeFunction("add", {node_f0, node_f1}, arrow::int32());
+  auto literal_10 = TreeExprBuilder::MakeLiteral((int32_t)10);
+  auto less_than_10 = TreeExprBuilder::MakeFunction("less_than", {sum_func, literal_10},
+                                                    arrow::boolean());
+  auto condition = TreeExprBuilder::MakeCondition(less_than_10);
+
+  std::shared_ptr<FilterWithSVInt32> filter;
+  Status status = FilterWithSVInt32::Make(schema, condition, &filter);
+  EXPECT_TRUE(status.ok());
+
+  // Create a row-batch with some sample data
+  int num_records = 5;
+  auto array0 = MakeArrowArrayInt32({1, 2, 3, 4, 6}, {true, true, true, false, true});
+  auto array1 = MakeArrowArrayInt32({5, 9, 6, 17, 3}, {true, true, false, true, true});
+  // expected output (indices for which condition matches)
+  auto exp = MakeArrowArrayInt32({0, 4});
+
+  // prepare input record batch
+  auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
+
+  std::shared_ptr<SelectionVectorInt32> selection_vector;
+  status = SelectionVectorInt32::Make(num_records, pool_, &selection_vector);
+  EXPECT_TRUE(status.ok());
+
+  // Evaluate expression
+  status = filter->Evaluate(*in_batch, selection_vector);
+  EXPECT_TRUE(status.ok());
+
+  // Validate results
+  EXPECT_ARROW_ARRAY_EQUALS(exp, selection_vector->ToArray());
 }
 
 }  // namespace gandiva
