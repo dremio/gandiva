@@ -86,7 +86,7 @@ Status SelectionVectorImpl<C_TYPE, A_TYPE>::ValidateBuffer(
   }
 
   // verify size of buffer.
-  auto min_len = max_slots * sizeof(C_TYPE);
+  int64_t min_len = max_slots * sizeof(C_TYPE);
   if (buffer->size() < min_len) {
     std::stringstream ss;
     ss << "buffer for selection_data has size " << buffer->size()
