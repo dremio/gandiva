@@ -39,9 +39,9 @@ TEST_F(TestSelectionVector, TestInt16Make) {
 
   // Test with pre-alloced buffer
   std::shared_ptr<SelectionVectorInt16> selection2;
-  auto buffer = std::make_shared<arrow::PoolBuffer>(pool_);
+  std::shared_ptr<arrow::Buffer> buffer;
   auto buffer_len = max_slots * sizeof(int16_t);
-  auto astatus = buffer->Resize(buffer_len);
+  auto astatus = arrow::AllocateBuffer(pool_, buffer_len, &buffer);
   EXPECT_EQ(astatus.ok(), true);
 
   status = SelectionVectorInt16::Make(max_slots, buffer, &selection2);

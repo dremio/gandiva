@@ -61,19 +61,23 @@ Status SelectionVector::PopulateFromBitMap(const uint8_t *bitmap, int bitmap_siz
 template <typename C_TYPE, typename A_TYPE>
 Status SelectionVectorImpl<C_TYPE, A_TYPE>::AllocateBuffer(
     int max_slots, arrow::MemoryPool *pool,
-    std::shared_ptr<arrow::MutableBuffer> *buffer) {
-  auto abuffer = std::make_shared<arrow::PoolBuffer>(pool);
-  auto buffer_len = max_slots * sizeof(C_TYPE);
-  auto status = abuffer->Resize(buffer_len);
-  GANDIVA_RETURN_ARROW_NOT_OK(status);
+    std::shared_ptr<arrow::Buffer> *buffer) {
 
-  *buffer = abuffer;
+  auto buffer_len = max_slots * sizeof(C_TYPE);
+  auto astatus = arrow::AllocateBuffer(pool, buffer_len, buffer);
+  GANDIVA_RETURN_ARROW_NOT_OK(astatus);
+
   return Status::OK();
 }
 
 template <typename C_TYPE, typename A_TYPE>
 Status SelectionVectorImpl<C_TYPE, A_TYPE>::ValidateBuffer(
-    int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer) {
+    int max_slots, std::shared_ptr<arrow::Buffer> buffer) {
+  // verify buffer is mutable
+  if (!buffer->is_mutable()) {
+    return Status::Invalid("buffer for selection vector must be mutable");
+  }
+
   // verify size of buffer.
   auto min_len = max_slots * sizeof(C_TYPE);
   if (buffer->size() < min_len) {
@@ -86,7 +90,7 @@ Status SelectionVectorImpl<C_TYPE, A_TYPE>::ValidateBuffer(
 }
 
 Status SelectionVectorInt16::Make(
-    int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer,
+    int max_slots, std::shared_ptr<arrow::Buffer> buffer,
     std::shared_ptr<SelectionVectorInt16> *selection_vector) {
   auto status = ValidateBuffer(max_slots, buffer);
   if (status.ok()) {
@@ -98,7 +102,7 @@ Status SelectionVectorInt16::Make(
 Status SelectionVectorInt16::Make(
     int max_slots, arrow::MemoryPool *pool,
     std::shared_ptr<SelectionVectorInt16> *selection_vector) {
-  std::shared_ptr<arrow::MutableBuffer> buffer;
+  std::shared_ptr<arrow::Buffer> buffer;
   auto status = AllocateBuffer(max_slots, pool, &buffer);
   if (status.ok()) {
     *selection_vector = std::make_shared<SelectionVectorInt16>(max_slots, buffer);
@@ -107,7 +111,7 @@ Status SelectionVectorInt16::Make(
 }
 
 Status SelectionVectorInt32::Make(
-    int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer,
+    int max_slots, std::shared_ptr<arrow::Buffer> buffer,
     std::shared_ptr<SelectionVectorInt32> *selection_vector) {
   auto status = ValidateBuffer(max_slots, buffer);
   if (status.ok()) {
@@ -119,7 +123,7 @@ Status SelectionVectorInt32::Make(
 Status SelectionVectorInt32::Make(
     int max_slots, arrow::MemoryPool *pool,
     std::shared_ptr<SelectionVectorInt32> *selection_vector) {
-  std::shared_ptr<arrow::MutableBuffer> buffer;
+  std::shared_ptr<arrow::Buffer> buffer;
   auto status = AllocateBuffer(max_slots, pool, &buffer);
   if (status.ok()) {
     *selection_vector = std::make_shared<SelectionVectorInt32>(max_slots, buffer);

@@ -62,8 +62,8 @@ class SelectionVector {
 template <typename C_TYPE, typename A_TYPE>
 class SelectionVectorImpl : public SelectionVector {
  public:
-  SelectionVectorImpl(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer)
-      : max_slots_(max_slots), buffer_(buffer) {
+  SelectionVectorImpl(int max_slots, std::shared_ptr<arrow::Buffer> buffer)
+      : max_slots_(max_slots), num_slots_(0), buffer_(buffer) {
     raw_data_ = reinterpret_cast<C_TYPE *>(buffer->mutable_data());
   }
 
@@ -92,10 +92,10 @@ class SelectionVectorImpl : public SelectionVector {
 
  protected:
   static Status AllocateBuffer(int max_slots, arrow::MemoryPool *pool,
-                               std::shared_ptr<arrow::MutableBuffer> *buffer);
+                               std::shared_ptr<arrow::Buffer> *buffer);
 
   static Status ValidateBuffer(int max_slots,
-                               std::shared_ptr<arrow::MutableBuffer> buffer);
+                               std::shared_ptr<arrow::Buffer> buffer);
 
   /// maximum slots in the vector
   int max_slots_;
@@ -103,7 +103,7 @@ class SelectionVectorImpl : public SelectionVector {
   /// number of slots in the vector
   int num_slots_;
 
-  std::shared_ptr<arrow::MutableBuffer> buffer_;
+  std::shared_ptr<arrow::Buffer> buffer_;
   C_TYPE *raw_data_;
 };
 
@@ -116,7 +116,7 @@ ArrayPtr SelectionVectorImpl<C_TYPE, A_TYPE>::ToArray() const {
 
 class SelectionVectorInt16 : public SelectionVectorImpl<int16_t, arrow::Int16Type> {
  public:
-  SelectionVectorInt16(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer)
+  SelectionVectorInt16(int max_slots, std::shared_ptr<arrow::Buffer> buffer)
       : SelectionVectorImpl(max_slots, buffer) {}
 
   int GetMaxSupportedValue() const override { return INT16_MAX; }
@@ -124,7 +124,7 @@ class SelectionVectorInt16 : public SelectionVectorImpl<int16_t, arrow::Int16Typ
   /// \param[in] : max_slots max number of slots
   /// \param[in] : buffer buffer sized to accomadate max_slots
   /// \param[out]: selection_vector selection vector backed by 'buffer'
-  static Status Make(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer,
+  static Status Make(int max_slots, std::shared_ptr<arrow::Buffer> buffer,
                      std::shared_ptr<SelectionVectorInt16> *selection_vector);
 
   /// \param[in] : max_slots max number of slots
@@ -137,7 +137,7 @@ class SelectionVectorInt16 : public SelectionVectorImpl<int16_t, arrow::Int16Typ
 
 class SelectionVectorInt32 : public SelectionVectorImpl<int32_t, arrow::Int32Type> {
  public:
-  SelectionVectorInt32(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer)
+  SelectionVectorInt32(int max_slots, std::shared_ptr<arrow::Buffer> buffer)
       : SelectionVectorImpl(max_slots, buffer) {}
 
   int GetMaxSupportedValue() const override { return INT32_MAX; }
@@ -145,7 +145,7 @@ class SelectionVectorInt32 : public SelectionVectorImpl<int32_t, arrow::Int32Typ
   /// \param[in] : max_slots max number of slots
   /// \param[in] : buffer buffer sized to accomadate max_slots
   /// \param[out]: selection_vector selection vector backed by 'buffer'
-  static Status Make(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer,
+  static Status Make(int max_slots, std::shared_ptr<arrow::Buffer> buffer,
                      std::shared_ptr<SelectionVectorInt32> *selection_vector);
 
   /// \param[in] : max_slots max number of slots
