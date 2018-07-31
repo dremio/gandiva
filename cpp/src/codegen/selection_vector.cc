@@ -24,11 +24,17 @@ namespace gandiva {
 
 Status SelectionVector::PopulateFromBitMap(const uint8_t *bitmap, int bitmap_size,
                                            int max_bitmap_index) {
-  GANDIVA_RETURN_FAILURE_IF_FALSE(
-      bitmap_size % 8 == 0, Status::Invalid("bitmap must be padded to 64-bit size"));
-  GANDIVA_RETURN_FAILURE_IF_FALSE(
-      max_bitmap_index <= GetMaxSupportedValue(),
-      Status::Invalid("max_bitmap_index must be <= maxSupportedValue"));
+  if (bitmap_size % 8 != 0) {
+    std::stringstream ss;
+    ss << "bitmap size " << bitmap_size << " must be padded to 64-bit size";
+    return Status::Invalid(ss.str());
+  }
+  if (max_bitmap_index > GetMaxSupportedValue()) {
+    std::stringstream ss;
+    ss << "max_bitmap_index " << max_bitmap_index << " must be <= maxSupportedValue "
+       << GetMaxSupportedValue() << " in selection vector";
+    return Status::Invalid(ss.str());
+  }
 
   // jump  8-bytes at a time, add the index corresponding to each valid bit to the
   // the selection vector.
@@ -47,6 +53,9 @@ Status SelectionVector::PopulateFromBitMap(const uint8_t *bitmap, int bitmap_siz
         break;
       }
 
+      if (selection_idx >= GetMaxSlots()) {
+        return Status::Invalid("selection vector has no remaining slots");
+      }
       SetIndex(selection_idx, pos_in_bitmap);
       ++selection_idx;
 
@@ -60,9 +69,7 @@ Status SelectionVector::PopulateFromBitMap(const uint8_t *bitmap, int bitmap_siz
 
 template <typename C_TYPE, typename A_TYPE>
 Status SelectionVectorImpl<C_TYPE, A_TYPE>::AllocateBuffer(
-    int max_slots, arrow::MemoryPool *pool,
-    std::shared_ptr<arrow::Buffer> *buffer) {
-
+    int max_slots, arrow::MemoryPool *pool, std::shared_ptr<arrow::Buffer> *buffer) {
   auto buffer_len = max_slots * sizeof(C_TYPE);
   auto astatus = arrow::AllocateBuffer(pool, buffer_len, buffer);
   GANDIVA_RETURN_ARROW_NOT_OK(astatus);

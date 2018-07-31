@@ -31,7 +31,7 @@ namespace gandiva {
 
 class LLVMGenerator;
 
-/// \brief filter records based on an condition.
+/// \brief filter records based on a condition.
 ///
 /// A filter is built for a specific schema and condition. Once the filter is built, it
 /// can be used to evaluate many row batches.
@@ -42,7 +42,7 @@ class Filter {
 
   ~Filter() = default;
 
-  /// Build a default filter for the given schema and condition.
+  /// Build a filter for the given schema and condition, with the default configuration.
   ///
   /// \param[in] : schema schema for the record batches, and the condition.
   /// \param[in] : condition filter condition.
@@ -52,7 +52,7 @@ class Filter {
     return Make(schema, condition, ConfigurationBuilder::DefaultConfiguration(), filter);
   }
 
-  /// \brief Build a default filter for the given schema and condition.
+  /// \brief Build a filter for the given schema and condition.
   /// Customize the filter with runtime configuration.
   ///
   /// \param[in] : schema schema for the record batches, and the condition.
@@ -66,7 +66,8 @@ class Filter {
   /// Evaluate the specified record batch, and populate output selection vector.
   ///
   /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
-  /// \param[in/out]: out_selection the output selection array.
+  /// \param[in/out]: out_selection the selection array with indices of rows that match
+  ///                 the condition.
   Status Evaluate(const arrow::RecordBatch &batch,
                   std::shared_ptr<SelectionVector> out_selection);
 

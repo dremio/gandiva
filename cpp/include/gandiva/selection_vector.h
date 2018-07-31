@@ -94,8 +94,7 @@ class SelectionVectorImpl : public SelectionVector {
   static Status AllocateBuffer(int max_slots, arrow::MemoryPool *pool,
                                std::shared_ptr<arrow::Buffer> *buffer);
 
-  static Status ValidateBuffer(int max_slots,
-                               std::shared_ptr<arrow::Buffer> buffer);
+  static Status ValidateBuffer(int max_slots, std::shared_ptr<arrow::Buffer> buffer);
 
   /// maximum slots in the vector
   int max_slots_;
@@ -122,7 +121,7 @@ class SelectionVectorInt16 : public SelectionVectorImpl<int16_t, arrow::Int16Typ
   int GetMaxSupportedValue() const override { return INT16_MAX; }
 
   /// \param[in] : max_slots max number of slots
-  /// \param[in] : buffer buffer sized to accomadate max_slots
+  /// \param[in] : buffer buffer sized to accomodate max_slots
   /// \param[out]: selection_vector selection vector backed by 'buffer'
   static Status Make(int max_slots, std::shared_ptr<arrow::Buffer> buffer,
                      std::shared_ptr<SelectionVectorInt16> *selection_vector);
@@ -130,7 +129,7 @@ class SelectionVectorInt16 : public SelectionVectorImpl<int16_t, arrow::Int16Typ
   /// \param[in] : max_slots max number of slots
   /// \param[in] : pool memory pool to allocate buffer
   /// \param[out]: selection_vector selection vector backed by a buffer allocated from the
-  /// pool.
+  ///              pool.
   static Status Make(int max_slots, arrow::MemoryPool *pool,
                      std::shared_ptr<SelectionVectorInt16> *selection_vector);
 };
@@ -143,7 +142,7 @@ class SelectionVectorInt32 : public SelectionVectorImpl<int32_t, arrow::Int32Typ
   int GetMaxSupportedValue() const override { return INT32_MAX; }
 
   /// \param[in] : max_slots max number of slots
-  /// \param[in] : buffer buffer sized to accomadate max_slots
+  /// \param[in] : buffer buffer sized to accomodate max_slots
   /// \param[out]: selection_vector selection vector backed by 'buffer'
   static Status Make(int max_slots, std::shared_ptr<arrow::Buffer> buffer,
                      std::shared_ptr<SelectionVectorInt32> *selection_vector);
@@ -151,7 +150,7 @@ class SelectionVectorInt32 : public SelectionVectorImpl<int32_t, arrow::Int32Typ
   /// \param[in] : max_slots max number of slots
   /// \param[in] : pool memory pool to allocate buffer
   /// \param[out]: selection_vector selection vector backed by a buffer allocated from the
-  /// pool.
+  ///              pool.
   static Status Make(int max_slots, arrow::MemoryPool *pool,
                      std::shared_ptr<SelectionVectorInt32> *selection_vector);
 };

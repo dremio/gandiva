@@ -33,7 +33,7 @@ TEST_F(TestSelectionVector, TestInt16Make) {
   // Test with pool allocation
   std::shared_ptr<SelectionVectorInt16> selection;
   auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
-  EXPECT_EQ(status.ok(), true);
+  EXPECT_EQ(status.ok(), true) << status.message();
   EXPECT_EQ(selection->GetMaxSlots(), max_slots);
   EXPECT_EQ(selection->GetNumSlots(), 0);
 
@@ -45,9 +45,24 @@ TEST_F(TestSelectionVector, TestInt16Make) {
   EXPECT_EQ(astatus.ok(), true);
 
   status = SelectionVectorInt16::Make(max_slots, buffer, &selection2);
-  EXPECT_EQ(status.ok(), true);
+  EXPECT_EQ(status.ok(), true) << status.message();
   EXPECT_EQ(selection2->GetMaxSlots(), max_slots);
   EXPECT_EQ(selection2->GetNumSlots(), 0);
+}
+
+TEST_F(TestSelectionVector, TestInt16MakeNegative) {
+  int max_slots = 10;
+
+  std::shared_ptr<SelectionVectorInt16> selection;
+  std::shared_ptr<arrow::Buffer> buffer;
+  auto buffer_len = max_slots * sizeof(int16_t);
+
+  // alloc a buffer that's insufficient.
+  auto astatus = arrow::AllocateBuffer(pool_, buffer_len - 16, &buffer);
+  EXPECT_EQ(astatus.ok(), true);
+
+  auto status = SelectionVectorInt16::Make(max_slots, buffer, &selection);
+  EXPECT_EQ(status.IsInvalid(), true);
 }
 
 TEST_F(TestSelectionVector, TestInt16Set) {
@@ -55,7 +70,7 @@ TEST_F(TestSelectionVector, TestInt16Set) {
 
   std::shared_ptr<SelectionVectorInt16> selection;
   auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
-  EXPECT_EQ(status.ok(), true);
+  EXPECT_EQ(status.ok(), true) << status.message();
 
   selection->SetIndex(0, 100);
   EXPECT_EQ(selection->GetIndex(0), 100);
@@ -79,7 +94,7 @@ TEST_F(TestSelectionVector, TestInt16PopulateFromBitMap) {
 
   std::shared_ptr<SelectionVectorInt16> selection;
   auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
-  EXPECT_EQ(status.ok(), true);
+  EXPECT_EQ(status.ok(), true) << status.message();
 
   int bitmap_size = arrow::BitUtil::RoundUpNumi64(max_slots) * 8;
   std::unique_ptr<uint8_t> bitmap(new uint8_t[bitmap_size]);
@@ -91,10 +106,32 @@ TEST_F(TestSelectionVector, TestInt16PopulateFromBitMap) {
   arrow::BitUtil::SetBit(bitmap.get(), 220);
 
   status = selection->PopulateFromBitMap(bitmap.get(), bitmap_size, max_slots - 1);
+  EXPECT_EQ(status.ok(), true) << status.message();
+
   EXPECT_EQ(selection->GetNumSlots(), 3);
   EXPECT_EQ(selection->GetIndex(0), 0);
   EXPECT_EQ(selection->GetIndex(1), 5);
   EXPECT_EQ(selection->GetIndex(2), 121);
+}
+
+TEST_F(TestSelectionVector, TestInt16PopulateFromBitMapNegative) {
+  int max_slots = 2;
+
+  std::shared_ptr<SelectionVectorInt16> selection;
+  auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
+  EXPECT_EQ(status.ok(), true) << status.message();
+
+  int bitmap_size = 16;
+  std::unique_ptr<uint8_t> bitmap(new uint8_t[bitmap_size]);
+  memset(bitmap.get(), 0, bitmap_size);
+
+  arrow::BitUtil::SetBit(bitmap.get(), 0);
+  arrow::BitUtil::SetBit(bitmap.get(), 1);
+  arrow::BitUtil::SetBit(bitmap.get(), 2);
+
+  // The bitmap has three set bits, whereas the selection vector has capacity for only 2.
+  status = selection->PopulateFromBitMap(bitmap.get(), bitmap_size, 2);
+  EXPECT_EQ(status.IsInvalid(), true);
 }
 
 TEST_F(TestSelectionVector, TestInt32Set) {
@@ -102,7 +139,7 @@ TEST_F(TestSelectionVector, TestInt32Set) {
 
   std::shared_ptr<SelectionVectorInt32> selection;
   auto status = SelectionVectorInt32::Make(max_slots, pool_, &selection);
-  EXPECT_EQ(status.ok(), true);
+  EXPECT_EQ(status.ok(), true) << status.message();
 
   selection->SetIndex(0, 100);
   EXPECT_EQ(selection->GetIndex(0), 100);
@@ -130,7 +167,7 @@ TEST_F(TestSelectionVector, TestInt32PopulateFromBitMap) {
 
   std::shared_ptr<SelectionVectorInt32> selection;
   auto status = SelectionVectorInt32::Make(max_slots, pool_, &selection);
-  EXPECT_EQ(status.ok(), true);
+  EXPECT_EQ(status.ok(), true) << status.message();
 
   int bitmap_size = arrow::BitUtil::RoundUpNumi64(max_slots) * 8;
   std::unique_ptr<uint8_t> bitmap(new uint8_t[bitmap_size]);
@@ -142,10 +179,27 @@ TEST_F(TestSelectionVector, TestInt32PopulateFromBitMap) {
   arrow::BitUtil::SetBit(bitmap.get(), 220);
 
   status = selection->PopulateFromBitMap(bitmap.get(), bitmap_size, max_slots - 1);
+  EXPECT_EQ(status.ok(), true) << status.message();
+
   EXPECT_EQ(selection->GetNumSlots(), 3);
   EXPECT_EQ(selection->GetIndex(0), 0);
   EXPECT_EQ(selection->GetIndex(1), 5);
   EXPECT_EQ(selection->GetIndex(2), 121);
+}
+
+TEST_F(TestSelectionVector, TestInt32MakeNegative) {
+  int max_slots = 10;
+
+  std::shared_ptr<SelectionVectorInt32> selection;
+  std::shared_ptr<arrow::Buffer> buffer;
+  auto buffer_len = max_slots * sizeof(int32_t);
+
+  // alloc a buffer that's insufficient.
+  auto astatus = arrow::AllocateBuffer(pool_, buffer_len - 1, &buffer);
+  EXPECT_EQ(astatus.ok(), true);
+
+  auto status = SelectionVectorInt32::Make(max_slots, buffer, &selection);
+  EXPECT_EQ(status.IsInvalid(), true);
 }
 
 }  // namespace gandiva
