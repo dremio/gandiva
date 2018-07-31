@@ -48,8 +48,8 @@ TEST_F(TestFilter, TestSimple) {
                                                     arrow::boolean());
   auto condition = TreeExprBuilder::MakeCondition(less_than_10);
 
-  std::shared_ptr<FilterWithSVInt16> filter;
-  Status status = FilterWithSVInt16::Make(schema, condition, &filter);
+  std::shared_ptr<Filter> filter;
+  Status status = Filter::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -86,8 +86,8 @@ TEST_F(TestFilter, TestSimpleCustomConfig) {
   ConfigurationBuilder config_builder;
   std::shared_ptr<Configuration> config = config_builder.build();
 
-  std::shared_ptr<FilterWithSVInt16> filter;
-  Status status = FilterWithSVInt16::Make(schema, condition, &filter);
+  std::shared_ptr<Filter> filter;
+  Status status = Filter::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -120,8 +120,8 @@ TEST_F(TestFilter, TestZeroCopy) {
   // Build condition
   auto condition = TreeExprBuilder::MakeCondition("isnotnull", {field0});
 
-  std::shared_ptr<FilterWithSVInt16> filter;
-  Status status = FilterWithSVInt16::Make(schema, condition, &filter);
+  std::shared_ptr<Filter> filter;
+  Status status = Filter::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -160,8 +160,8 @@ TEST_F(TestFilter, TestZeroCopyNegative) {
   // Build expression
   auto condition = TreeExprBuilder::MakeCondition("isnotnull", {field0});
 
-  std::shared_ptr<FilterWithSVInt16> filter;
-  Status status = FilterWithSVInt16::Make(schema, condition, &filter);
+  std::shared_ptr<Filter> filter;
+  Status status = Filter::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data
@@ -217,8 +217,8 @@ TEST_F(TestFilter, TestSimpleSVInt32) {
                                                     arrow::boolean());
   auto condition = TreeExprBuilder::MakeCondition(less_than_10);
 
-  std::shared_ptr<FilterWithSVInt32> filter;
-  Status status = FilterWithSVInt32::Make(schema, condition, &filter);
+  std::shared_ptr<Filter> filter;
+  Status status = Filter::Make(schema, condition, &filter);
   EXPECT_TRUE(status.ok());
 
   // Create a row-batch with some sample data

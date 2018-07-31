@@ -22,8 +22,44 @@
 
 namespace gandiva {
 
+Status SelectionVector::PopulateFromBitMap(const uint8_t *bitmap, int bitmap_size,
+                                           int max_bitmap_index) {
+  GANDIVA_RETURN_FAILURE_IF_FALSE(
+      bitmap_size % 8 == 0, Status::Invalid("bitmap must be padded to 64-bit size"));
+  GANDIVA_RETURN_FAILURE_IF_FALSE(
+      max_bitmap_index <= GetMaxSupportedValue(),
+      Status::Invalid("max_bitmap_index must be <= maxSupportedValue"));
+
+  // jump  8-bytes at a time, add the index corresponding to each valid bit to the
+  // the selection vector.
+  int selection_idx = 0;
+  const uint64_t *bitmap_64 = reinterpret_cast<const uint64_t *>(bitmap);
+  for (int bitmap_idx = 0; bitmap_idx < bitmap_size / 8; ++bitmap_idx) {
+    uint64_t current_word = bitmap_64[bitmap_idx];
+
+    while (current_word != 0) {
+      uint64_t highest_only = current_word & -current_word;
+      int pos_in_word = __builtin_ctzl(highest_only);
+
+      int pos_in_bitmap = bitmap_idx * 64 + pos_in_word;
+      if (pos_in_bitmap > max_bitmap_index) {
+        // the bitmap may be slighly larger for alignment/padding.
+        break;
+      }
+
+      SetIndex(selection_idx, pos_in_bitmap);
+      ++selection_idx;
+
+      current_word ^= highest_only;
+    }
+  }
+
+  SetNumSlots(selection_idx);
+  return Status::OK();
+}
+
 template <typename C_TYPE, typename A_TYPE>
-Status SelectionVector<C_TYPE, A_TYPE>::AllocateBuffer(
+Status SelectionVectorImpl<C_TYPE, A_TYPE>::AllocateBuffer(
     int max_slots, arrow::MemoryPool *pool,
     std::shared_ptr<arrow::MutableBuffer> *buffer) {
   auto abuffer = std::make_shared<arrow::PoolBuffer>(pool);
@@ -36,7 +72,7 @@ Status SelectionVector<C_TYPE, A_TYPE>::AllocateBuffer(
 }
 
 template <typename C_TYPE, typename A_TYPE>
-Status SelectionVector<C_TYPE, A_TYPE>::ValidateBuffer(
+Status SelectionVectorImpl<C_TYPE, A_TYPE>::ValidateBuffer(
     int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer) {
   // verify size of buffer.
   auto min_len = max_slots * sizeof(C_TYPE);

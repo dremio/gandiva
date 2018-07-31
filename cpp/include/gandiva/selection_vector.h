@@ -21,47 +21,32 @@
 
 namespace gandiva {
 
-/// \brief Selection Vector : vector of indices in a row-batch for a selection.
-template <typename C_TYPE, typename A_TYPE>
+/// \brief Selection Vector : vector of indices in a row-batch for a selection,
+/// backed by an arrow-array.
 class SelectionVector {
  public:
-  SelectionVector(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer)
-      : max_slots_(max_slots), buffer_(buffer) {
-    raw_data_ = reinterpret_cast<C_TYPE *>(buffer->mutable_data());
-  }
-
   ~SelectionVector() = default;
 
   /// Get the value at a given index.
-  int GetIndex(int index) {
-    DCHECK_LE(index, max_slots_);
-    return raw_data_[index];
-  }
+  virtual int GetIndex(int index) const = 0;
 
   /// Set the value at a given index.
-  void SetIndex(int index, int value) {
-    DCHECK_LE(index, max_slots_);
-    DCHECK_LE(value, GetMaxSupportedValue());
+  virtual void SetIndex(int index, int value) = 0;
 
-    raw_data_[index] = value;
-  }
-
+  // Get the max supported value in the selection vector.
   virtual int GetMaxSupportedValue() const = 0;
 
-  /// Convert to arrow-array.
-  ArrayPtr ToArray();
-
   /// The maximum slots (capacity) of the selection vector.
-  int GetMaxSlots() const { return max_slots_; }
+  virtual int GetMaxSlots() const = 0;
 
   /// The number of slots (size) of the selection vector.
-  int GetNumSlots() const { return num_slots_; }
+  virtual int GetNumSlots() const = 0;
 
   /// Set the number of slots in the selection vector.
-  void SetNumSlots(int num_slots) {
-    DCHECK_LE(num_slots, max_slots_);
-    num_slots_ = num_slots;
-  }
+  virtual void SetNumSlots(int num_slots) = 0;
+
+  /// Convert to arrow-array.
+  virtual ArrayPtr ToArray() const = 0;
 
   /// populate selection vector for all the set bits in the bitmap.
   ///
@@ -70,6 +55,40 @@ class SelectionVector {
   /// \param[in] : max_bitmap_index max valid index in bitmap (can be lesser than
   ///              capacity in the bitmap, due to alignment/padding).
   Status PopulateFromBitMap(const uint8_t *bitmap, int bitmap_size, int max_bitmap_index);
+};
+
+/// \brief template implementation of selection vector with a specific ctype and arrow
+/// type.
+template <typename C_TYPE, typename A_TYPE>
+class SelectionVectorImpl : public SelectionVector {
+ public:
+  SelectionVectorImpl(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer)
+      : max_slots_(max_slots), buffer_(buffer) {
+    raw_data_ = reinterpret_cast<C_TYPE *>(buffer->mutable_data());
+  }
+
+  int GetIndex(int index) const override {
+    DCHECK_LE(index, max_slots_);
+    return raw_data_[index];
+  }
+
+  void SetIndex(int index, int value) override {
+    DCHECK_LE(index, max_slots_);
+    DCHECK_LE(value, GetMaxSupportedValue());
+
+    raw_data_[index] = value;
+  }
+
+  ArrayPtr ToArray() const override;
+
+  int GetMaxSlots() const override { return max_slots_; }
+
+  int GetNumSlots() const override { return num_slots_; }
+
+  void SetNumSlots(int num_slots) override {
+    DCHECK_LE(num_slots, max_slots_);
+    num_slots_ = num_slots;
+  }
 
  protected:
   static Status AllocateBuffer(int max_slots, arrow::MemoryPool *pool,
@@ -89,54 +108,16 @@ class SelectionVector {
 };
 
 template <typename C_TYPE, typename A_TYPE>
-Status SelectionVector<C_TYPE, A_TYPE>::PopulateFromBitMap(const uint8_t *bitmap,
-                                                           int bitmap_size,
-                                                           int max_bitmap_index) {
-  GANDIVA_RETURN_FAILURE_IF_FALSE(
-      bitmap_size % 8 == 0, Status::Invalid("bitmap must be padded to 64-bit size"));
-  GANDIVA_RETURN_FAILURE_IF_FALSE(
-      max_bitmap_index <= GetMaxSlots(),
-      Status::Invalid("max_bitmap_index must be <= buffer capacity"));
-
-  // jump  8-bytes at a time, add the index corresponding to each valid bit to the
-  // the selection vector.
-  int selection_idx = 0;
-  const uint64_t *bitmap_64 = reinterpret_cast<const uint64_t *>(bitmap);
-  for (int bitmap_idx = 0; bitmap_idx < bitmap_size / 8; ++bitmap_idx) {
-    uint64_t current_word = bitmap_64[bitmap_idx];
-
-    while (current_word != 0) {
-      uint64_t highest_only = current_word & -current_word;
-      int pos_in_word = __builtin_ctzl(highest_only);
-
-      int pos_in_bitmap = bitmap_idx * 64 + pos_in_word;
-      if (pos_in_bitmap > max_bitmap_index) {
-        // the bitmap may be slighly larger for alignment/padding.
-        break;
-      }
-
-      SetIndex(selection_idx, pos_in_bitmap);
-      ++selection_idx;
-
-      current_word ^= highest_only;
-    }
-  }
-
-  SetNumSlots(selection_idx);
-  return Status::OK();
-}
-
-template <typename C_TYPE, typename A_TYPE>
-ArrayPtr SelectionVector<C_TYPE, A_TYPE>::ToArray() {
+ArrayPtr SelectionVectorImpl<C_TYPE, A_TYPE>::ToArray() const {
   auto data_type = arrow::TypeTraits<A_TYPE>::type_singleton();
   auto array_data = arrow::ArrayData::Make(data_type, num_slots_, {nullptr, buffer_});
   return arrow::MakeArray(array_data);
 }
 
-class SelectionVectorInt16 : public SelectionVector<int16_t, arrow::Int16Type> {
+class SelectionVectorInt16 : public SelectionVectorImpl<int16_t, arrow::Int16Type> {
  public:
   SelectionVectorInt16(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer)
-      : SelectionVector(max_slots, buffer) {}
+      : SelectionVectorImpl(max_slots, buffer) {}
 
   int GetMaxSupportedValue() const override { return INT16_MAX; }
 
@@ -154,10 +135,10 @@ class SelectionVectorInt16 : public SelectionVector<int16_t, arrow::Int16Type> {
                      std::shared_ptr<SelectionVectorInt16> *selection_vector);
 };
 
-class SelectionVectorInt32 : public SelectionVector<int32_t, arrow::Int32Type> {
+class SelectionVectorInt32 : public SelectionVectorImpl<int32_t, arrow::Int32Type> {
  public:
   SelectionVectorInt32(int max_slots, std::shared_ptr<arrow::MutableBuffer> buffer)
-      : SelectionVector(max_slots, buffer) {}
+      : SelectionVectorImpl(max_slots, buffer) {}
 
   int GetMaxSupportedValue() const override { return INT32_MAX; }
 

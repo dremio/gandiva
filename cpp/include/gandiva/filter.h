@@ -35,7 +35,6 @@ class LLVMGenerator;
 ///
 /// A filter is built for a specific schema and condition. Once the filter is built, it
 /// can be used to evaluate many row batches.
-template <typename SELECT_TYPE>
 class Filter {
  public:
   Filter(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
@@ -43,90 +42,38 @@ class Filter {
 
   ~Filter() = default;
 
- protected:
-  static Status MakeGenerator(SchemaPtr schema, ConditionPtr cond,
-                              std::shared_ptr<Configuration> configuration,
-                              std::unique_ptr<LLVMGenerator> *generator);
+  /// Build a default filter for the given schema and condition.
+  ///
+  /// \param[in] : schema schema for the record batches, and the condition.
+  /// \param[in] : condition filter condition.
+  /// \param[out]: filter the returned filter object
+  static Status Make(SchemaPtr schema, ConditionPtr condition,
+                     std::shared_ptr<Filter> *filter) {
+    return Make(schema, condition, ConfigurationBuilder::DefaultConfiguration(), filter);
+  }
+
+  /// \brief Build a default filter for the given schema and condition.
+  /// Customize the filter with runtime configuration.
+  ///
+  /// \param[in] : schema schema for the record batches, and the condition.
+  /// \param[in] : condition filter conditions.
+  /// \param[in] : config run time configuration.
+  /// \param[out]: filter the returned filter object
+  static Status Make(SchemaPtr schema, ConditionPtr condition,
+                     std::shared_ptr<Configuration> config,
+                     std::shared_ptr<Filter> *filter);
 
   /// Evaluate the specified record batch, and populate output selection vector.
   ///
   /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
   /// \param[in/out]: out_selection the output selection array.
-  Status EvaluateCommon(const arrow::RecordBatch &batch,
-                        std::shared_ptr<SELECT_TYPE> out_selection);
+  Status Evaluate(const arrow::RecordBatch &batch,
+                  std::shared_ptr<SelectionVector> out_selection);
 
+ private:
   const std::unique_ptr<LLVMGenerator> llvm_generator_;
   const SchemaPtr schema_;
-  arrow::MemoryPool *pool_;
   const std::shared_ptr<Configuration> configuration_;
-};
-
-class FilterWithSVInt16 : public Filter<SelectionVectorInt16> {
- public:
-  FilterWithSVInt16(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
-                    std::shared_ptr<Configuration> config);
-
-  /// Build a default filter for the given schema and condition.
-  ///
-  /// \param[in] : schema schema for the record batches, and the condition.
-  /// \param[in] : cond filter condition.
-  /// \param[out]: filter the returned filter object
-  static Status Make(SchemaPtr schema, ConditionPtr cond,
-                     std::shared_ptr<FilterWithSVInt16> *filter) {
-    return Make(schema, cond, ConfigurationBuilder::DefaultConfiguration(), filter);
-  }
-
-  /// \brief Build a default filter for the given schema and condition.
-  /// Customize the filter with runtime configuration.
-  ///
-  /// \param[in] : schema schema for the record batches, and the condition.
-  /// \param[in] : cond filter conditions.
-  /// \param[in] : config run time configuration.
-  /// \param[out]: filter the returned filter object
-  static Status Make(SchemaPtr schema, ConditionPtr cond,
-                     std::shared_ptr<Configuration> config,
-                     std::shared_ptr<FilterWithSVInt16> *filter);
-
-  /// Evaluate the specified record batch, and populate output selection vector.
-  ///
-  /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
-  /// \param[in/out]: out_selection the output selection array.
-  Status Evaluate(const arrow::RecordBatch &batch,
-                  std::shared_ptr<SelectionVectorInt16> out_selection);
-};
-
-class FilterWithSVInt32 : public Filter<SelectionVectorInt32> {
- public:
-  FilterWithSVInt32(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
-                    std::shared_ptr<Configuration> config);
-
-  /// Build a default filter for the given schema and condition.
-  ///
-  /// \param[in] : schema schema for the record batches, and the condition.
-  /// \param[in] : cond filter condition.
-  /// \param[out]: filter the returned filter object
-  static Status Make(SchemaPtr schema, ConditionPtr cond,
-                     std::shared_ptr<FilterWithSVInt32> *filter) {
-    return Make(schema, cond, ConfigurationBuilder::DefaultConfiguration(), filter);
-  }
-
-  /// \brief Build a default filter for the given schema and condition.
-  /// Customize the filter with runtime configuration.
-  ///
-  /// \param[in] : schema schema for the record batches, and the condition.
-  /// \param[in] : cond filter conditions.
-  /// \param[in] : config run time configuration.
-  /// \param[out]: filter the returned filter object
-  static Status Make(SchemaPtr schema, ConditionPtr cond,
-                     std::shared_ptr<Configuration> config,
-                     std::shared_ptr<FilterWithSVInt32> *filter);
-
-  /// Evaluate the specified record batch, and populate output selection vector.
-  ///
-  /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
-  /// \param[in/out]: out_selection the output selection array.
-  Status Evaluate(const arrow::RecordBatch &batch,
-                  std::shared_ptr<SelectionVectorInt32> out_selection);
 };
 
 }  // namespace gandiva
