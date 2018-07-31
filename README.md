@@ -183,6 +183,28 @@ not attempt to solve this.
 
 The core functionality of Gandiva is implemented in C++. Language bindings are provided for Java.
 
+### Getting involved
+
+We prefer to receive contributions in the form of GitHub pull requests. Please 
+send pull requests against the github.com/dremio/gandiva repository.
+
+If you are looking for some ideas, here is a list of things we would like to 
+have but haven't gotten to doing yet.
+
+* String based expression builder
+
+  This would be a wrapper around the existing tree based expression builder eg.
+
+     ```cpp
+     auto expr1 = StringExprBuilder::MakeExpression(schema, "a + b >= 10");
+     auto expr2 = StringExprBuilder::MakeExpression(schema, "if (a == "india" and b == "chennai") then 10 else 20");
+     ```
+
+* Decimal support
+
+  Gandiva doesn't support decimals yet. Supporting operations on decimal data 
+  types would be great to have.
+
 ### Performance
 
 To validate the techniques, we did a performance test with Dremio software using two alternative techniques of code 
@@ -335,3 +357,4 @@ For both the tests, the dremio batch size was set to 16K.
      </td>
   </tr>
 </table>
+
