@@ -44,10 +44,10 @@ extern "C" {
   DATE_TYPES(INNER, NAME, OP)                    \
   INNER(NAME, boolean, OP)
 
-#define BINARY_GENERIC_OP(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE, OP)          \
+#define MOD_OP(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE)                         \
   FORCE_INLINE                                                             \
   OUT_TYPE NAME##_##IN_TYPE1##_##IN_TYPE2(IN_TYPE1 left, IN_TYPE2 right) { \
-    return left OP right;                                                  \
+    return (right == 0 ? left : left % right);                             \
   }
 
 // Symmetric binary fns : left, right params and return type are same.
@@ -60,8 +60,8 @@ NUMERIC_TYPES(BINARY_SYMMETRIC, subtract, -)
 NUMERIC_TYPES(BINARY_SYMMETRIC, multiply, *)
 NUMERIC_TYPES(BINARY_SYMMETRIC, divide, /)
 
-BINARY_GENERIC_OP(mod, int64, int32, int32, %)
-BINARY_GENERIC_OP(mod, int64, int64, int64, %)
+MOD_OP(mod, int64, int32, int32)
+MOD_OP(mod, int64, int64, int64)
 
 // Relational binary fns : left, right params are same, return is bool.
 #define BINARY_RELATIONAL(NAME, TYPE, OP) \
@@ -95,5 +95,58 @@ CAST_UNARY(castFLOAT8, float32, float64)
 NUMERIC_BOOL_DATE_TYPES(VALIDITY_OP, isnull, !)
 NUMERIC_BOOL_DATE_TYPES(VALIDITY_OP, isnotnull, +)
 NUMERIC_TYPES(VALIDITY_OP, isnumeric, +)
+
+#define NUMERIC_FUNCTION(INNER) \
+  INNER(int8)                   \
+  INNER(int16)                  \
+  INNER(int32)                  \
+  INNER(int64)                  \
+  INNER(uint8)                  \
+  INNER(uint16)                 \
+  INNER(uint32)                 \
+  INNER(uint64)                 \
+  INNER(float32)                \
+  INNER(float64)
+
+#define DATE_FUNCTION(INNER) \
+  INNER(date64)              \
+  INNER(timestamp)           \
+  INNER(time32)
+
+#define NUMERIC_BOOL_DATE_FUNCTION(INNER) \
+  NUMERIC_FUNCTION(INNER)                 \
+  DATE_FUNCTION(INNER)                    \
+  INNER(boolean)
+
+// is_distinct_from
+#define IS_DISTINCT_FROM(TYPE)                                                 \
+  FORCE_INLINE                                                                 \
+  bool is_distinct_from_##TYPE##_##TYPE(TYPE in1, boolean is_valid1, TYPE in2, \
+                                        boolean is_valid2) {                   \
+    if (is_valid1 != is_valid2) {                                              \
+      return true;                                                             \
+    }                                                                          \
+    if (!is_valid1) {                                                          \
+      return false;                                                            \
+    }                                                                          \
+    return in1 != in2;                                                         \
+  }
+
+// is_not_distinct_from
+#define IS_NOT_DISTINCT_FROM(TYPE)                                                 \
+  FORCE_INLINE                                                                     \
+  bool is_not_distinct_from_##TYPE##_##TYPE(TYPE in1, boolean is_valid1, TYPE in2, \
+                                            boolean is_valid2) {                   \
+    if (is_valid1 != is_valid2) {                                                  \
+      return false;                                                                \
+    }                                                                              \
+    if (!is_valid1) {                                                              \
+      return true;                                                                 \
+    }                                                                              \
+    return in1 == in2;                                                             \
+  }
+
+NUMERIC_BOOL_DATE_FUNCTION(IS_DISTINCT_FROM)
+NUMERIC_BOOL_DATE_FUNCTION(IS_NOT_DISTINCT_FROM)
 
 }  // extern "C"
