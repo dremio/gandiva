@@ -62,7 +62,7 @@ TEST_F(TestFilter, TestSimple) {
   // prepare input record batch
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
-  std::shared_ptr<SelectionVectorInt16> selection_vector;
+  std::shared_ptr<SelectionVector> selection_vector;
   status = SelectionVectorInt16::Make(num_records, pool_, &selection_vector);
   EXPECT_TRUE(status.ok());
 
@@ -100,7 +100,7 @@ TEST_F(TestFilter, TestSimpleCustomConfig) {
   // prepare input record batch
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
-  std::shared_ptr<SelectionVectorInt16> selection_vector;
+  std::shared_ptr<SelectionVector> selection_vector;
   status = SelectionVectorInt16::Make(num_records, pool_, &selection_vector);
   EXPECT_TRUE(status.ok());
 
@@ -138,7 +138,7 @@ TEST_F(TestFilter, TestZeroCopy) {
   std::shared_ptr<arrow::MutableBuffer> data_buf =
       std::make_shared<arrow::MutableBuffer>(data.get(), data_sz);
 
-  std::shared_ptr<SelectionVectorInt16> selection_vector;
+  std::shared_ptr<SelectionVector> selection_vector;
   status = SelectionVectorInt16::Make(num_records, data_buf, &selection_vector);
   EXPECT_TRUE(status.ok());
 
@@ -178,7 +178,7 @@ TEST_F(TestFilter, TestZeroCopyNegative) {
   std::shared_ptr<arrow::MutableBuffer> data_buf =
       std::make_shared<arrow::MutableBuffer>(data.get(), data_sz);
 
-  std::shared_ptr<SelectionVectorInt16> selection_vector;
+  std::shared_ptr<SelectionVector> selection_vector;
   status = SelectionVectorInt16::Make(num_records, data_buf, &selection_vector);
   EXPECT_TRUE(status.ok());
 
@@ -193,7 +193,7 @@ TEST_F(TestFilter, TestZeroCopyNegative) {
   EXPECT_EQ(status.code(), StatusCode::Invalid);
 
   // the selection vector must be suitably sized.
-  std::shared_ptr<SelectionVectorInt16> bad_selection;
+  std::shared_ptr<SelectionVector> bad_selection;
   status = SelectionVectorInt16::Make(num_records - 1, data_buf, &bad_selection);
   EXPECT_TRUE(status.ok());
 
@@ -231,7 +231,7 @@ TEST_F(TestFilter, TestSimpleSVInt32) {
   // prepare input record batch
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
-  std::shared_ptr<SelectionVectorInt32> selection_vector;
+  std::shared_ptr<SelectionVector> selection_vector;
   status = SelectionVectorInt32::Make(num_records, pool_, &selection_vector);
   EXPECT_TRUE(status.ok());
 

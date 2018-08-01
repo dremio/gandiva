@@ -27,19 +27,22 @@
 
 #include "Types.pb.h"
 #include "gandiva/configuration.h"
+#include "gandiva/filter.h"
+#include "gandiva/projector.h"
 #include "gandiva/tree_expr_builder.h"
 #include "jni/config_holder.h"
 #include "jni/env_helper.h"
+#include "jni/id_to_module_map.h"
 #include "jni/module_holder.h"
-#include "jni/org_apache_arrow_gandiva_evaluator_NativeBuilder.h"
+#include "jni/org_apache_arrow_gandiva_evaluator_JniWrapper.h"
 
-#define INIT_MODULE_ID (4)
-
+using gandiva::ConditionPtr;
 using gandiva::DataTypePtr;
 using gandiva::ExpressionPtr;
 using gandiva::ExpressionVector;
 using gandiva::FieldPtr;
 using gandiva::FieldVector;
+using gandiva::Filter;
 using gandiva::NodePtr;
 using gandiva::NodeVector;
 using gandiva::Projector;
@@ -50,17 +53,11 @@ using gandiva::ArrayDataVector;
 using gandiva::ConfigHolder;
 using gandiva::Configuration;
 using gandiva::ConfigurationBuilder;
+using gandiva::FilterHolder;
 using gandiva::ProjectorHolder;
 
 // forward declarations
 NodePtr ProtoTypeToNode(const types::TreeNode &node);
-
-// map from module ids returned to Java and module pointers
-std::unordered_map<jlong, std::shared_ptr<ProjectorHolder>> projector_modules_map_;
-std::mutex g_mtx_;
-
-// atomic counter for projector module ids
-jlong projector_module_id_(INIT_MODULE_ID);
 
 static jint JNI_VERSION = JNI_VERSION_1_6;
 
@@ -70,6 +67,10 @@ jmethodID byte_code_accessor_method_id_;
 
 // refs for self.
 static jclass gandiva_exception_;
+
+// module maps
+gandiva::IdToModuleMap<std::shared_ptr<ProjectorHolder>> projector_modules_;
+gandiva::IdToModuleMap<std::shared_ptr<FilterHolder>> filter_modules_;
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env;
@@ -101,35 +102,6 @@ void JNI_OnUnload(JavaVM *vm, void *reserved) {
   vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION);
   env->DeleteGlobalRef(configuration_builder_class_);
   env->DeleteGlobalRef(gandiva_exception_);
-}
-
-jlong MapInsert(std::shared_ptr<ProjectorHolder> holder) {
-  g_mtx_.lock();
-
-  jlong result = projector_module_id_++;
-  projector_modules_map_.insert(
-      std::pair<jlong, std::shared_ptr<ProjectorHolder>>(result, holder));
-
-  g_mtx_.unlock();
-
-  return result;
-}
-
-void MapErase(jlong module_id) {
-  g_mtx_.lock();
-  projector_modules_map_.erase(module_id);
-  g_mtx_.unlock();
-}
-
-std::shared_ptr<ProjectorHolder> MapLookup(jlong module_id) {
-  std::shared_ptr<ProjectorHolder> result = nullptr;
-
-  try {
-    result = projector_modules_map_.at(module_id);
-  } catch (const std::out_of_range &e) {
-  }
-
-  return result;
 }
 
 DataTypePtr ProtoTypeToTime32(const types::ExtGandivaType &ext_type) {
@@ -423,6 +395,16 @@ ExpressionPtr ProtoTypeToExpression(const types::ExpressionRoot &root) {
   return TreeExprBuilder::MakeExpression(root_node, field);
 }
 
+ConditionPtr ProtoTypeToCondition(const types::Condition &condition) {
+  NodePtr root_node = ProtoTypeToNode(condition.root());
+  if (root_node == nullptr) {
+    std::cerr << "Unable to create expression node from condition protobuf\n";
+    return nullptr;
+  }
+
+  return TreeExprBuilder::MakeCondition(root_node);
+}
+
 SchemaPtr ProtoTypeToSchema(const types::Schema &schema) {
   std::vector<FieldPtr> fields;
 
@@ -451,8 +433,7 @@ void releaseInput(jbyteArray schema_arr, jbyte *schema_bytes, jbyteArray exprs_a
   env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
 }
 
-JNIEXPORT jlong JNICALL
-Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode(
+JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_buildProjector(
     JNIEnv *env, jobject obj, jbyteArray schema_arr, jbyteArray exprs_arr,
     jlong configuration_id) {
   jlong module_id = 0LL;
@@ -527,7 +508,7 @@ Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_buildNativeCode(
   // store the result in a map
   holder = std::shared_ptr<ProjectorHolder>(
       new ProjectorHolder(schema_ptr, ret_types, std::move(projector)));
-  module_id = MapInsert(holder);
+  module_id = projector_modules_.Insert(holder);
   releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
   return module_id;
 
@@ -548,11 +529,12 @@ err_out:
     break;                                                                     \
   }
 
-JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_evaluate(
+JNIEXPORT void JNICALL
+Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evaluateProjector(
     JNIEnv *env, jobject cls, jlong module_id, jint num_rows, jlongArray buf_addrs,
     jlongArray buf_sizes, jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
   gandiva::Status status;
-  std::shared_ptr<ProjectorHolder> holder = MapLookup(module_id);
+  std::shared_ptr<ProjectorHolder> holder = projector_modules_.Lookup(module_id);
   if (holder == nullptr) {
     env->ThrowNew(gandiva_exception_, "Unknown module id\n");
     return;
@@ -663,7 +645,196 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_eva
   }
 }
 
-JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_NativeBuilder_close(
+JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_closeProjector(
     JNIEnv *env, jobject cls, jlong module_id) {
-  MapErase(module_id);
+  projector_modules_.Erase(module_id);
+}
+
+void releaseFilterInput(jbyteArray schema_arr, jbyte *schema_bytes,
+                        jbyteArray condition_arr, jbyte *condition_bytes, JNIEnv *env) {
+  env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
+  env->ReleaseByteArrayElements(condition_arr, condition_bytes, JNI_ABORT);
+}
+
+JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_buildFilter(
+    JNIEnv *env, jobject obj, jbyteArray schema_arr, jbyteArray condition_arr,
+    jlong configuration_id) {
+  jlong module_id = 0LL;
+  std::shared_ptr<Filter> filter;
+  std::shared_ptr<FilterHolder> holder;
+
+  types::Schema schema;
+  jsize schema_len = env->GetArrayLength(schema_arr);
+  jbyte *schema_bytes = env->GetByteArrayElements(schema_arr, 0);
+
+  types::Condition condition;
+  jsize condition_len = env->GetArrayLength(condition_arr);
+  jbyte *condition_bytes = env->GetByteArrayElements(condition_arr, 0);
+
+  ConditionPtr condition_ptr;
+  SchemaPtr schema_ptr;
+  FieldVector ret_types;
+  gandiva::Status status;
+
+  std::shared_ptr<Configuration> config = ConfigHolder::MapLookup(configuration_id);
+  std::stringstream ss;
+
+  if (config == nullptr) {
+    ss << "configuration is mandatory.";
+    releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
+    goto err_out;
+  }
+
+  if (!ParseProtobuf(reinterpret_cast<uint8_t *>(schema_bytes), schema_len, &schema)) {
+    ss << "Unable to parse schema protobuf\n";
+    releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
+    goto err_out;
+  }
+
+  if (!ParseProtobuf(reinterpret_cast<uint8_t *>(condition_bytes), condition_len,
+                     &condition)) {
+    ss << "Unable to parse condition protobuf\n";
+    releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
+    goto err_out;
+  }
+
+  // convert types::Schema to arrow::Schema
+  schema_ptr = ProtoTypeToSchema(schema);
+  if (schema_ptr == nullptr) {
+    ss << "Unable to construct arrow schema object from schema protobuf\n";
+    releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
+    goto err_out;
+  }
+
+  condition_ptr = ProtoTypeToCondition(condition);
+  if (condition_ptr == nullptr) {
+    ss << "Unable to construct expression object from expression protobuf\n";
+    releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
+    goto err_out;
+  }
+
+  // good to invoke the evaluator now
+  status = Filter::Make(schema_ptr, condition_ptr, config, &filter);
+  if (!status.ok()) {
+    ss << "Failed to make LLVM module due to " << status.message() << "\n";
+    releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
+    goto err_out;
+  }
+
+  // store the result in a map
+  holder = std::shared_ptr<FilterHolder>(new FilterHolder(schema_ptr, std::move(filter)));
+  module_id = filter_modules_.Insert(holder);
+  releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
+  return module_id;
+
+err_out:
+  env->ThrowNew(gandiva_exception_, ss.str().c_str());
+  return module_id;
+}
+
+JNIEXPORT jint JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evaluateFilter(
+    JNIEnv *env, jobject cls, jlong module_id, jint num_rows, jlongArray buf_addrs,
+    jlongArray buf_sizes, jint jselection_vector_type, jlong out_buf_addr,
+    jlong out_buf_size) {
+  gandiva::Status status;
+  std::shared_ptr<FilterHolder> holder = filter_modules_.Lookup(module_id);
+  if (holder == nullptr) {
+    env->ThrowNew(gandiva_exception_, "Unknown module id\n");
+    return -1;
+  }
+
+  int in_bufs_len = env->GetArrayLength(buf_addrs);
+  if (in_bufs_len != env->GetArrayLength(buf_sizes)) {
+    env->ThrowNew(gandiva_exception_, "mismatch in arraylen of buf_addrs and buf_sizes");
+    return -1;
+  }
+
+  jlong *in_buf_addrs = env->GetLongArrayElements(buf_addrs, 0);
+  jlong *in_buf_sizes = env->GetLongArrayElements(buf_sizes, 0);
+  auto selection_vector_type =
+      static_cast<types::SelectionVectorType>(jselection_vector_type);
+  std::shared_ptr<gandiva::SelectionVector> selection_vector;
+
+  do {
+    auto schema = holder->schema();
+    std::vector<std::shared_ptr<arrow::ArrayData>> columns;
+    auto num_fields = schema->num_fields();
+    int buf_idx = 0;
+    int sz_idx = 0;
+
+    for (int i = 0; i < num_fields; i++) {
+      auto field = schema->field(i);
+      std::vector<std::shared_ptr<arrow::Buffer>> buffers;
+
+      CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
+      jlong validity_addr = in_buf_addrs[buf_idx++];
+      jlong validity_size = in_buf_sizes[sz_idx++];
+      auto validity = std::shared_ptr<arrow::Buffer>(
+          new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
+      buffers.push_back(validity);
+
+      CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
+      jlong value_addr = in_buf_addrs[buf_idx++];
+      jlong value_size = in_buf_sizes[sz_idx++];
+      auto data = std::shared_ptr<arrow::Buffer>(
+          new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
+      buffers.push_back(data);
+
+      if (arrow::is_binary_like(field->type()->id())) {
+        CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
+
+        // add offsets buffer for variable-len fields.
+        jlong offsets_addr = in_buf_addrs[buf_idx++];
+        jlong offsets_size = in_buf_sizes[sz_idx++];
+        auto offsets = std::shared_ptr<arrow::Buffer>(
+            new arrow::Buffer(reinterpret_cast<uint8_t *>(offsets_addr), offsets_size));
+        buffers.push_back(offsets);
+      }
+
+      auto array_data =
+          arrow::ArrayData::Make(field->type(), num_rows, std::move(buffers));
+      columns.push_back(array_data);
+    }
+    if (!status.ok()) {
+      break;
+    }
+
+    auto out_buffer = std::make_shared<arrow::MutableBuffer>(
+        reinterpret_cast<uint8_t *>(out_buf_addr), out_buf_size);
+    switch (selection_vector_type) {
+      case types::SV_INT16:
+        status =
+            gandiva::SelectionVectorInt16::Make(num_rows, out_buffer, &selection_vector);
+        break;
+      case types::SV_INT32:
+        status =
+            gandiva::SelectionVectorInt32::Make(num_rows, out_buffer, &selection_vector);
+        break;
+      default:
+        status = gandiva::Status::Invalid("unknown selection vector type");
+    }
+    if (!status.ok()) {
+      break;
+    }
+
+    auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
+    status = holder->filter()->Evaluate(*in_batch, selection_vector);
+  } while (0);
+
+  env->ReleaseLongArrayElements(buf_addrs, in_buf_addrs, JNI_ABORT);
+  env->ReleaseLongArrayElements(buf_sizes, in_buf_sizes, JNI_ABORT);
+
+  if (!status.ok()) {
+    std::stringstream ss;
+    ss << "Evaluate returned " << status.message() << "\n";
+    env->ThrowNew(gandiva_exception_, status.message().c_str());
+    return -1;
+  } else {
+    return selection_vector->GetNumSlots();
+  }
+}
+
+JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_closeFilter(
+    JNIEnv *env, jobject cls, jlong module_id) {
+  filter_modules_.Erase(module_id);
 }

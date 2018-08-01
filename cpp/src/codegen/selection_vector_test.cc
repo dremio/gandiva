@@ -31,14 +31,14 @@ TEST_F(TestSelectionVector, TestInt16Make) {
   int max_slots = 10;
 
   // Test with pool allocation
-  std::shared_ptr<SelectionVectorInt16> selection;
+  std::shared_ptr<SelectionVector> selection;
   auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
   EXPECT_EQ(selection->GetMaxSlots(), max_slots);
   EXPECT_EQ(selection->GetNumSlots(), 0);
 
   // Test with pre-alloced buffer
-  std::shared_ptr<SelectionVectorInt16> selection2;
+  std::shared_ptr<SelectionVector> selection2;
   std::shared_ptr<arrow::Buffer> buffer;
   auto buffer_len = max_slots * sizeof(int16_t);
   auto astatus = arrow::AllocateBuffer(pool_, buffer_len, &buffer);
@@ -53,7 +53,7 @@ TEST_F(TestSelectionVector, TestInt16Make) {
 TEST_F(TestSelectionVector, TestInt16MakeNegative) {
   int max_slots = 10;
 
-  std::shared_ptr<SelectionVectorInt16> selection;
+  std::shared_ptr<SelectionVector> selection;
   std::shared_ptr<arrow::Buffer> buffer;
   auto buffer_len = max_slots * sizeof(int16_t);
 
@@ -68,7 +68,7 @@ TEST_F(TestSelectionVector, TestInt16MakeNegative) {
 TEST_F(TestSelectionVector, TestInt16Set) {
   int max_slots = 10;
 
-  std::shared_ptr<SelectionVectorInt16> selection;
+  std::shared_ptr<SelectionVector> selection;
   auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
@@ -92,7 +92,7 @@ TEST_F(TestSelectionVector, TestInt16Set) {
 TEST_F(TestSelectionVector, TestInt16PopulateFromBitMap) {
   int max_slots = 200;
 
-  std::shared_ptr<SelectionVectorInt16> selection;
+  std::shared_ptr<SelectionVector> selection;
   auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
@@ -117,7 +117,7 @@ TEST_F(TestSelectionVector, TestInt16PopulateFromBitMap) {
 TEST_F(TestSelectionVector, TestInt16PopulateFromBitMapNegative) {
   int max_slots = 2;
 
-  std::shared_ptr<SelectionVectorInt16> selection;
+  std::shared_ptr<SelectionVector> selection;
   auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
@@ -137,7 +137,7 @@ TEST_F(TestSelectionVector, TestInt16PopulateFromBitMapNegative) {
 TEST_F(TestSelectionVector, TestInt32Set) {
   int max_slots = 10;
 
-  std::shared_ptr<SelectionVectorInt32> selection;
+  std::shared_ptr<SelectionVector> selection;
   auto status = SelectionVectorInt32::Make(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
@@ -165,7 +165,7 @@ TEST_F(TestSelectionVector, TestInt32Set) {
 TEST_F(TestSelectionVector, TestInt32PopulateFromBitMap) {
   int max_slots = 200;
 
-  std::shared_ptr<SelectionVectorInt32> selection;
+  std::shared_ptr<SelectionVector> selection;
   auto status = SelectionVectorInt32::Make(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
@@ -190,7 +190,7 @@ TEST_F(TestSelectionVector, TestInt32PopulateFromBitMap) {
 TEST_F(TestSelectionVector, TestInt32MakeNegative) {
   int max_slots = 10;
 
-  std::shared_ptr<SelectionVectorInt32> selection;
+  std::shared_ptr<SelectionVector> selection;
   std::shared_ptr<arrow::Buffer> buffer;
   auto buffer_len = max_slots * sizeof(int32_t);
 

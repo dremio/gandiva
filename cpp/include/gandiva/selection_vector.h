@@ -124,14 +124,14 @@ class SelectionVectorInt16 : public SelectionVectorImpl<int16_t, arrow::Int16Typ
   /// \param[in] : buffer buffer sized to accomodate max_slots
   /// \param[out]: selection_vector selection vector backed by 'buffer'
   static Status Make(int max_slots, std::shared_ptr<arrow::Buffer> buffer,
-                     std::shared_ptr<SelectionVectorInt16> *selection_vector);
+                     std::shared_ptr<SelectionVector> *selection_vector);
 
   /// \param[in] : max_slots max number of slots
   /// \param[in] : pool memory pool to allocate buffer
   /// \param[out]: selection_vector selection vector backed by a buffer allocated from the
   ///              pool.
   static Status Make(int max_slots, arrow::MemoryPool *pool,
-                     std::shared_ptr<SelectionVectorInt16> *selection_vector);
+                     std::shared_ptr<SelectionVector> *selection_vector);
 };
 
 class SelectionVectorInt32 : public SelectionVectorImpl<int32_t, arrow::Int32Type> {
@@ -145,14 +145,14 @@ class SelectionVectorInt32 : public SelectionVectorImpl<int32_t, arrow::Int32Typ
   /// \param[in] : buffer buffer sized to accomodate max_slots
   /// \param[out]: selection_vector selection vector backed by 'buffer'
   static Status Make(int max_slots, std::shared_ptr<arrow::Buffer> buffer,
-                     std::shared_ptr<SelectionVectorInt32> *selection_vector);
+                     std::shared_ptr<SelectionVector> *selection_vector);
 
   /// \param[in] : max_slots max number of slots
   /// \param[in] : pool memory pool to allocate buffer
   /// \param[out]: selection_vector selection vector backed by a buffer allocated from the
   ///              pool.
   static Status Make(int max_slots, arrow::MemoryPool *pool,
-                     std::shared_ptr<SelectionVectorInt32> *selection_vector);
+                     std::shared_ptr<SelectionVector> *selection_vector);
 };
 
 }  // namespace gandiva

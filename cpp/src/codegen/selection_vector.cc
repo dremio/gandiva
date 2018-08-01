@@ -96,9 +96,8 @@ Status SelectionVectorImpl<C_TYPE, A_TYPE>::ValidateBuffer(
   return Status::OK();
 }
 
-Status SelectionVectorInt16::Make(
-    int max_slots, std::shared_ptr<arrow::Buffer> buffer,
-    std::shared_ptr<SelectionVectorInt16> *selection_vector) {
+Status SelectionVectorInt16::Make(int max_slots, std::shared_ptr<arrow::Buffer> buffer,
+                                  std::shared_ptr<SelectionVector> *selection_vector) {
   auto status = ValidateBuffer(max_slots, buffer);
   if (status.ok()) {
     *selection_vector = std::make_shared<SelectionVectorInt16>(max_slots, buffer);
@@ -106,9 +105,8 @@ Status SelectionVectorInt16::Make(
   return status;
 }
 
-Status SelectionVectorInt16::Make(
-    int max_slots, arrow::MemoryPool *pool,
-    std::shared_ptr<SelectionVectorInt16> *selection_vector) {
+Status SelectionVectorInt16::Make(int max_slots, arrow::MemoryPool *pool,
+                                  std::shared_ptr<SelectionVector> *selection_vector) {
   std::shared_ptr<arrow::Buffer> buffer;
   auto status = AllocateBuffer(max_slots, pool, &buffer);
   if (status.ok()) {
@@ -117,9 +115,8 @@ Status SelectionVectorInt16::Make(
   return status;
 }
 
-Status SelectionVectorInt32::Make(
-    int max_slots, std::shared_ptr<arrow::Buffer> buffer,
-    std::shared_ptr<SelectionVectorInt32> *selection_vector) {
+Status SelectionVectorInt32::Make(int max_slots, std::shared_ptr<arrow::Buffer> buffer,
+                                  std::shared_ptr<SelectionVector> *selection_vector) {
   auto status = ValidateBuffer(max_slots, buffer);
   if (status.ok()) {
     *selection_vector = std::make_shared<SelectionVectorInt32>(max_slots, buffer);
@@ -127,9 +124,8 @@ Status SelectionVectorInt32::Make(
   return status;
 }
 
-Status SelectionVectorInt32::Make(
-    int max_slots, arrow::MemoryPool *pool,
-    std::shared_ptr<SelectionVectorInt32> *selection_vector) {
+Status SelectionVectorInt32::Make(int max_slots, arrow::MemoryPool *pool,
+                                  std::shared_ptr<SelectionVector> *selection_vector) {
   std::shared_ptr<arrow::Buffer> buffer;
   auto status = AllocateBuffer(max_slots, pool, &buffer);
   if (status.ok()) {
