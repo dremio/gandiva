@@ -25,7 +25,7 @@ namespace gandiva {
 
 template<typename HOLDER>
 class IdToModuleMap {
-  public:
+ public:
   IdToModuleMap() : module_id_(kInitModuleId) {}
 
   jlong Insert(HOLDER holder) {
@@ -51,7 +51,7 @@ class IdToModuleMap {
     return result;
   }
 
-  private:
+ private:
   static const int kInitModuleId = 4;
 
   long module_id_;

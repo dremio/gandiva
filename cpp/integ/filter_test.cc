@@ -63,7 +63,7 @@ TEST_F(TestFilter, TestSimple) {
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
   std::shared_ptr<SelectionVector> selection_vector;
-  status = SelectionVectorInt16::Make(num_records, pool_, &selection_vector);
+  status = SelectionVector::MakeInt16(num_records, pool_, &selection_vector);
   EXPECT_TRUE(status.ok());
 
   // Evaluate expression
@@ -101,7 +101,7 @@ TEST_F(TestFilter, TestSimpleCustomConfig) {
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
   std::shared_ptr<SelectionVector> selection_vector;
-  status = SelectionVectorInt16::Make(num_records, pool_, &selection_vector);
+  status = SelectionVector::MakeInt16(num_records, pool_, &selection_vector);
   EXPECT_TRUE(status.ok());
 
   // Evaluate expression
@@ -139,7 +139,7 @@ TEST_F(TestFilter, TestZeroCopy) {
       std::make_shared<arrow::MutableBuffer>(data.get(), data_sz);
 
   std::shared_ptr<SelectionVector> selection_vector;
-  status = SelectionVectorInt16::Make(num_records, data_buf, &selection_vector);
+  status = SelectionVector::MakeInt16(num_records, data_buf, &selection_vector);
   EXPECT_TRUE(status.ok());
 
   // Evaluate expression
@@ -179,7 +179,7 @@ TEST_F(TestFilter, TestZeroCopyNegative) {
       std::make_shared<arrow::MutableBuffer>(data.get(), data_sz);
 
   std::shared_ptr<SelectionVector> selection_vector;
-  status = SelectionVectorInt16::Make(num_records, data_buf, &selection_vector);
+  status = SelectionVector::MakeInt16(num_records, data_buf, &selection_vector);
   EXPECT_TRUE(status.ok());
 
   // the batch can't be empty.
@@ -188,13 +188,13 @@ TEST_F(TestFilter, TestZeroCopyNegative) {
   EXPECT_EQ(status.code(), StatusCode::Invalid);
 
   // the selection_vector can't be null.
-  std::shared_ptr<SelectionVectorInt16> null_selection;
+  std::shared_ptr<SelectionVector> null_selection;
   status = filter->Evaluate(*in_batch, null_selection);
   EXPECT_EQ(status.code(), StatusCode::Invalid);
 
   // the selection vector must be suitably sized.
   std::shared_ptr<SelectionVector> bad_selection;
-  status = SelectionVectorInt16::Make(num_records - 1, data_buf, &bad_selection);
+  status = SelectionVector::MakeInt16(num_records - 1, data_buf, &bad_selection);
   EXPECT_TRUE(status.ok());
 
   status = filter->Evaluate(*in_batch, bad_selection);
@@ -232,7 +232,7 @@ TEST_F(TestFilter, TestSimpleSVInt32) {
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
 
   std::shared_ptr<SelectionVector> selection_vector;
-  status = SelectionVectorInt32::Make(num_records, pool_, &selection_vector);
+  status = SelectionVector::MakeInt32(num_records, pool_, &selection_vector);
   EXPECT_TRUE(status.ok());
 
   // Evaluate expression

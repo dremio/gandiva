@@ -32,7 +32,7 @@ TEST_F(TestSelectionVector, TestInt16Make) {
 
   // Test with pool allocation
   std::shared_ptr<SelectionVector> selection;
-  auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
+  auto status = SelectionVector::MakeInt16(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
   EXPECT_EQ(selection->GetMaxSlots(), max_slots);
   EXPECT_EQ(selection->GetNumSlots(), 0);
@@ -44,7 +44,7 @@ TEST_F(TestSelectionVector, TestInt16Make) {
   auto astatus = arrow::AllocateBuffer(pool_, buffer_len, &buffer);
   EXPECT_EQ(astatus.ok(), true);
 
-  status = SelectionVectorInt16::Make(max_slots, buffer, &selection2);
+  status = SelectionVector::MakeInt16(max_slots, buffer, &selection2);
   EXPECT_EQ(status.ok(), true) << status.message();
   EXPECT_EQ(selection2->GetMaxSlots(), max_slots);
   EXPECT_EQ(selection2->GetNumSlots(), 0);
@@ -61,7 +61,7 @@ TEST_F(TestSelectionVector, TestInt16MakeNegative) {
   auto astatus = arrow::AllocateBuffer(pool_, buffer_len - 16, &buffer);
   EXPECT_EQ(astatus.ok(), true);
 
-  auto status = SelectionVectorInt16::Make(max_slots, buffer, &selection);
+  auto status = SelectionVector::MakeInt16(max_slots, buffer, &selection);
   EXPECT_EQ(status.IsInvalid(), true);
 }
 
@@ -69,7 +69,7 @@ TEST_F(TestSelectionVector, TestInt16Set) {
   int max_slots = 10;
 
   std::shared_ptr<SelectionVector> selection;
-  auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
+  auto status = SelectionVector::MakeInt16(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
   selection->SetIndex(0, 100);
@@ -93,7 +93,7 @@ TEST_F(TestSelectionVector, TestInt16PopulateFromBitMap) {
   int max_slots = 200;
 
   std::shared_ptr<SelectionVector> selection;
-  auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
+  auto status = SelectionVector::MakeInt16(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
   int bitmap_size = arrow::BitUtil::RoundUpNumi64(max_slots) * 8;
@@ -118,7 +118,7 @@ TEST_F(TestSelectionVector, TestInt16PopulateFromBitMapNegative) {
   int max_slots = 2;
 
   std::shared_ptr<SelectionVector> selection;
-  auto status = SelectionVectorInt16::Make(max_slots, pool_, &selection);
+  auto status = SelectionVector::MakeInt16(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
   int bitmap_size = 16;
@@ -138,7 +138,7 @@ TEST_F(TestSelectionVector, TestInt32Set) {
   int max_slots = 10;
 
   std::shared_ptr<SelectionVector> selection;
-  auto status = SelectionVectorInt32::Make(max_slots, pool_, &selection);
+  auto status = SelectionVector::MakeInt32(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
   selection->SetIndex(0, 100);
@@ -166,7 +166,7 @@ TEST_F(TestSelectionVector, TestInt32PopulateFromBitMap) {
   int max_slots = 200;
 
   std::shared_ptr<SelectionVector> selection;
-  auto status = SelectionVectorInt32::Make(max_slots, pool_, &selection);
+  auto status = SelectionVector::MakeInt32(max_slots, pool_, &selection);
   EXPECT_EQ(status.ok(), true) << status.message();
 
   int bitmap_size = arrow::BitUtil::RoundUpNumi64(max_slots) * 8;
@@ -198,7 +198,7 @@ TEST_F(TestSelectionVector, TestInt32MakeNegative) {
   auto astatus = arrow::AllocateBuffer(pool_, buffer_len - 1, &buffer);
   EXPECT_EQ(astatus.ok(), true);
 
-  auto status = SelectionVectorInt32::Make(max_slots, buffer, &selection);
+  auto status = SelectionVector::MakeInt32(max_slots, buffer, &selection);
   EXPECT_EQ(status.IsInvalid(), true);
 }
 

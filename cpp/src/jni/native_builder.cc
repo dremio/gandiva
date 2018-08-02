@@ -673,7 +673,6 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
 
   ConditionPtr condition_ptr;
   SchemaPtr schema_ptr;
-  FieldVector ret_types;
   gandiva::Status status;
 
   std::shared_ptr<Configuration> config = ConfigHolder::MapLookup(configuration_id);
@@ -708,12 +707,12 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
 
   condition_ptr = ProtoTypeToCondition(condition);
   if (condition_ptr == nullptr) {
-    ss << "Unable to construct expression object from expression protobuf\n";
+    ss << "Unable to construct condition object from condition protobuf\n";
     releaseFilterInput(schema_arr, schema_bytes, condition_arr, condition_bytes, env);
     goto err_out;
   }
 
-  // good to invoke the evaluator now
+  // good to invoke the filter builder now
   status = Filter::Make(schema_ptr, condition_ptr, config, &filter);
   if (!status.ok()) {
     ss << "Failed to make LLVM module due to " << status.message() << "\n";
@@ -804,11 +803,11 @@ JNIEXPORT jint JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evalua
     switch (selection_vector_type) {
       case types::SV_INT16:
         status =
-            gandiva::SelectionVectorInt16::Make(num_rows, out_buffer, &selection_vector);
+            gandiva::SelectionVector::MakeInt16(num_rows, out_buffer, &selection_vector);
         break;
       case types::SV_INT32:
         status =
-            gandiva::SelectionVectorInt32::Make(num_rows, out_buffer, &selection_vector);
+            gandiva::SelectionVector::MakeInt32(num_rows, out_buffer, &selection_vector);
         break;
       default:
         status = gandiva::Status::Invalid("unknown selection vector type");
