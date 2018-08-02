@@ -23,7 +23,6 @@ import org.apache.arrow.gandiva.exceptions.GandivaException;
 import org.apache.arrow.gandiva.expression.ArrowTypeHelper;
 import org.apache.arrow.gandiva.expression.Condition;
 import org.apache.arrow.gandiva.ipc.GandivaTypes;
-import org.apache.arrow.vector.ValueVector;
 import org.apache.arrow.vector.ipc.message.ArrowBuffer;
 import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
 import org.apache.arrow.vector.types.pojo.Schema;
@@ -102,8 +101,8 @@ public class Filter {
 
     int numRows = recordBatch.getLength();
     if (selectionVector.getMaxRecords() < numRows) {
-      logger.info("Expected selectionVector to have capacity " + numRows
-          + " is < minimum required " + recordBatch.getLength());
+      logger.info("selectionVector has capacity for " + numRows
+          + " rows, minimum required " + recordBatch.getLength());
       throw new GandivaException("SelectionVector too small");
     }
 

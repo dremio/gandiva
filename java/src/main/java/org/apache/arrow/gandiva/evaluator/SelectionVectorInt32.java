@@ -20,29 +20,28 @@ import io.netty.buffer.ArrowBuf;
 import org.apache.arrow.gandiva.ipc.GandivaTypes.SelectionVectorType;
 
 /*
- * Selection vector with records of arrow type INT16.
+ * Selection vector with records of arrow type INT32.
  */
-public class SelectionVectorInt16 extends SelectionVector {
+public class SelectionVectorInt32 extends SelectionVector {
 
-  public SelectionVectorInt16(ArrowBuf buffer) {
+  public SelectionVectorInt32(ArrowBuf buffer) {
     super(buffer);
   }
 
   @Override
   public int getRecordSize() {
-    return 2;
+    return 4;
   }
 
   @Override
   public SelectionVectorType getType() {
-    return SelectionVectorType.SV_INT16;
+    return SelectionVectorType.SV_INT32;
   }
 
   @Override
   public int getIndex(int index) {
     checkReadBounds(index);
 
-    char value = getBuffer().getChar(index * getRecordSize());
-    return (int)value;
+    return getBuffer().getInt(index * getRecordSize());
   }
 }
