@@ -26,6 +26,8 @@ import org.apache.arrow.gandiva.ipc.GandivaTypes;
 import org.apache.arrow.vector.ipc.message.ArrowBuffer;
 import org.apache.arrow.vector.ipc.message.ArrowRecordBatch;
 import org.apache.arrow.vector.types.pojo.Schema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -38,7 +40,7 @@ import java.util.List;
  * 3) Invoke close() to release resources
  */
 public class Filter {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Filter.class);
+  private static final Logger logger = LoggerFactory.getLogger(Filter.class);
 
   private final long moduleId;
   private final Schema schema;
@@ -101,7 +103,7 @@ public class Filter {
 
     int numRows = recordBatch.getLength();
     if (selectionVector.getMaxRecords() < numRows) {
-      logger.info("selectionVector has capacity for " + numRows
+      logger.error("selectionVector has capacity for " + numRows
           + " rows, minimum required " + recordBatch.getLength());
       throw new GandivaException("SelectionVector too small");
     }

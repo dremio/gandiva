@@ -47,6 +47,7 @@ using gandiva::NodePtr;
 using gandiva::NodeVector;
 using gandiva::Projector;
 using gandiva::SchemaPtr;
+using gandiva::Status;
 using gandiva::TreeExprBuilder;
 
 using gandiva::ArrayDataVector;
@@ -398,7 +399,6 @@ ExpressionPtr ProtoTypeToExpression(const types::ExpressionRoot &root) {
 ConditionPtr ProtoTypeToCondition(const types::Condition &condition) {
   NodePtr root_node = ProtoTypeToNode(condition.root());
   if (root_node == nullptr) {
-    std::cerr << "Unable to create expression node from condition protobuf\n";
     return nullptr;
   }
 
@@ -421,14 +421,68 @@ SchemaPtr ProtoTypeToSchema(const types::Schema &schema) {
   return arrow::schema(fields);
 }
 
+// Common for both projector and filters.
+
 bool ParseProtobuf(uint8_t *buf, int bufLen, google::protobuf::Message *msg) {
   google::protobuf::io::CodedInputStream cis(buf, bufLen);
   cis.SetRecursionLimit(1000);
   return msg->ParseFromCodedStream(&cis);
 }
 
-void releaseInput(jbyteArray schema_arr, jbyte *schema_bytes, jbyteArray exprs_arr,
-                  jbyte *exprs_bytes, JNIEnv *env) {
+Status make_record_batch_with_buf_addrs(SchemaPtr schema, int num_rows,
+                                        jlong *in_buf_addrs, jlong *in_buf_sizes,
+                                        int in_bufs_len,
+                                        std::shared_ptr<arrow::RecordBatch> *batch) {
+  std::vector<std::shared_ptr<arrow::ArrayData>> columns;
+  auto num_fields = schema->num_fields();
+  int buf_idx = 0;
+  int sz_idx = 0;
+
+  for (int i = 0; i < num_fields; i++) {
+    auto field = schema->field(i);
+    std::vector<std::shared_ptr<arrow::Buffer>> buffers;
+
+    if (buf_idx >= in_bufs_len) {
+      return Status::Invalid("insufficient number of in_buf_addrs");
+    }
+    jlong validity_addr = in_buf_addrs[buf_idx++];
+    jlong validity_size = in_buf_sizes[sz_idx++];
+    auto validity = std::shared_ptr<arrow::Buffer>(
+        new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
+    buffers.push_back(validity);
+
+    if (buf_idx >= in_bufs_len) {
+      return Status::Invalid("insufficient number of in_buf_addrs");
+    }
+    jlong value_addr = in_buf_addrs[buf_idx++];
+    jlong value_size = in_buf_sizes[sz_idx++];
+    auto data = std::shared_ptr<arrow::Buffer>(
+        new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
+    buffers.push_back(data);
+
+    if (arrow::is_binary_like(field->type()->id())) {
+      if (buf_idx >= in_bufs_len) {
+        return Status::Invalid("insufficient number of in_buf_addrs");
+      }
+
+      // add offsets buffer for variable-len fields.
+      jlong offsets_addr = in_buf_addrs[buf_idx++];
+      jlong offsets_size = in_buf_sizes[sz_idx++];
+      auto offsets = std::shared_ptr<arrow::Buffer>(
+          new arrow::Buffer(reinterpret_cast<uint8_t *>(offsets_addr), offsets_size));
+      buffers.push_back(offsets);
+    }
+
+    auto array_data = arrow::ArrayData::Make(field->type(), num_rows, std::move(buffers));
+    columns.push_back(array_data);
+  }
+  *batch = arrow::RecordBatch::Make(schema, num_rows, columns);
+  return Status::OK();
+}
+
+// projector related functions.
+void releaseProjectorInput(jbyteArray schema_arr, jbyte *schema_bytes,
+                           jbyteArray exprs_arr, jbyte *exprs_bytes, JNIEnv *env) {
   env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
   env->ReleaseByteArrayElements(exprs_arr, exprs_bytes, JNI_ABORT);
 }
@@ -458,18 +512,18 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
 
   if (config == nullptr) {
     ss << "configuration is mandatory.";
-    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseProjectorInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     goto err_out;
   }
 
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(schema_bytes), schema_len, &schema)) {
     ss << "Unable to parse schema protobuf\n";
-    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseProjectorInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     goto err_out;
   }
 
   if (!ParseProtobuf(reinterpret_cast<uint8_t *>(exprs_bytes), exprs_len, &exprs)) {
-    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseProjectorInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     ss << "Unable to parse expressions protobuf\n";
     goto err_out;
   }
@@ -478,7 +532,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
   schema_ptr = ProtoTypeToSchema(schema);
   if (schema_ptr == nullptr) {
     ss << "Unable to construct arrow schema object from schema protobuf\n";
-    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseProjectorInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     goto err_out;
   }
 
@@ -488,7 +542,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
 
     if (root == nullptr) {
       ss << "Unable to construct expression object from expression protobuf\n";
-      releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+      releaseProjectorInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
       goto err_out;
     }
 
@@ -501,7 +555,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
 
   if (!status.ok()) {
     ss << "Failed to make LLVM module due to " << status.message() << "\n";
-    releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+    releaseProjectorInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
     goto err_out;
   }
 
@@ -509,19 +563,13 @@ JNIEXPORT jlong JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_build
   holder = std::shared_ptr<ProjectorHolder>(
       new ProjectorHolder(schema_ptr, ret_types, std::move(projector)));
   module_id = projector_modules_.Insert(holder);
-  releaseInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
+  releaseProjectorInput(schema_arr, schema_bytes, exprs_arr, exprs_bytes, env);
   return module_id;
 
 err_out:
   env->ThrowNew(gandiva_exception_, ss.str().c_str());
   return module_id;
 }
-
-#define CHECK_IN_BUFFER_IDX_AND_BREAK(idx, len)                               \
-  if (idx >= len) {                                                           \
-    status = gandiva::Status::Invalid("insufficient number of in_buf_addrs"); \
-    break;                                                                    \
-  }
 
 #define CHECK_OUT_BUFFER_IDX_AND_BREAK(idx, len)                               \
   if (idx >= len) {                                                            \
@@ -533,7 +581,7 @@ JNIEXPORT void JNICALL
 Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evaluateProjector(
     JNIEnv *env, jobject cls, jlong module_id, jint num_rows, jlongArray buf_addrs,
     jlongArray buf_sizes, jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
-  gandiva::Status status;
+  Status status;
   std::shared_ptr<ProjectorHolder> holder = projector_modules_.Lookup(module_id);
   if (holder == nullptr) {
     env->ThrowNew(gandiva_exception_, "Unknown module id\n");
@@ -560,53 +608,17 @@ Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evaluateProjector(
   jlong *out_sizes = env->GetLongArrayElements(out_buf_sizes, 0);
 
   do {
-    auto schema = holder->schema();
-    std::vector<std::shared_ptr<arrow::ArrayData>> columns;
-    auto num_fields = schema->num_fields();
-    int buf_idx = 0;
-    int sz_idx = 0;
-
-    for (int i = 0; i < num_fields; i++) {
-      auto field = schema->field(i);
-      std::vector<std::shared_ptr<arrow::Buffer>> buffers;
-
-      CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
-      jlong validity_addr = in_buf_addrs[buf_idx++];
-      jlong validity_size = in_buf_sizes[sz_idx++];
-      auto validity = std::shared_ptr<arrow::Buffer>(
-          new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
-      buffers.push_back(validity);
-
-      CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
-      jlong value_addr = in_buf_addrs[buf_idx++];
-      jlong value_size = in_buf_sizes[sz_idx++];
-      auto data = std::shared_ptr<arrow::Buffer>(
-          new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
-      buffers.push_back(data);
-
-      if (arrow::is_binary_like(field->type()->id())) {
-        CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
-
-        // add offsets buffer for variable-len fields.
-        jlong offsets_addr = in_buf_addrs[buf_idx++];
-        jlong offsets_size = in_buf_sizes[sz_idx++];
-        auto offsets = std::shared_ptr<arrow::Buffer>(
-            new arrow::Buffer(reinterpret_cast<uint8_t *>(offsets_addr), offsets_size));
-        buffers.push_back(offsets);
-      }
-
-      auto array_data =
-          arrow::ArrayData::Make(field->type(), num_rows, std::move(buffers));
-      columns.push_back(array_data);
-    }
+    std::shared_ptr<arrow::RecordBatch> in_batch;
+    status = make_record_batch_with_buf_addrs(holder->schema(), num_rows, in_buf_addrs,
+                                              in_buf_sizes, in_bufs_len, &in_batch);
     if (!status.ok()) {
       break;
     }
 
     auto ret_types = holder->rettypes();
     ArrayDataVector output;
-    buf_idx = 0;
-    sz_idx = 0;
+    int buf_idx = 0;
+    int sz_idx = 0;
     for (FieldPtr field : ret_types) {
       CHECK_OUT_BUFFER_IDX_AND_BREAK(buf_idx, out_bufs_len);
       uint8_t *validity_buf = reinterpret_cast<uint8_t *>(out_bufs[buf_idx++]);
@@ -628,7 +640,6 @@ Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evaluateProjector(
       break;
     }
 
-    auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
     status = holder->projector()->Evaluate(*in_batch, output);
   } while (0);
 
@@ -650,6 +661,7 @@ JNIEXPORT void JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_closeP
   projector_modules_.Erase(module_id);
 }
 
+// filter related functions.
 void releaseFilterInput(jbyteArray schema_arr, jbyte *schema_bytes,
                         jbyteArray condition_arr, jbyte *condition_bytes, JNIEnv *env) {
   env->ReleaseByteArrayElements(schema_arr, schema_bytes, JNI_ABORT);
@@ -750,54 +762,19 @@ JNIEXPORT jint JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evalua
 
   jlong *in_buf_addrs = env->GetLongArrayElements(buf_addrs, 0);
   jlong *in_buf_sizes = env->GetLongArrayElements(buf_sizes, 0);
-  auto selection_vector_type =
-      static_cast<types::SelectionVectorType>(jselection_vector_type);
   std::shared_ptr<gandiva::SelectionVector> selection_vector;
 
   do {
-    auto schema = holder->schema();
-    std::vector<std::shared_ptr<arrow::ArrayData>> columns;
-    auto num_fields = schema->num_fields();
-    int buf_idx = 0;
-    int sz_idx = 0;
+    std::shared_ptr<arrow::RecordBatch> in_batch;
 
-    for (int i = 0; i < num_fields; i++) {
-      auto field = schema->field(i);
-      std::vector<std::shared_ptr<arrow::Buffer>> buffers;
-
-      CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
-      jlong validity_addr = in_buf_addrs[buf_idx++];
-      jlong validity_size = in_buf_sizes[sz_idx++];
-      auto validity = std::shared_ptr<arrow::Buffer>(
-          new arrow::Buffer(reinterpret_cast<uint8_t *>(validity_addr), validity_size));
-      buffers.push_back(validity);
-
-      CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
-      jlong value_addr = in_buf_addrs[buf_idx++];
-      jlong value_size = in_buf_sizes[sz_idx++];
-      auto data = std::shared_ptr<arrow::Buffer>(
-          new arrow::Buffer(reinterpret_cast<uint8_t *>(value_addr), value_size));
-      buffers.push_back(data);
-
-      if (arrow::is_binary_like(field->type()->id())) {
-        CHECK_IN_BUFFER_IDX_AND_BREAK(buf_idx, in_bufs_len);
-
-        // add offsets buffer for variable-len fields.
-        jlong offsets_addr = in_buf_addrs[buf_idx++];
-        jlong offsets_size = in_buf_sizes[sz_idx++];
-        auto offsets = std::shared_ptr<arrow::Buffer>(
-            new arrow::Buffer(reinterpret_cast<uint8_t *>(offsets_addr), offsets_size));
-        buffers.push_back(offsets);
-      }
-
-      auto array_data =
-          arrow::ArrayData::Make(field->type(), num_rows, std::move(buffers));
-      columns.push_back(array_data);
-    }
+    status = make_record_batch_with_buf_addrs(holder->schema(), num_rows, in_buf_addrs,
+                                              in_buf_sizes, in_bufs_len, &in_batch);
     if (!status.ok()) {
       break;
     }
 
+    auto selection_vector_type =
+        static_cast<types::SelectionVectorType>(jselection_vector_type);
     auto out_buffer = std::make_shared<arrow::MutableBuffer>(
         reinterpret_cast<uint8_t *>(out_buf_addr), out_buf_size);
     switch (selection_vector_type) {
@@ -816,7 +793,6 @@ JNIEXPORT jint JNICALL Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evalua
       break;
     }
 
-    auto in_batch = arrow::RecordBatch::Make(schema, num_rows, columns);
     status = holder->filter()->Evaluate(*in_batch, selection_vector);
   } while (0);
 
