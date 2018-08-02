@@ -23,7 +23,7 @@
 
 namespace gandiva {
 
-template<typename HOLDER>
+template <typename HOLDER>
 class IdToModuleMap {
  public:
   IdToModuleMap() : module_id_(kInitModuleId) {}
