@@ -22,6 +22,8 @@ import org.apache.arrow.gandiva.ipc.GandivaTypes.SelectionVectorType;
 /**
  * A selection vector contains the indexes of "selected" records in a row batch. It is backed by an
  * arrow buffer.
+ *
+ * Client manages the lifecycle of the arrow buffer - to release the reference.
  */
 public abstract class SelectionVector {
   private int recordCount;
