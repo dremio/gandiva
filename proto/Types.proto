@@ -64,6 +64,11 @@ enum TimeUnit {
   NANOSEC = 3;
 }
 
+enum SelectionVectorType {
+  SV_INT16 = 0;
+  SV_INT32 = 1;
+}
+
 message ExtGandivaType {
   optional GandivaType type = 1;
   optional uint32 width = 2;  // used by FIXED_SIZE_BINARY
@@ -167,6 +172,10 @@ message ExpressionRoot {
 
 message ExpressionList {
   repeated ExpressionRoot exprs = 2;
+}
+
+message Condition {
+  optional TreeNode root = 1;
 }
 
 message Schema {
