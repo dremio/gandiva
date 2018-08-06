@@ -54,27 +54,7 @@ public class FilterTest extends BaseEvaluatorTest {
     int[] values_b = new int[]{2, 1, 4, 3, 6, 5, 8, 7, 10,  9, 12, 11, 14, 13, 14, 15};
     int[] expected = {0, 2, 4, 6};
 
-    ArrowBuf validitya = buf(validity);
-    ArrowBuf valuesa = intBuf(values_a);
-    ArrowBuf validityb = buf(validity);
-    ArrowBuf valuesb = intBuf(values_b);
-    ArrowRecordBatch batch = new ArrowRecordBatch(
-      numRows,
-      Lists.newArrayList(new ArrowFieldNode(numRows, 8), new ArrowFieldNode(numRows, 8)),
-      Lists.newArrayList(validitya, valuesa, validityb, valuesb));
-
-    ArrowBuf selectionBuffer = buf(numRows * 2);
-    SelectionVectorInt16 selectionVector = new SelectionVectorInt16(selectionBuffer);
-
-    filter.evaluate(batch, selectionVector);
-
-    // free buffers
-    int[] actual = selectionVectorToArray(selectionVector);
-    releaseRecordBatch(batch);
-    selectionBuffer.close();
-    filter.close();
-
-    Assert.assertArrayEquals(actual, expected);
+    verifyTestCase(filter, numRows, validity, values_a, values_b, expected);
   }
 
   @Test
@@ -94,7 +74,6 @@ public class FilterTest extends BaseEvaluatorTest {
 
     IntStream.range(0,numRows/8).forEach(i -> validity[i] = (byte)255);
 
-    // second half is "undefined"
     int[] values_a = new int[numRows];
     IntStream.range(0, numRows).forEach(i -> values_a[i] = i);
 
@@ -104,27 +83,7 @@ public class FilterTest extends BaseEvaluatorTest {
     int[] expected = new int[numRows];
     IntStream.range(0, numRows).forEach(i -> expected[i] = i);
 
-    ArrowBuf validitya = buf(validity);
-    ArrowBuf valuesa = intBuf(values_a);
-    ArrowBuf validityb = buf(validity);
-    ArrowBuf valuesb = intBuf(values_b);
-    ArrowRecordBatch batch = new ArrowRecordBatch(
-            numRows,
-            Lists.newArrayList(new ArrowFieldNode(numRows, 0), new ArrowFieldNode(numRows, 0)),
-            Lists.newArrayList(validitya, valuesa, validityb, valuesb));
-
-    ArrowBuf selectionBuffer = buf(numRows * 2);
-    SelectionVectorInt16 selectionVector = new SelectionVectorInt16(selectionBuffer);
-
-    filter.evaluate(batch, selectionVector);
-
-    // free buffers
-    int[] actual = selectionVectorToArray(selectionVector);
-    releaseRecordBatch(batch);
-    selectionBuffer.close();
-    filter.close();
-
-    Assert.assertArrayEquals(expected, actual);
+    verifyTestCase(filter, numRows, validity, values_a, values_b, expected);
   }
 
   @Test
@@ -144,7 +103,6 @@ public class FilterTest extends BaseEvaluatorTest {
 
     IntStream.range(0,numRows/8).forEach(i -> validity[i] = (byte)255);
 
-    // second half is "undefined"
     int[] values_a = new int[numRows];
     IntStream.range(0, numRows).forEach(i -> values_a[i] = i);
 
@@ -156,27 +114,7 @@ public class FilterTest extends BaseEvaluatorTest {
 
     int[] expected = {0};
 
-    ArrowBuf validitya = buf(validity);
-    ArrowBuf valuesa = intBuf(values_a);
-    ArrowBuf validityb = buf(validity);
-    ArrowBuf valuesb = intBuf(values_b);
-    ArrowRecordBatch batch = new ArrowRecordBatch(
-            numRows,
-            Lists.newArrayList(new ArrowFieldNode(numRows, 0), new ArrowFieldNode(numRows, 0)),
-            Lists.newArrayList(validitya, valuesa, validityb, valuesb));
-
-    ArrowBuf selectionBuffer = buf(numRows * 2);
-    SelectionVectorInt16 selectionVector = new SelectionVectorInt16(selectionBuffer);
-
-    filter.evaluate(batch, selectionVector);
-
-    // free buffers
-    int[] actual = selectionVectorToArray(selectionVector);
-    releaseRecordBatch(batch);
-    selectionBuffer.close();
-    filter.close();
-
-    Assert.assertArrayEquals(expected, actual);
+    verifyTestCase(filter, numRows, validity, values_a, values_b, expected);
   }
 
   @Test
@@ -197,17 +135,22 @@ public class FilterTest extends BaseEvaluatorTest {
     int[] values_b = new int[]{2, 1, 4, 3, 6, 5, 8, 7, 10,  9, 12, 11, 14, 13, 14, 15};
     int[] expected = {0, 2, 4, 6};
 
+    verifyTestCase(filter, numRows, validity, values_a, values_b, expected);
+  }
+
+  private void verifyTestCase(Filter filter, int numRows, byte[] validity,
+                              int[] values_a, int[] values_b, int[] expected) throws GandivaException {
     ArrowBuf validitya = buf(validity);
     ArrowBuf valuesa = intBuf(values_a);
     ArrowBuf validityb = buf(validity);
     ArrowBuf valuesb = intBuf(values_b);
     ArrowRecordBatch batch = new ArrowRecordBatch(
-      numRows,
-      Lists.newArrayList(new ArrowFieldNode(numRows, 8), new ArrowFieldNode(numRows, 8)),
-      Lists.newArrayList(validitya, valuesa, validityb, valuesb));
+            numRows,
+            Lists.newArrayList(new ArrowFieldNode(numRows, 0), new ArrowFieldNode(numRows, 0)),
+            Lists.newArrayList(validitya, valuesa, validityb, valuesb));
 
-    ArrowBuf selectionBuffer = buf(numRows * 4);
-    SelectionVectorInt32 selectionVector = new SelectionVectorInt32(selectionBuffer);
+    ArrowBuf selectionBuffer = buf(numRows * 2);
+    SelectionVectorInt16 selectionVector = new SelectionVectorInt16(selectionBuffer);
 
     filter.evaluate(batch, selectionVector);
 
@@ -217,6 +160,6 @@ public class FilterTest extends BaseEvaluatorTest {
     selectionBuffer.close();
     filter.close();
 
-    Assert.assertArrayEquals(actual, expected);
+    Assert.assertArrayEquals(expected, actual);
   }
 }
