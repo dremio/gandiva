@@ -205,6 +205,11 @@ have but haven't gotten to doing yet.
   Gandiva doesn't support decimals yet. Supporting operations on decimal data 
   types would be great to have.
 
+* Language bindings
+
+  Gandiva has bindings for Java. It would be great to have bindings for more
+  languages like Python.
+
 ### Performance
 
 To validate the techniques, we did a performance test with Dremio software using two alternative techniques of code 
