@@ -23,7 +23,7 @@ namespace gandiva {
 class FilterCacheKey {
  public:
   FilterCacheKey(SchemaPtr schema, std::shared_ptr<Configuration> configuration,
-                 Expression expression)
+                 Expression &expression)
       : schema_(schema), configuration_(configuration) {
     static const int kSeedValue = 4;
     size_t result = kSeedValue;
