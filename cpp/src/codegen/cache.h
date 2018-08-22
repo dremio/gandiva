@@ -15,8 +15,8 @@
 #ifndef GANDIVA_FILTER_CACHE_H
 #define GANDIVA_FILTER_CACHE_H
 
-#include "codegen/lru_cache.h"
 #include "codegen/filter_cache_key.h"
+#include "codegen/lru_cache.h"
 #include "codegen/projector_cache_key.h"
 #include "gandiva/arrow.h"
 
@@ -52,8 +52,6 @@ class FilterCache : public Cache<FilterCacheKey, std::shared_ptr<Filter>> {
   using Cache<FilterCacheKey, std::shared_ptr<Filter>>::mtx_;
 };
 
-class ProjectorCache : public Cache<ProjectorCacheKey, std::shared_ptr<Projector>> {
-
-};
+class ProjectorCache : public Cache<ProjectorCacheKey, std::shared_ptr<Projector>> {};
 }  // namespace gandiva
 #endif  // GANDIVA_FILTER_CACHE_H

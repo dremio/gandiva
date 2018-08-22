@@ -62,5 +62,5 @@ class FilterCacheKey {
   std::string expression_as_string;
   size_t hash_code;
 };
-} // namespace
-#endif //GANDIVA_FILTER_CACHE_KEY_H
+}  // namespace gandiva
+#endif  // GANDIVA_FILTER_CACHE_KEY_H
