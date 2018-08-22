@@ -12,26 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "gandiva/configuration.h"
+#include "codegen/filter_cache.h"
 
-#include "boost/functional/hash.hpp"
+#define CACHE_SIZE 100
 
 namespace gandiva {
-
-const std::shared_ptr<Configuration> ConfigurationBuilder::default_configuration_ =
-    InitDefaultConfig();
-
-std::size_t Configuration::Hash() const {
-  boost::hash<std::string> string_hash;
-  return string_hash(byte_code_file_path_);
-}
-
-bool Configuration::operator==(const Configuration &other) const {
-  return other.byte_code_file_path() == byte_code_file_path();
-}
-
-bool Configuration::operator!=(const Configuration &other) const {
-  return !(*this == other);
-}
-
+lru_cache<FilterCache::FilterCacheKey, std::shared_ptr<Filter>> FilterCache::cache_(
+    CACHE_SIZE);
+std::mutex FilterCache::mtx_;
 }  // namespace gandiva

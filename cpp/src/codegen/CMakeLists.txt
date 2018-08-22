@@ -31,11 +31,13 @@ set(SRC_FILES annotator.cc
       expression.cc
       expression_registry.cc
       filter.cc
+      filter_cache.cc
       function_registry.cc
       function_signature.cc
       llvm_generator.cc
       llvm_types.cc
       projector.cc
+      projector_cache.cc
       selection_vector.cc
       status.cc
       tree_expr_builder.cc

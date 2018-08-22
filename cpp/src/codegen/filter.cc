@@ -20,6 +20,7 @@
 
 #include "codegen/bitmap_accumulator.h"
 #include "codegen/expr_validator.h"
+#include "codegen/filter_cache.h"
 #include "codegen/llvm_generator.h"
 #include "codegen/selection_vector_impl.h"
 #include "gandiva/condition.h"
@@ -42,6 +43,12 @@ Status Filter::Make(SchemaPtr schema, ConditionPtr condition,
                                   Status::Invalid("condition cannot be null"));
   GANDIVA_RETURN_FAILURE_IF_FALSE(configuration != nullptr,
                                   Status::Invalid("configuration cannot be null"));
+  FilterCache::FilterCacheKey cacheKey(schema, configuration, *(condition.get()));
+  std::shared_ptr<Filter> cachedFilter = FilterCache::GetCachedFilter(cacheKey);
+  if (cachedFilter != nullptr) {
+    *filter = cachedFilter;
+    return Status::OK();
+  }
   // Build LLVM generator, and generate code for the specified expression
   std::unique_ptr<LLVMGenerator> llvm_gen;
   Status status = LLVMGenerator::Make(configuration, &llvm_gen);
@@ -58,6 +65,7 @@ Status Filter::Make(SchemaPtr schema, ConditionPtr condition,
 
   // Instantiate the filter with the completely built llvm generator
   *filter = std::make_shared<Filter>(std::move(llvm_gen), schema, configuration);
+  FilterCache::CacheFilter(cacheKey, *filter);
   return Status::OK();
 }
 
