@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GANDIVA_PROJECTOR_CACHE_H
-#define GANDIVA_PROJECTOR_CACHE_H
+#ifndef GANDIVA_PROJECTOR_CACHE_KEY_H
+#define GANDIVA_PROJECTOR_CACHE_KEY_H
 
 #include "gandiva/arrow.h"
 #include "gandiva/projector.h"
@@ -65,4 +65,4 @@ class ProjectorCacheKey {
   size_t hash_code;
 };
 }  // namespace gandiva
-#endif  // GANDIVA_PROJECTOR_CACHE_H
+#endif  // GANDIVA_PROJECTOR_CACHE_KEY_H

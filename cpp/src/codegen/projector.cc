@@ -18,9 +18,10 @@
 #include <utility>
 #include <vector>
 
+#include "codegen/cache.h"
 #include "codegen/expr_validator.h"
 #include "codegen/llvm_generator.h"
-#include "codegen/projector_cache.h"
+#include "codegen/projector_cache_key.h"
 #include "gandiva/status.h"
 
 namespace gandiva {
@@ -50,9 +51,9 @@ Status Projector::Make(SchemaPtr schema, const ExpressionVector &exprs,
                                   Status::Invalid("configuration cannot be null"));
 
   // see if equivalent projector was already built
-  ProjectorCache::ProjectorCacheKey cache_key(schema, configuration, exprs);
-  std::shared_ptr<Projector> cached_projector =
-      ProjectorCache::GetCachedProjector(cache_key);
+  static Cache<ProjectorCacheKey, std::shared_ptr<Projector>> cache;
+  ProjectorCacheKey cache_key(schema, configuration, exprs);
+  std::shared_ptr<Projector> cached_projector = cache.GetCachedModule(cache_key);
   if (cached_projector != nullptr) {
     *projector = cached_projector;
     return Status::OK();
@@ -83,7 +84,7 @@ Status Projector::Make(SchemaPtr schema, const ExpressionVector &exprs,
   // Instantiate the projector with the completely built llvm generator
   *projector = std::shared_ptr<Projector>(
       new Projector(std::move(llvm_gen), schema, output_fields, configuration));
-  ProjectorCache::CacheProjector(cache_key, *projector);
+  cache.CacheModule(cache_key, *projector);
   return Status::OK();
 }
 

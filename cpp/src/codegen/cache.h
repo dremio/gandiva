@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GANDIVA_FILTER_CACHE_H
-#define GANDIVA_FILTER_CACHE_H
+#ifndef GANDIVA_PROJECTOR_CACHE_H
+#define GANDIVA_PROJECTOR_CACHE_H
 
-#include "codegen/filter_cache_key.h"
+#include <mutex>
+
 #include "codegen/lru_cache.h"
-#include "codegen/projector_cache_key.h"
-#include "gandiva/arrow.h"
 
 namespace gandiva {
 
 template <class KeyType, typename ValueType>
 class Cache {
  public:
-  static ValueType GetCachedModule(KeyType cache_key) {
+  Cache() : cache_(CACHE_SIZE) {}
+  ValueType GetCachedModule(KeyType cache_key) {
     boost::optional<ValueType> result;
     result = cache_.get(cache_key);
     if (result != boost::none) {
@@ -37,21 +37,16 @@ class Cache {
     return result != boost::none ? result.value() : nullptr;
   }
 
-  static void CacheModule(KeyType cache_key, ValueType projector) {
+  void CacheModule(KeyType cache_key, ValueType projector) {
     mtx_.lock();
     cache_.insert(cache_key, projector);
     mtx_.unlock();
   }
-  static lru_cache<KeyType, ValueType> cache_;
-  static std::mutex mtx_;
-};
 
-class FilterCache : public Cache<FilterCacheKey, std::shared_ptr<Filter>> {
- public:
-  using Cache::cache_;
-  using Cache<FilterCacheKey, std::shared_ptr<Filter>>::mtx_;
+ private:
+  lru_cache<KeyType, ValueType> cache_;
+  static const int CACHE_SIZE = 100;
+  std::mutex mtx_;
 };
-
-class ProjectorCache : public Cache<ProjectorCacheKey, std::shared_ptr<Projector>> {};
 }  // namespace gandiva
-#endif  // GANDIVA_FILTER_CACHE_H
+#endif  // GANDIVA_PROJECTOR_CACHE_H
