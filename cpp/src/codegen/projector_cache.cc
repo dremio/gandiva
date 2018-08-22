@@ -19,5 +19,5 @@
 namespace gandiva {
 lru_cache<ProjectorCache::ProjectorCacheKey, std::shared_ptr<Projector>>
     ProjectorCache::cache_(CACHE_SIZE);
-std::mutex ProjectorCache::mtx_;
+//std::mutex ProjectorCache::mtx_;
 }  // namespace gandiva

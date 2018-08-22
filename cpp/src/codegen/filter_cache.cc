@@ -19,5 +19,5 @@
 namespace gandiva {
 lru_cache<FilterCache::FilterCacheKey, std::shared_ptr<Filter>> FilterCache::cache_(
     CACHE_SIZE);
-std::mutex FilterCache::mtx_;
+//std::mutex FilterCache::mtx_;
 }  // namespace gandiva

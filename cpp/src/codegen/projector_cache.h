@@ -76,17 +76,17 @@ class ProjectorCache {
     if (result != boost::none) {
       return result.value();
     }
-    mtx_.lock();
+    //mtx_.lock();
     result = cache_.get(cache_key);
-    mtx_.unlock();
+    //mtx_.unlock();
     return result != boost::none ? result.value() : nullptr;
   }
 
   static void CacheProjector(ProjectorCacheKey cache_key,
                              std::shared_ptr<Projector> projector) {
-    mtx_.lock();
+    //mtx_.lock();
     cache_.insert(cache_key, projector);
-    mtx_.unlock();
+    //mtx_.unlock();
   }
 
  private:
