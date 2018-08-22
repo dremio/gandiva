@@ -89,7 +89,7 @@ class FilterCache {
 
  private:
   static lru_cache<FilterCacheKey, std::shared_ptr<Filter>> cache_;
-  static std::mutex mtx_;
+  // static std::mutex mtx_;
 };
 }  // namespace gandiva
 #endif  // GANDIVA_FILTER_CACHE_H

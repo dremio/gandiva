@@ -91,7 +91,7 @@ class ProjectorCache {
 
  private:
   static lru_cache<ProjectorCacheKey, std::shared_ptr<Projector>> cache_;
-  static std::mutex mtx_;
+  // static std::mutex mtx_;
 };
 }  // namespace gandiva
 #endif  // GANDIVA_PROJECTOR_CACHE_H
