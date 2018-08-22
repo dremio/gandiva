@@ -15,6 +15,8 @@
 #ifndef GANDIVA_FILTER_CACHE_H
 #define GANDIVA_FILTER_CACHE_H
 
+#include <memory>
+
 #include "boost/functional/hash.hpp"
 #include "codegen/lru_cache.h"
 #include "gandiva/arrow.h"
