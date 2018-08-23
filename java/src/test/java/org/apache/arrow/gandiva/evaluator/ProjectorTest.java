@@ -102,8 +102,9 @@ public class ProjectorTest extends BaseEvaluatorTest {
     ExpressionTree expr = TreeBuilder.makeExpression(ifNode, Field.nullable("c", int64));
     List<ExpressionTree> exprs = Lists.newArrayList(expr);
 
-    // should be getting the projector from the cache;
-    // giving 5ms for varying system load.
+    // build projectors in parallel choosing schema at random
+    // this should hit the same cache entry thus exposing
+    // any threading issues.
     ExecutorService executors = Executors.newFixedThreadPool(16);
 
     IntStream.range(0, 1000).forEach(i -> {
