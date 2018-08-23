@@ -67,14 +67,13 @@ TEST_F(TestFilter, TestFilterCache) {
   EXPECT_TRUE(cached_filter.get() != should_be_new_filter.get());
 
   // condition is different, should return a new filter.
-  auto greater_than_10 = TreeExprBuilder::MakeFunction("greater_than", {sum_func, literal_10},
-                                                    arrow::boolean());
+  auto greater_than_10 = TreeExprBuilder::MakeFunction(
+      "greater_than", {sum_func, literal_10}, arrow::boolean());
   auto new_condition = TreeExprBuilder::MakeCondition(greater_than_10);
   std::shared_ptr<Filter> should_be_new_filter1;
   status = Filter::Make(schema, new_condition, &should_be_new_filter1);
   EXPECT_TRUE(status.ok());
   EXPECT_TRUE(cached_filter.get() != should_be_new_filter1.get());
-
 }
 
 TEST_F(TestFilter, TestSimple) {

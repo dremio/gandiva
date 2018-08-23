@@ -62,7 +62,8 @@ TEST_F(TestProjector, TestProjectCache) {
   auto field2 = field("f2", int32());
   auto different_schema = arrow::schema({field0, field1, field2});
   std::shared_ptr<Projector> should_be_new_projector;
-  status = Projector::Make(different_schema, {sum_expr, sub_expr}, &should_be_new_projector);
+  status =
+      Projector::Make(different_schema, {sum_expr, sub_expr}, &should_be_new_projector);
   EXPECT_TRUE(status.ok());
   EXPECT_TRUE(cached_projector.get() != should_be_new_projector.get());
 
