@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef GANDIVA_PROJECTOR_CACHE_H
-#define GANDIVA_PROJECTOR_CACHE_H
+#ifndef GANDIVA_MODULE_CACHE_H
+#define GANDIVA_MODULE_CACHE_H
 
 #include <mutex>
 
@@ -24,7 +24,7 @@ namespace gandiva {
 template <class KeyType, typename ValueType>
 class Cache {
  public:
-  Cache() : cache_(CACHE_SIZE) {}
+  Cache(size_t capacity = CACHE_SIZE) : cache_(capacity) {}
   ValueType GetCachedModule(KeyType cache_key) {
     boost::optional<ValueType> result;
     result = cache_.get(cache_key);
@@ -37,16 +37,16 @@ class Cache {
     return result != boost::none ? result.value() : nullptr;
   }
 
-  void CacheModule(KeyType cache_key, ValueType projector) {
+  void CacheModule(KeyType cache_key, ValueType module) {
     mtx_.lock();
-    cache_.insert(cache_key, projector);
+    cache_.insert(cache_key, module);
     mtx_.unlock();
   }
 
  private:
-  lru_cache<KeyType, ValueType> cache_;
+  LruCache<KeyType, ValueType> cache_;
   static const int CACHE_SIZE = 100;
   std::mutex mtx_;
 };
 }  // namespace gandiva
-#endif  // GANDIVA_PROJECTOR_CACHE_H
+#endif  // GANDIVA_MODULE_CACHE_H

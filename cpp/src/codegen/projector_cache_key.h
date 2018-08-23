@@ -28,15 +28,15 @@ class ProjectorCacheKey {
     size_t result = kSeedValue;
     for (auto &expr : expression_vector) {
       std::string expr_as_string = expr->ToString();
-      expressions_as_strings.push_back(expr_as_string);
+      expressions_as_strings_.push_back(expr_as_string);
       boost::hash_combine(result, expr_as_string);
     }
     boost::hash_combine(result, configuration);
     boost::hash_combine(result, schema_->ToString());
-    hash_code = result;
+    hash_code_ = result;
   }
 
-  std::size_t Hash() const { return hash_code; }
+  std::size_t Hash() const { return hash_code_; }
 
   bool operator==(const ProjectorCacheKey &other) const {
     // arrow schema does not overload equality operators.
@@ -48,7 +48,7 @@ class ProjectorCacheKey {
       return false;
     }
 
-    if (expressions_as_strings != other.expressions_as_strings) {
+    if (expressions_as_strings_ != other.expressions_as_strings_) {
       return false;
     }
     return true;
@@ -61,8 +61,8 @@ class ProjectorCacheKey {
  private:
   const SchemaPtr schema_;
   const std::shared_ptr<Configuration> configuration_;
-  std::vector<std::string> expressions_as_strings;
-  size_t hash_code;
+  std::vector<std::string> expressions_as_strings_;
+  size_t hash_code_;
 };
 }  // namespace gandiva
 #endif  // GANDIVA_PROJECTOR_CACHE_KEY_H

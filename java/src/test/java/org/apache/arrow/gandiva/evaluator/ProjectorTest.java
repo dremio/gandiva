@@ -106,7 +106,7 @@ public class ProjectorTest extends BaseEvaluatorTest {
     // should be getting the projector from the cache;
     // giving 5ms for varying system load.
     Assert.assertTrue(timeToMakeProjector < 5L);
-  
+
     evaluator1.close();
     evaluator2.close();
     evaluator3.close();

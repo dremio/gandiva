@@ -27,14 +27,14 @@ class FilterCacheKey {
       : schema_(schema), configuration_(configuration) {
     static const int kSeedValue = 4;
     size_t result = kSeedValue;
-    expression_as_string = expression.ToString();
-    boost::hash_combine(result, expression_as_string);
+    expression_as_string_ = expression.ToString();
+    boost::hash_combine(result, expression_as_string_);
     boost::hash_combine(result, configuration);
     boost::hash_combine(result, schema_->ToString());
-    hash_code = result;
+    hash_code_ = result;
   }
 
-  std::size_t Hash() const { return hash_code; }
+  std::size_t Hash() const { return hash_code_; }
 
   bool operator==(const FilterCacheKey &other) const {
     // arrow schema does not overload equality operators.
@@ -46,7 +46,7 @@ class FilterCacheKey {
       return false;
     }
 
-    if (expression_as_string != other.expression_as_string) {
+    if (expression_as_string_ != other.expression_as_string_) {
       return false;
     }
     return true;
@@ -59,8 +59,8 @@ class FilterCacheKey {
  private:
   const SchemaPtr schema_;
   const std::shared_ptr<Configuration> configuration_;
-  std::string expression_as_string;
-  size_t hash_code;
+  std::string expression_as_string_;
+  size_t hash_code_;
 };
 }  // namespace gandiva
 #endif  // GANDIVA_FILTER_CACHE_KEY_H
