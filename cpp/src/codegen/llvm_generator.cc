@@ -25,6 +25,7 @@
 #include "codegen/expr_decomposer.h"
 #include "codegen/function_registry.h"
 #include "codegen/lvalue.h"
+#include "codegen/sql_regex.h"
 #include "gandiva/expression.h"
 
 namespace gandiva {
@@ -348,10 +349,9 @@ llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
 
   // find the llvm function.
   llvm::Function *fn = module()->getFunction(full_name);
-  DCHECK(fn != NULL);
+  DCHECK_NE(fn, nullptr) << "missing function " + full_name;
 
-  if (enable_ir_traces_ && full_name.compare("printf") != 0 &&
-      full_name.compare("printff") != 0) {
+  if (enable_ir_traces_ && !full_name.compare("printf") && !full_name.compare("printff")) {
     // Trace for debugging
     ADD_TRACE("invoke native fn " + full_name);
   }
@@ -363,6 +363,69 @@ llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
     value = ir_builder().CreateCall(fn, args);
   } else {
     value = ir_builder().CreateCall(fn, args, full_name);
+    DCHECK(value->getType() == ret_type);
+  }
+  return value;
+}
+
+Status like_build(const std::string pattern, std::shared_ptr<Operator> *op) {
+  std::shared_ptr<SqlRegex> regex;
+  auto status = SqlRegex::Make(pattern, &regex);
+  GANDIVA_RETURN_NOT_OK(status);
+
+  *op = regex;
+  return Status::OK();
+}
+
+extern "C"
+bool like_evaluate(int8_t *object, const char *data, int data_len) {
+  SqlRegex *regex = reinterpret_cast<SqlRegex *>(object);
+  return regex->Like(std::string(data, data_len));
+}
+
+llvm::Value *LLVMGenerator::Visitor::AddCppCall(const std::string &full_name,
+                                       llvm::Type *ret_type,
+                                       const ValueValidityPairVector &vv_args) {
+
+  std::shared_ptr<Operator> op;
+
+  // Extract the pattern from the first argument.
+  auto args_iter = vv_args.begin();
+  auto literal_dex = dynamic_cast<LiteralDex *>(((*args_iter)->value_expr()).get());
+  auto pattern = boost::get<std::string>(literal_dex->holder());
+  ++args_iter;
+
+  auto status = like_build(pattern, &op);
+  DCHECK_EQ(status.ok(), true);
+  generator_->operators_.push_back(op);
+
+  std::vector<llvm::Value *> eval_arg_values;
+  llvm::Constant *op_int_cast = generator_->types().i64_constant((int64_t)op.get());
+  auto ptr = llvm::ConstantExpr::getIntToPtr(op_int_cast, generator_->types().i8_ptr_type());
+  eval_arg_values.push_back(ptr);
+
+  auto params = BuildParams(std::vector<ValueValidityPairPtr>(vv_args.begin() + 1, vv_args.end()), false);
+  eval_arg_values.insert(eval_arg_values.end(), params.begin(), params.end());
+
+  // Create fn prototype for evaluation :
+  std::vector<llvm::Type *> eval_arg_types;
+  for (auto &value : eval_arg_values) {
+    eval_arg_types.push_back(value->getType());
+
+  }
+  llvm::FunctionType *prototype =
+      llvm::FunctionType::get(ret_type, eval_arg_types, false /*isVarArg*/);
+
+  auto fn = llvm::Function::Create(prototype, llvm::GlobalValue::ExternalLinkage, "like_evaluate",
+                                   module());
+  DCHECK_NE(fn, nullptr) << " cpp function " << full_name << " does not exist";
+
+  llvm::Value *value;
+  if (ret_type->isVoidTy()) {
+    // void functions can't have a name for the call.
+    value = ir_builder().CreateCall(fn, eval_arg_values);
+  } else {
+    value = ir_builder().CreateCall(fn, eval_arg_values, full_name);
     DCHECK(value->getType() == ret_type);
   }
   return value;
@@ -545,18 +608,28 @@ void LLVMGenerator::Visitor::Visit(const LiteralDex &dex) {
   result_.reset(new LValue(value, len));
 }
 
+bool
+like_xyz(void *regex_in, const char *data, int data_len) {
+  SqlRegex *regex = static_cast<SqlRegex *>(regex_in);
+  return regex->Like(std::string(data, data_len));
+}
+
 void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
   ADD_VISITOR_TRACE("visit NonNullableFunc base function " +
                     dex.func_descriptor()->name());
   LLVMTypes *types = generator_->types_.get();
 
-  // build the function params (ignore validity).
-  auto params = BuildParams(dex.args(), false);
-
   const NativeFunction *native_function = dex.native_function();
+  llvm::Value *value;
+
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
-  llvm::Value *value =
-      generator_->AddFunctionCall(native_function->pc_name(), ret_type, params);
+  if (!native_function->signature().base_name().compare("like")) {
+    value = AddCppCall(native_function->pc_name(), ret_type, dex.args());
+  } else {
+    // build the function params (ignore validity).
+    auto params = BuildParams(dex.args(), false);
+    value = generator_->AddFunctionCall(native_function->pc_name(), ret_type, params);
+  }
   result_.reset(new LValue(value));
 }
 

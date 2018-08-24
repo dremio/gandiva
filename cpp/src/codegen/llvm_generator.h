@@ -34,6 +34,8 @@
 
 namespace gandiva {
 
+class Operator;
+
 /// Builds an LLVM module and generates code for the specified set of expressions.
 class LLVMGenerator {
  public:
@@ -110,6 +112,9 @@ class LLVMGenerator {
     // Clear the bit in the local bitmap, if is_valid is 'false'
     void ClearLocalBitMapIfNotValid(int local_bitmap_idx, llvm::Value *is_valid);
 
+  llvm::Value *AddCppCall(const std::string &name, llvm::Type *ret_type,
+                          const ValueValidityPairVector &vv_args);
+
     LLVMGenerator *generator_;
     LValuePtr result_;
     llvm::Function *function_;
@@ -180,6 +185,7 @@ class LLVMGenerator {
   std::unique_ptr<LLVMTypes> types_;
   FunctionRegistry function_registry_;
   Annotator annotator_;
+  std::vector<std::shared_ptr<Operator>> operators_;
 
   // used for debug
   bool dump_ir_;

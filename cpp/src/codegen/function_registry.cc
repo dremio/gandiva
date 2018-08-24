@@ -338,6 +338,7 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, less_than_or_equal_to),
     VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than),
     VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, greater_than_or_equal_to),
+    VAR_LEN_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, like),
 
     // Null internal (sample)
     NativeFunction("half_or_null", DataTypeVector{int32()}, int32(), true,
