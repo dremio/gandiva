@@ -50,6 +50,7 @@ class SqlRegex : public FunctionHolder {
   static Status SqlPatternToPosixPattern(const std::string &sql_pattern, char escape_char,
                                          std::string &output);
 
+  std::string pattern_;
   std::regex regex_;
 };
 

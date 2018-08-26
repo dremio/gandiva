@@ -28,9 +28,9 @@ Status FunctionHolder::Make(const std::string &name, const FunctionNode &node,
     return Status::Invalid("expected two parameters");
   }
 
-  auto literal = dynamic_cast<LiteralNode *>(node.children().at(0).get());
+  auto literal = dynamic_cast<LiteralNode *>(node.children().at(1).get());
   if (literal == nullptr) {
-    return Status::Invalid("expected literal as the first parameter");
+    return Status::Invalid("expected literal as the second parameter");
   }
 
   if (literal->return_type()->id() != arrow::Type::STRING &&
@@ -47,8 +47,8 @@ Status FunctionHolder::Make(const std::string &name, const FunctionNode &node,
   return Status::OK();
 }
 
-extern "C" bool like_utf8_utf8(int64_t holder, const char *pattern, int pattern_len,
-                               const char *data, int data_len) {
+extern "C" bool like_utf8_utf8(int64_t holder, const char *data, int data_len,
+                               const char *pattern, int pattern_len) {
   SqlRegex *regex = reinterpret_cast<SqlRegex *>(holder);
   return regex->Like(std::string(data, data_len));
 }

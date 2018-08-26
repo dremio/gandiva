@@ -19,7 +19,7 @@ namespace gandiva {
 const std::set<char> SqlRegex::posix_regex_specials = {
     '[', ']', '(', ')', '|', '^', '-', '+', '*', '?', '{', '}', '$', '\\'};
 
-SqlRegex::SqlRegex(const std::string &pattern) : regex_(pattern) {}
+SqlRegex::SqlRegex(const std::string &pattern) : pattern_(pattern), regex_(pattern) {}
 
 Status SqlRegex::Make(const std::string &sql_pattern, char escape_char,
                       std::shared_ptr<SqlRegex> *regex) {

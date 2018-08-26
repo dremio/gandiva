@@ -180,7 +180,7 @@ TEST_F(TestUtf8, TestLike) {
 
   auto node_a = TreeExprBuilder::MakeField(field_a);
   auto literal_s = TreeExprBuilder::MakeStringLiteral("%spark%");
-  auto is_like = TreeExprBuilder::MakeFunction("like", {literal_s, node_a}, boolean());
+  auto is_like = TreeExprBuilder::MakeFunction("like", {node_a, literal_s}, boolean());
   auto expr = TreeExprBuilder::MakeExpression(is_like, res);
 
   // Build a projector for the expressions.
