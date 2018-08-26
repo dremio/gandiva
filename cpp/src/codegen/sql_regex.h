@@ -17,17 +17,13 @@
 
 #include <regex>
 #include <set>
+#include "codegen/function_holder.h"
 #include "gandiva/status.h"
 
 namespace gandiva {
 
-class Operator {
- public:
-  virtual ~Operator() = default;
-};
-
 /// \brief Build a regex matcher for the specified 'sql_pattern'
-class SqlRegex : public Operator {
+class SqlRegex : public FunctionHolder {
  public:
   ~SqlRegex() = default;
 

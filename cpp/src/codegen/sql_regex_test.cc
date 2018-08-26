@@ -35,6 +35,11 @@ TEST_F(TestSqlRegex, TestMatchAny) {
 
   EXPECT_FALSE(regex->Like("a"));
   EXPECT_FALSE(regex->Like("cab"));
+
+  status = SqlRegex::Make("%super%", &regex);
+  EXPECT_EQ(status.ok(), true) << status.message();
+
+  EXPECT_TRUE(regex->Like("superb"));
 }
 
 TEST_F(TestSqlRegex, TestMatchOne) {

@@ -53,13 +53,13 @@ Status LLVMGenerator::Add(const ExpressionPtr expr, const FieldDescriptorPtr out
 
   // decompose the expression to separate out value and validities.
   ExprDecomposer decomposer(function_registry_, annotator_);
-  ValueValidityPairPtr value_validity = decomposer.Decompose(*expr->root());
+  ValueValidityPairPtr value_validity;
+  auto status = decomposer.Decompose(*expr->root(), &value_validity);
+  GANDIVA_RETURN_NOT_OK(status);
 
   // Generate the IR function for the decomposed expression.
   llvm::Function *ir_function = nullptr;
-
-  Status status =
-      CodeGenExprValue(value_validity->value_expr(), output, idx, &ir_function);
+  status = CodeGenExprValue(value_validity->value_expr(), output, idx, &ir_function);
   GANDIVA_RETURN_NOT_OK(status);
 
   std::unique_ptr<CompiledExpr> compiled_expr(
@@ -70,14 +70,17 @@ Status LLVMGenerator::Add(const ExpressionPtr expr, const FieldDescriptorPtr out
 
 /// Build and optimise module for projection expression.
 Status LLVMGenerator::Build(const ExpressionVector &exprs) {
+  Status status;
+
   for (auto &expr : exprs) {
     auto output = annotator_.AddOutputFieldDescriptor(expr->result());
-    Add(expr, output);
+    status = Add(expr, output);
+    GANDIVA_RETURN_NOT_OK(status);
   }
 
   // optimise, compile and finalize the module
-  Status result = engine_->FinalizeModule(optimise_ir_, dump_ir_);
-  GANDIVA_RETURN_NOT_OK(result);
+  status = engine_->FinalizeModule(optimise_ir_, dump_ir_);
+  GANDIVA_RETURN_NOT_OK(status);
 
   // setup the jit functions for each expression.
   for (auto &compiled_expr : compiled_exprs_) {
@@ -341,17 +344,45 @@ void LLVMGenerator::ComputeBitMapsForExpr(const CompiledExpr &compiled_expr,
   accumulator.ComputeResult(dst_bitmap);
 }
 
+void LLVMGenerator::CheckAndAddPrototype(const std::string &full_name,
+                                         llvm::Type *ret_type,
+                                         const std::vector<llvm::Value *> &args) {
+  auto fn = module()->getFunction(full_name);
+  if (fn != nullptr) {
+    // prototype already added to module.
+    return;
+  }
+
+  // Create fn prototype for evaluation
+  std::vector<llvm::Type *> arg_types;
+  for (auto &value : args) {
+    arg_types.push_back(value->getType());
+  }
+  llvm::FunctionType *prototype =
+      llvm::FunctionType::get(ret_type, arg_types, false /*isVarArg*/);
+
+  fn = llvm::Function::Create(prototype, llvm::GlobalValue::ExternalLinkage, full_name,
+                              module());
+  DCHECK_NE(fn, nullptr) << " cpp function " << full_name << " does not exist";
+}
+
 llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
                                             llvm::Type *ret_type,
-                                            const std::vector<llvm::Value *> &args) {
-  // add to list of functions that need to be compiled
-  engine_->AddFunctionToCompile(full_name);
+                                            const std::vector<llvm::Value *> &args,
+                                            bool has_holder) {
+  if (has_holder) {
+    CheckAndAddPrototype(full_name, ret_type, args);
+  } else {
+    // add to list of functions that need to be compiled
+    engine_->AddFunctionToCompile(full_name);
+  }
 
   // find the llvm function.
   llvm::Function *fn = module()->getFunction(full_name);
   DCHECK_NE(fn, nullptr) << "missing function " + full_name;
 
-  if (enable_ir_traces_ && !full_name.compare("printf") && !full_name.compare("printff")) {
+  if (enable_ir_traces_ && !full_name.compare("printf") &&
+      !full_name.compare("printff")) {
     // Trace for debugging
     ADD_TRACE("invoke native fn " + full_name);
   }
@@ -363,69 +394,6 @@ llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
     value = ir_builder().CreateCall(fn, args);
   } else {
     value = ir_builder().CreateCall(fn, args, full_name);
-    DCHECK(value->getType() == ret_type);
-  }
-  return value;
-}
-
-Status like_build(const std::string pattern, std::shared_ptr<Operator> *op) {
-  std::shared_ptr<SqlRegex> regex;
-  auto status = SqlRegex::Make(pattern, &regex);
-  GANDIVA_RETURN_NOT_OK(status);
-
-  *op = regex;
-  return Status::OK();
-}
-
-extern "C"
-bool like_evaluate(int8_t *object, const char *data, int data_len) {
-  SqlRegex *regex = reinterpret_cast<SqlRegex *>(object);
-  return regex->Like(std::string(data, data_len));
-}
-
-llvm::Value *LLVMGenerator::Visitor::AddCppCall(const std::string &full_name,
-                                       llvm::Type *ret_type,
-                                       const ValueValidityPairVector &vv_args) {
-
-  std::shared_ptr<Operator> op;
-
-  // Extract the pattern from the first argument.
-  auto args_iter = vv_args.begin();
-  auto literal_dex = dynamic_cast<LiteralDex *>(((*args_iter)->value_expr()).get());
-  auto pattern = boost::get<std::string>(literal_dex->holder());
-  ++args_iter;
-
-  auto status = like_build(pattern, &op);
-  DCHECK_EQ(status.ok(), true);
-  generator_->operators_.push_back(op);
-
-  std::vector<llvm::Value *> eval_arg_values;
-  llvm::Constant *op_int_cast = generator_->types().i64_constant((int64_t)op.get());
-  auto ptr = llvm::ConstantExpr::getIntToPtr(op_int_cast, generator_->types().i8_ptr_type());
-  eval_arg_values.push_back(ptr);
-
-  auto params = BuildParams(std::vector<ValueValidityPairPtr>(vv_args.begin() + 1, vv_args.end()), false);
-  eval_arg_values.insert(eval_arg_values.end(), params.begin(), params.end());
-
-  // Create fn prototype for evaluation :
-  std::vector<llvm::Type *> eval_arg_types;
-  for (auto &value : eval_arg_values) {
-    eval_arg_types.push_back(value->getType());
-
-  }
-  llvm::FunctionType *prototype =
-      llvm::FunctionType::get(ret_type, eval_arg_types, false /*isVarArg*/);
-
-  auto fn = llvm::Function::Create(prototype, llvm::GlobalValue::ExternalLinkage, "like_evaluate",
-                                   module());
-  DCHECK_NE(fn, nullptr) << " cpp function " << full_name << " does not exist";
-
-  llvm::Value *value;
-  if (ret_type->isVoidTy()) {
-    // void functions can't have a name for the call.
-    value = ir_builder().CreateCall(fn, eval_arg_values);
-  } else {
-    value = ir_builder().CreateCall(fn, eval_arg_values, full_name);
     DCHECK(value->getType() == ret_type);
   }
   return value;
@@ -608,28 +576,19 @@ void LLVMGenerator::Visitor::Visit(const LiteralDex &dex) {
   result_.reset(new LValue(value, len));
 }
 
-bool
-like_xyz(void *regex_in, const char *data, int data_len) {
-  SqlRegex *regex = static_cast<SqlRegex *>(regex_in);
-  return regex->Like(std::string(data, data_len));
-}
-
 void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
   ADD_VISITOR_TRACE("visit NonNullableFunc base function " +
                     dex.func_descriptor()->name());
   LLVMTypes *types = generator_->types_.get();
 
-  const NativeFunction *native_function = dex.native_function();
-  llvm::Value *value;
+  // build the function params (ignore validity).
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), false);
 
+  const NativeFunction *native_function = dex.native_function();
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
-  if (!native_function->signature().base_name().compare("like")) {
-    value = AddCppCall(native_function->pc_name(), ret_type, dex.args());
-  } else {
-    // build the function params (ignore validity).
-    auto params = BuildParams(dex.args(), false);
-    value = generator_->AddFunctionCall(native_function->pc_name(), ret_type, params);
-  }
+
+  llvm::Value *value = generator_->AddFunctionCall(
+      native_function->pc_name(), ret_type, params, native_function->needs_holder());
   result_.reset(new LValue(value));
 }
 
@@ -638,12 +597,12 @@ void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
   LLVMTypes *types = generator_->types_.get();
 
   // build function params along with validity.
-  auto params = BuildParams(dex.args(), true);
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), true);
 
   const NativeFunction *native_function = dex.native_function();
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
-  llvm::Value *value =
-      generator_->AddFunctionCall(native_function->pc_name(), ret_type, params);
+  llvm::Value *value = generator_->AddFunctionCall(
+      native_function->pc_name(), ret_type, params, native_function->needs_holder());
   result_.reset(new LValue(value));
 }
 
@@ -654,7 +613,7 @@ void LLVMGenerator::Visitor::Visit(const NullableInternalFuncDex &dex) {
   LLVMTypes *types = generator_->types_.get();
 
   // build function params along with validity.
-  auto params = BuildParams(dex.args(), true);
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), true);
 
   // add an extra arg for validity (alloced on stack).
   llvm::AllocaInst *result_valid_ptr =
@@ -663,8 +622,8 @@ void LLVMGenerator::Visitor::Visit(const NullableInternalFuncDex &dex) {
 
   const NativeFunction *native_function = dex.native_function();
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
-  llvm::Value *value =
-      generator_->AddFunctionCall(native_function->pc_name(), ret_type, params);
+  llvm::Value *value = generator_->AddFunctionCall(
+      native_function->pc_name(), ret_type, params, native_function->needs_holder());
 
   // load the result validity and truncate to i1.
   llvm::Value *result_valid_i8 = builder.CreateLoad(result_valid_ptr);
@@ -899,9 +858,18 @@ LValuePtr LLVMGenerator::Visitor::BuildValueAndValidity(const ValueValidityPair 
 }
 
 std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
-    const ValueValidityPairVector &args, bool with_validity) {
-  // build the function params, along with the validities.
+    FunctionHolder *holder, const ValueValidityPairVector &args, bool with_validity) {
+  LLVMTypes *types = generator_->types_.get();
   std::vector<llvm::Value *> params;
+
+  // if the function has holder, add the holder pointer first.
+  if (holder != nullptr) {
+    llvm::Constant *ptr_int_cast = types->i64_constant((int64_t)holder);
+    auto ptr = llvm::ConstantExpr::getIntToPtr(ptr_int_cast, types->i8_ptr_type());
+    params.push_back(ptr);
+  }
+
+  // build the function params, along with the validities.
   for (auto &pair : args) {
     // build value.
     DexPtr value_expr = pair->value_expr();
@@ -923,9 +891,7 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
   return params;
 }
 
-/*
- * Bitwise-AND of a vector of bits to get the combined validity.
- */
+// Bitwise-AND of a vector of bits to get the combined validity.
 llvm::Value *LLVMGenerator::Visitor::BuildCombinedValidity(const DexVector &validities) {
   llvm::IRBuilder<> &builder = ir_builder();
   LLVMTypes *types = generator_->types_.get();

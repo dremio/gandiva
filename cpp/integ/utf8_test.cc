@@ -185,13 +185,13 @@ TEST_F(TestUtf8, TestLike) {
 
   // Build a projector for the expressions.
   std::shared_ptr<Projector> projector;
-  Status status = Projector::Make(schema, {expr}, pool_, &projector);
+  Status status = Projector::Make(schema, {expr}, &projector);
   EXPECT_TRUE(status.ok()) << status.message();
 
   // Create a row-batch with some sample data
   int num_records = 4;
-  auto array_a =
-      MakeArrowArrayUtf8({"park", "sparkle", "bright spark and fire", "spark"}, {true, true, true, true});
+  auto array_a = MakeArrowArrayUtf8({"park", "sparkle", "bright spark and fire", "spark"},
+                                    {true, true, true, true});
 
   // expected output
   auto exp = MakeArrowArrayBool({false, true, true, true}, {true, true, true, true});
@@ -201,8 +201,8 @@ TEST_F(TestUtf8, TestLike) {
 
   // Evaluate expression
   arrow::ArrayVector outputs;
-  status = projector->Evaluate(*in_batch, &outputs);
-  EXPECT_TRUE(status.ok());
+  status = projector->Evaluate(*in_batch, pool_, &outputs);
+  EXPECT_TRUE(status.ok()) << status.message();
 
   // Validate results
   EXPECT_ARROW_ARRAY_EQUALS(exp, outputs.at(0));
