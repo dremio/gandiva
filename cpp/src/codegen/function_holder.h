@@ -15,18 +15,12 @@
 #ifndef GANDIVA_FUNCTION_HOLDER_H
 #define GANDIVA_FUNCTION_HOLDER_H
 
-#include "codegen/node.h"
-#include "gandiva/status.h"
-
 namespace gandiva {
 
 /// Holder for a function that can be invoked from LLVM.
 class FunctionHolder {
  public:
   virtual ~FunctionHolder() = default;
-
-  static Status Make(const std::string &name, const FunctionNode &node,
-                     std::shared_ptr<FunctionHolder> *holder);
 };
 
 using FunctionHolderPtr = std::shared_ptr<FunctionHolder>;

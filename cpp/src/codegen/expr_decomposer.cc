@@ -21,7 +21,7 @@
 
 #include "codegen/annotator.h"
 #include "codegen/dex.h"
-#include "codegen/function_holder.h"
+#include "codegen/function_holder_registry.h"
 #include "codegen/function_registry.h"
 #include "codegen/node.h"
 #include "gandiva/function_signature.h"
@@ -63,7 +63,7 @@ Status ExprDecomposer::Visit(const FunctionNode &node) {
   // Make a function holder, if required.
   std::shared_ptr<FunctionHolder> holder;
   if (native_function->needs_holder()) {
-    auto status = FunctionHolder::Make(desc->name(), node, &holder);
+    auto status = FunctionHolderRegistry::Make(desc->name(), node, &holder);
     GANDIVA_RETURN_NOT_OK(status);
   }
 

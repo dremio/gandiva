@@ -36,7 +36,6 @@ Status LikeHolder::Make(const FunctionNode &node, std::shared_ptr<LikeHolder> *h
         "'like' function requires a string literal as the second parameter");
   }
   auto pattern = boost::get<std::string>(literal->holder());
-
   return Make(pattern, holder);
 }
 
