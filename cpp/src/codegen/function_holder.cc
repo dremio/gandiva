@@ -14,43 +14,24 @@
 
 #include "codegen/function_holder.h"
 
+#include <regex>
+#include "codegen/like_holder.h"
 #include "codegen/node.h"
-#include "codegen/sql_regex.h"
 
 namespace gandiva {
 
 Status FunctionHolder::Make(const std::string &name, const FunctionNode &node,
-                            std::shared_ptr<FunctionHolder> *holder) {
-  if (name.compare("like")) {
+                            FunctionHolderPtr *holder) {
+  if (name.compare("like") == 0) {
+    std::shared_ptr<LikeHolder> like_holder;
+    auto status = LikeHolder::Make(node, &like_holder);
+    GANDIVA_RETURN_NOT_OK(status);
+
+    *holder = static_cast<FunctionHolderPtr>(like_holder);
+    return Status::OK();
+  } else {
     return Status::Invalid("unknown function " + name);
   }
-  if (node.children().size() != 2) {
-    return Status::Invalid("expected two parameters");
-  }
-
-  auto literal = dynamic_cast<LiteralNode *>(node.children().at(1).get());
-  if (literal == nullptr) {
-    return Status::Invalid("expected literal as the second parameter");
-  }
-
-  if (literal->return_type()->id() != arrow::Type::STRING &&
-      literal->return_type()->id() != arrow::Type::BINARY) {
-    return Status::Invalid("expected string or binary literal");
-  }
-  auto pattern = boost::get<std::string>(literal->holder());
-
-  std::shared_ptr<SqlRegex> regex;
-  auto status = SqlRegex::Make(pattern, &regex);
-  GANDIVA_RETURN_NOT_OK(status);
-
-  *holder = regex;
-  return Status::OK();
-}
-
-extern "C" bool like_utf8_utf8(int64_t holder, const char *data, int data_len,
-                               const char *pattern, int pattern_len) {
-  SqlRegex *regex = reinterpret_cast<SqlRegex *>(holder);
-  return regex->Like(std::string(data, data_len));
 }
 
 }  // namespace gandiva

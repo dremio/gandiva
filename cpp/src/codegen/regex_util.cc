@@ -12,33 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "codegen/sql_regex.h"
+#include "codegen/regex_util.h"
 
 namespace gandiva {
 
-const std::set<char> SqlRegex::posix_regex_specials = {
+/// Characters that are considered special by posix regex. These needs to be
+/// escaped with '\\'.
+const std::set<char> RegexUtil::posix_regex_specials_ = {
     '[', ']', '(', ')', '|', '^', '-', '+', '*', '?', '{', '}', '$', '\\'};
 
-SqlRegex::SqlRegex(const std::string &pattern) : pattern_(pattern), regex_(pattern) {}
-
-Status SqlRegex::Make(const std::string &sql_pattern, char escape_char,
-                      std::shared_ptr<SqlRegex> *regex) {
-  std::string posix_pattern;
-  auto status = SqlPatternToPosixPattern(sql_pattern, escape_char, posix_pattern);
-  GANDIVA_RETURN_ARROW_NOT_OK(status);
-
-  *regex = std::shared_ptr<SqlRegex>(new SqlRegex(posix_pattern));
-  return Status::OK();
-}
-
-Status SqlRegex::SqlPatternToPosixPattern(const std::string &sql_pattern,
-                                          char escape_char, std::string &posix_pattern) {
+Status RegexUtil::SqlLikePatternToPosix(const std::string &sql_pattern, char escape_char,
+                                        std::string &posix_pattern) {
   posix_pattern.clear();
   for (int idx = 0; idx < sql_pattern.size(); ++idx) {
     auto cur = sql_pattern.at(idx);
 
     // Escape any char that is special for posix regex
-    if (posix_regex_specials.find(cur) != posix_regex_specials.end()) {
+    if (posix_regex_specials_.find(cur) != posix_regex_specials_.end()) {
       posix_pattern += "\\";
     }
 

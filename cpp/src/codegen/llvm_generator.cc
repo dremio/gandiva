@@ -25,7 +25,6 @@
 #include "codegen/expr_decomposer.h"
 #include "codegen/function_registry.h"
 #include "codegen/lvalue.h"
-#include "codegen/sql_regex.h"
 #include "gandiva/expression.h"
 
 namespace gandiva {

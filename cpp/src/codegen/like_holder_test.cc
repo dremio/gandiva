@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "codegen/sql_regex.h"
+#include "codegen/like_holder.h"
 
 #include <memory>
 #include <vector>
@@ -21,39 +21,36 @@
 
 namespace gandiva {
 
-class TestSqlRegex : public ::testing::Test {};
+class TestLikeHolder : public ::testing::Test {};
 
-TEST_F(TestSqlRegex, TestMatchAny) {
-  std::shared_ptr<SqlRegex> regex;
+TEST_F(TestLikeHolder, TestMatchAny) {
+  std::shared_ptr<LikeHolder> like_holder;
 
-  auto status = SqlRegex::Make("ab%", &regex);
+  auto status = LikeHolder::Make("ab%", &like_holder);
   EXPECT_EQ(status.ok(), true) << status.message();
 
-  EXPECT_TRUE(regex->Like("ab"));
-  EXPECT_TRUE(regex->Like("abc"));
-  EXPECT_TRUE(regex->Like("abcd"));
+  auto like = *like_holder;
+  EXPECT_TRUE(like("ab"));
+  EXPECT_TRUE(like("abc"));
+  EXPECT_TRUE(like("abcd"));
 
-  EXPECT_FALSE(regex->Like("a"));
-  EXPECT_FALSE(regex->Like("cab"));
-
-  status = SqlRegex::Make("%super%", &regex);
-  EXPECT_EQ(status.ok(), true) << status.message();
-
-  EXPECT_TRUE(regex->Like("superb"));
+  EXPECT_FALSE(like("a"));
+  EXPECT_FALSE(like("cab"));
 }
 
-TEST_F(TestSqlRegex, TestMatchOne) {
-  std::shared_ptr<SqlRegex> regex;
+TEST_F(TestLikeHolder, TestMatchOne) {
+  std::shared_ptr<LikeHolder> like_holder;
 
-  auto status = SqlRegex::Make("ab_", &regex);
+  auto status = LikeHolder::Make("ab_", &like_holder);
   EXPECT_EQ(status.ok(), true) << status.message();
 
-  EXPECT_TRUE(regex->Like("abc"));
-  EXPECT_TRUE(regex->Like("abd"));
+  auto like = *like_holder;
+  EXPECT_TRUE(like("abc"));
+  EXPECT_TRUE(like("abd"));
 
-  EXPECT_FALSE(regex->Like("a"));
-  EXPECT_FALSE(regex->Like("abcd"));
-  EXPECT_FALSE(regex->Like("dabc"));
+  EXPECT_FALSE(like("a"));
+  EXPECT_FALSE(like("abcd"));
+  EXPECT_FALSE(like("dabc"));
 }
 
 int main(int argc, char **argv) {
