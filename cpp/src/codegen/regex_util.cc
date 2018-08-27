@@ -24,7 +24,7 @@ const std::set<char> RegexUtil::posix_regex_specials_ = {
 Status RegexUtil::SqlLikePatternToPosix(const std::string &sql_pattern, char escape_char,
                                         std::string &posix_pattern) {
   posix_pattern.clear();
-  for (int idx = 0; idx < sql_pattern.size(); ++idx) {
+  for (size_t idx = 0; idx < sql_pattern.size(); ++idx) {
     auto cur = sql_pattern.at(idx);
 
     // Escape any char that is special for posix regex
