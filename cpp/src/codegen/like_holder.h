@@ -41,6 +41,10 @@ class LikeHolder : public FunctionHolder {
   std::regex regex_;     // compiled regex for the pattern
 };
 
+extern "C" __attribute__((used)) bool like_utf8_utf8(int64_t ptr, const char *data,
+                                                     int data_len, const char *pattern,
+                                                     int pattern_len);
+
 }  // namespace gandiva
 
 #endif  // GANDIVA_LIKE_HOLDER_H
