@@ -374,6 +374,7 @@ public class ProjectorTest extends BaseEvaluatorTest {
     eval.close();
   }
 
+  @Ignore
   @Test
   public void testRegex() throws GandivaException {
     /*
