@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "codegen/like_holder.h"
+#include "codegen/regex_util.h"
 
 #include <memory>
 #include <vector>
@@ -51,6 +52,25 @@ TEST_F(TestLikeHolder, TestMatchOne) {
   EXPECT_FALSE(like("a"));
   EXPECT_FALSE(like("abcd"));
   EXPECT_FALSE(like("dabc"));
+}
+
+TEST_F(TestLikeHolder, TestPosixSpecial) {
+  std::shared_ptr<LikeHolder> like_holder;
+
+  auto status = LikeHolder::Make(".*ab_", &like_holder);
+  EXPECT_EQ(status.ok(), true) << status.message();
+
+  auto like = *like_holder;
+  EXPECT_TRUE(like(".*abc"));  // . and * aren't special in sql regex
+  EXPECT_FALSE(like("xxabc"));
+}
+
+TEST_F(TestLikeHolder, TestRegexEscape) {
+  std::string res;
+  auto status = RegexUtil::SqlLikePatternToPosix("#%hello#_abc_def##", '#', res);
+  EXPECT_TRUE(status.ok()) << status.message();
+
+  EXPECT_EQ(res, "%hello_abc.def#");
 }
 
 int main(int argc, char **argv) {
