@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "boost/date_time/posix_time/posix_time.hpp"
+
 extern "C" {
 
 #include <stdlib.h>
@@ -29,82 +31,82 @@ extern "C" {
   INNER(timestamp)
 
 // Extract millennium
-#define EXTRACT_MILLENNIUM(TYPE)                  \
-  FORCE_INLINE                                    \
-  int64 extractMillennium##_##TYPE(TYPE millis) { \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis);  \
-    struct tm tm;                                 \
-    gmtime_r(&tsec, &tm);                         \
-    return (1900 + tm.tm_year - 1) / 1000 + 1;    \
+#define EXTRACT_MILLENNIUM(TYPE)                                           \
+  FORCE_INLINE                                                             \
+  int64 extractMillennium##_##TYPE(TYPE millis) {                          \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return (1900 + time.tm_year - 1) / 1000 + 1;                           \
   }
 
 DATE_TYPES(EXTRACT_MILLENNIUM)
 
 // Extract century
-#define EXTRACT_CENTURY(TYPE)                    \
-  FORCE_INLINE                                   \
-  int64 extractCentury##_##TYPE(TYPE millis) {   \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return (1900 + tm.tm_year - 1) / 100 + 1;    \
+#define EXTRACT_CENTURY(TYPE)                                              \
+  FORCE_INLINE                                                             \
+  int64 extractCentury##_##TYPE(TYPE millis) {                             \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return (1900 + time.tm_year - 1) / 100 + 1;                            \
   }
 
 DATE_TYPES(EXTRACT_CENTURY)
 
 // Extract  decade
-#define EXTRACT_DECADE(TYPE)                     \
-  FORCE_INLINE                                   \
-  int64 extractDecade##_##TYPE(TYPE millis) {    \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return (1900 + tm.tm_year) / 10;             \
+#define EXTRACT_DECADE(TYPE)                                               \
+  FORCE_INLINE                                                             \
+  int64 extractDecade##_##TYPE(TYPE millis) {                              \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return (1900 + time.tm_year) / 10;                                     \
   }
 
 DATE_TYPES(EXTRACT_DECADE)
 
 // Extract  year.
-#define EXTRACT_YEAR(TYPE)                       \
-  FORCE_INLINE                                   \
-  int64 extractYear##_##TYPE(TYPE millis) {      \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return 1900 + tm.tm_year;                    \
+#define EXTRACT_YEAR(TYPE)                                                 \
+  FORCE_INLINE                                                             \
+  int64 extractYear##_##TYPE(TYPE millis) {                                \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return 1900 + time.tm_year;                                            \
   }
 
 DATE_TYPES(EXTRACT_YEAR)
 
-#define EXTRACT_DOY(TYPE)                        \
-  FORCE_INLINE                                   \
-  int64 extractDoy##_##TYPE(TYPE millis) {       \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return 1 + tm.tm_yday;                       \
+#define EXTRACT_DOY(TYPE)                                                  \
+  FORCE_INLINE                                                             \
+  int64 extractDoy##_##TYPE(TYPE millis) {                                 \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return 1 + time.tm_yday;                                               \
   }
 
 DATE_TYPES(EXTRACT_DOY)
 
-#define EXTRACT_QUARTER(TYPE)                    \
-  FORCE_INLINE                                   \
-  int64 extractQuarter##_##TYPE(TYPE millis) {   \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return tm.tm_mon / 3 + 1;                    \
+#define EXTRACT_QUARTER(TYPE)                                              \
+  FORCE_INLINE                                                             \
+  int64 extractQuarter##_##TYPE(TYPE millis) {                             \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return time.tm_mon / 3 + 1;                                            \
   }
 
 DATE_TYPES(EXTRACT_QUARTER)
 
-#define EXTRACT_MONTH(TYPE)                      \
-  FORCE_INLINE                                   \
-  int64 extractMonth##_##TYPE(TYPE millis) {     \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return 1 + tm.tm_mon;                        \
+#define EXTRACT_MONTH(TYPE)                                                \
+  FORCE_INLINE                                                             \
+  int64 extractMonth##_##TYPE(TYPE millis) {                               \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return 1 + time.tm_mon;                                                \
   }
 
 DATE_TYPES(EXTRACT_MONTH)
@@ -301,68 +303,68 @@ int64 weekOfYear(struct tm *ptm) {
   return weekOfCurrentYear(ptm);
 }
 
-#define EXTRACT_WEEK(TYPE)                       \
-  FORCE_INLINE                                   \
-  int64 extractWeek##_##TYPE(TYPE millis) {      \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return weekOfYear(&tm);                      \
+#define EXTRACT_WEEK(TYPE)                                                 \
+  FORCE_INLINE                                                             \
+  int64 extractWeek##_##TYPE(TYPE millis) {                                \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return weekOfYear(&time);                                              \
   }
 
 DATE_TYPES(EXTRACT_WEEK)
 
-#define EXTRACT_DOW(TYPE)                        \
-  FORCE_INLINE                                   \
-  int64 extractDow##_##TYPE(TYPE millis) {       \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return 1 + tm.tm_wday;                       \
+#define EXTRACT_DOW(TYPE)                                                  \
+  FORCE_INLINE                                                             \
+  int64 extractDow##_##TYPE(TYPE millis) {                                 \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return 1 + time.tm_wday;                                               \
   }
 
 DATE_TYPES(EXTRACT_DOW)
 
-#define EXTRACT_DAY(TYPE)                        \
-  FORCE_INLINE                                   \
-  int64 extractDay##_##TYPE(TYPE millis) {       \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return tm.tm_mday;                           \
+#define EXTRACT_DAY(TYPE)                                                  \
+  FORCE_INLINE                                                             \
+  int64 extractDay##_##TYPE(TYPE millis) {                                 \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return time.tm_mday;                                                   \
   }
 
 DATE_TYPES(EXTRACT_DAY)
 
-#define EXTRACT_HOUR(TYPE)                       \
-  FORCE_INLINE                                   \
-  int64 extractHour##_##TYPE(TYPE millis) {      \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return tm.tm_hour;                           \
+#define EXTRACT_HOUR(TYPE)                                                 \
+  FORCE_INLINE                                                             \
+  int64 extractHour##_##TYPE(TYPE millis) {                                \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return time.tm_hour;                                                   \
   }
 
 DATE_TYPES(EXTRACT_HOUR)
 
-#define EXTRACT_MINUTE(TYPE)                     \
-  FORCE_INLINE                                   \
-  int64 extractMinute##_##TYPE(TYPE millis) {    \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return tm.tm_min;                            \
+#define EXTRACT_MINUTE(TYPE)                                               \
+  FORCE_INLINE                                                             \
+  int64 extractMinute##_##TYPE(TYPE millis) {                              \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return time.tm_min;                                                    \
   }
 
 DATE_TYPES(EXTRACT_MINUTE)
 
-#define EXTRACT_SECOND(TYPE)                     \
-  FORCE_INLINE                                   \
-  int64 extractSecond##_##TYPE(TYPE millis) {    \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    return tm.tm_sec;                            \
+#define EXTRACT_SECOND(TYPE)                                               \
+  FORCE_INLINE                                                             \
+  int64 extractSecond##_##TYPE(TYPE millis) {                              \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm time = boost::posix_time::to_tm(ptime);                      \
+    return time.tm_sec;                                                    \
   }
 
 DATE_TYPES(EXTRACT_SECOND)
@@ -405,54 +407,54 @@ EXTRACT_HOUR_TIME(time32)
     return ((millis / NMILLIS_IN_UNIT) * NMILLIS_IN_UNIT); \
   }
 
-#define DATE_TRUNC_WEEK(TYPE)                    \
-  FORCE_INLINE                                   \
-  TYPE date_trunc_Week_##TYPE(TYPE millis) {     \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis); \
-    struct tm tm;                                \
-    gmtime_r(&tsec, &tm);                        \
-    tm.tm_sec = 0;                               \
-    tm.tm_min = 0;                               \
-    tm.tm_hour = 0;                              \
-    if (tm.tm_wday == 0) {                       \
-      /* Sunday */                               \
-      tm.tm_mday -= 6;                           \
-    } else {                                     \
-      /* All other days */                       \
-      tm.tm_mday -= (tm.tm_wday - 1);            \
-    }                                            \
-    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;    \
+#define DATE_TRUNC_WEEK(TYPE)                                              \
+  FORCE_INLINE                                                             \
+  TYPE date_trunc_Week_##TYPE(TYPE millis) {                               \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm tm = boost::posix_time::to_tm(ptime);                        \
+    tm.tm_sec = 0;                                                         \
+    tm.tm_min = 0;                                                         \
+    tm.tm_hour = 0;                                                        \
+    if (tm.tm_wday == 0) {                                                 \
+      /* Sunday */                                                         \
+      tm.tm_mday -= 6;                                                     \
+    } else {                                                               \
+      /* All other days */                                                 \
+      tm.tm_mday -= (tm.tm_wday - 1);                                      \
+    }                                                                      \
+    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                              \
   }
 
-#define DATE_TRUNC_MONTH_UNITS(NAME, TYPE, NMONTHS_IN_UNIT)      \
-  FORCE_INLINE                                                   \
-  TYPE NAME##_##TYPE(TYPE millis) {                              \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                 \
-    struct tm tm;                                                \
-    gmtime_r(&tsec, &tm);                                        \
-    tm.tm_sec = 0;                                               \
-    tm.tm_min = 0;                                               \
-    tm.tm_hour = 0;                                              \
-    tm.tm_mday = 1;                                              \
-    tm.tm_mon = (tm.tm_mon / NMONTHS_IN_UNIT) * NMONTHS_IN_UNIT; \
-    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                    \
+#define DATE_TRUNC_MONTH_UNITS(NAME, TYPE, NMONTHS_IN_UNIT)                \
+  FORCE_INLINE                                                             \
+  TYPE NAME##_##TYPE(TYPE millis) {                                        \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm tm = boost::posix_time::to_tm(ptime);                        \
+    tm.tm_sec = 0;                                                         \
+    tm.tm_min = 0;                                                         \
+    tm.tm_hour = 0;                                                        \
+    tm.tm_mday = 1;                                                        \
+    tm.tm_mon = (tm.tm_mon / NMONTHS_IN_UNIT) * NMONTHS_IN_UNIT;           \
+    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                              \
   }
 
-#define DATE_TRUNC_YEAR_UNITS(NAME, TYPE, NYEARS_IN_UNIT, OFF_BY)        \
-  FORCE_INLINE                                                           \
-  TYPE NAME##_##TYPE(TYPE millis) {                                      \
-    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                         \
-    struct tm tm;                                                        \
-    gmtime_r(&tsec, &tm);                                                \
-    tm.tm_sec = 0;                                                       \
-    tm.tm_min = 0;                                                       \
-    tm.tm_hour = 0;                                                      \
-    tm.tm_mday = 1;                                                      \
-    tm.tm_mon = 0;                                                       \
-    int year = 1900 + tm.tm_year;                                        \
-    year = ((year - OFF_BY) / NYEARS_IN_UNIT) * NYEARS_IN_UNIT + OFF_BY; \
-    tm.tm_year = year - 1900;                                            \
-    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                            \
+#define DATE_TRUNC_YEAR_UNITS(NAME, TYPE, NYEARS_IN_UNIT, OFF_BY)          \
+  FORCE_INLINE                                                             \
+  TYPE NAME##_##TYPE(TYPE millis) {                                        \
+    time_t tsec = (time_t)MILLIS_TO_SEC(millis);                           \
+    boost::posix_time::ptime ptime = boost::posix_time::from_time_t(tsec); \
+    struct tm tm = boost::posix_time::to_tm(ptime);                        \
+    tm.tm_sec = 0;                                                         \
+    tm.tm_min = 0;                                                         \
+    tm.tm_hour = 0;                                                        \
+    tm.tm_mday = 1;                                                        \
+    tm.tm_mon = 0;                                                         \
+    int year = 1900 + tm.tm_year;                                          \
+    year = ((year - OFF_BY) / NYEARS_IN_UNIT) * NYEARS_IN_UNIT + OFF_BY;   \
+    tm.tm_year = year - 1900;                                              \
+    return (TYPE)timegm(&tm) * MILLIS_IN_SEC;                              \
   }
 
 #define DATE_TRUNC_FUNCTIONS(TYPE)                              \
