@@ -84,6 +84,22 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
+# Pre-compiled .so library for function helpers.
+add_library(gandiva_helpers SHARED
+  function_holder_stubs.cc
+  like_holder.cc
+  regex_util.cc
+  status.cc)
+
+target_include_directories(gandiva_helpers  PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/src
+)
+
+if (NOT APPLE)
+  target_link_libraries(gandiva_helpers LINK_PRIVATE -static-libstdc++ -static-libgcc)
+endif()
+
 #args: label test-file src-files
 add_gandiva_unit_test(bitmap_accumulator_test.cc bitmap_accumulator.cc)
 add_gandiva_unit_test(engine_llvm_test.cc engine.cc llvm_types.cc status.cc configuration.cc ${BC_FILE_PATH_CC})

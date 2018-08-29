@@ -49,11 +49,4 @@ Status LikeHolder::Make(const std::string &sql_pattern,
   return Status::OK();
 }
 
-// Wrapper C functions for "like" to be invoked from LLVM.
-extern "C" bool like_utf8_utf8(int64_t ptr, const char *data, int data_len,
-                               const char *pattern, int pattern_len) {
-  LikeHolder *holder = reinterpret_cast<LikeHolder *>(ptr);
-  return (*holder)(std::string(data, data_len));
-}
-
 }  // namespace gandiva

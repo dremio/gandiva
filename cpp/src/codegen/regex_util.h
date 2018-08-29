@@ -31,10 +31,6 @@ class RegexUtil {
                                       std::string &posix_pattern) {
     return SqlLikePatternToPosix(like_pattern, 0 /*escape_char*/, posix_pattern);
   }
-
- private:
-  // set of characters that std::regex treats as special.
-  static const std::set<char> posix_regex_specials_;
 };
 
 }  // namespace gandiva
