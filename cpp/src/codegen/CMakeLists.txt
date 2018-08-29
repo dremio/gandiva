@@ -91,11 +91,14 @@ add_library(gandiva_helpers SHARED
   regex_util.cc
   status.cc)
 
-target_include_directories(gandiva_helpers  PRIVATE
-  ${CMAKE_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/src
+target_include_directories(gandiva_helpers
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/src
+    $<TARGET_PROPERTY:ARROW::ARROW_SHARED,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
+target_link_libraries(gandiva_helpers PRIVATE Boost::boost)
 if (NOT APPLE)
   target_link_libraries(gandiva_helpers LINK_PRIVATE -static-libstdc++ -static-libgcc)
 endif()
