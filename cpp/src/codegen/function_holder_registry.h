@@ -22,14 +22,14 @@
 
 namespace gandiva {
 
-#define LAMBDA_MAKER(derived)                                \
-  [](const FunctionNode &node, FunctionHolderPtr *holder) {  \
-    std::shared_ptr<derived> derived_instance;               \
-    auto status = LikeHolder::Make(node, &derived_instance); \
-    if (status.ok()) {                                       \
-      *holder = derived_instance;                            \
-    }                                                        \
-    return status;                                           \
+#define LAMBDA_MAKER(derived)                               \
+  [](const FunctionNode &node, FunctionHolderPtr *holder) { \
+    std::shared_ptr<derived> derived_instance;              \
+    auto status = derived::Make(node, &derived_instance);   \
+    if (status.ok()) {                                      \
+      *holder = derived_instance;                           \
+    }                                                       \
+    return status;                                          \
   }
 
 /// Static registry of function holders.

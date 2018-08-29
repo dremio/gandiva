@@ -35,6 +35,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Select compiler flags.
 add_compile_options(-Wall -Werror)
+# This is required to prevent the linker from stripping symbols in gandiva
+# libraries that are used only from within LLVM.
 link_libraries(-rdynamic)
 
 # set the build-support dir.
