@@ -32,7 +32,8 @@ foreach(SRC_FILE ${PRECOMPILED_SRCS})
   add_custom_command(
     OUTPUT ${BC_FILE}
     COMMAND ${CLANG_EXECUTABLE}
-            -std=c++11 -emit-llvm -O2 -c ${ABSOLUTE_SRC} -o ${BC_FILE}
+            -fno-use-cxa-atexit -std=c++11 -emit-llvm -O2 -c ${ABSOLUTE_SRC} -o ${BC_FILE}
+            -I$<TARGET_PROPERTY:Boost::boost,INTERFACE_INCLUDE_DIRECTORIES>
     DEPENDS ${SRC_FILE})
   list(APPEND BC_FILES ${BC_FILE})
 endforeach()

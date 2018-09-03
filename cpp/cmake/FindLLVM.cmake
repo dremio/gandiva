@@ -27,7 +27,7 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 # Find the libraries that correspond to the LLVM components
 llvm_map_components_to_libnames(LLVM_LIBS core mcjit native ipo bitreader target linker analysis debuginfodwarf)
 
-set(CLANG_EXECUTABLE ${LLVM_TOOLS_BINARY_DIR}/clang CACHE STRING "clang")
+set(CLANG_EXECUTABLE ${LLVM_TOOLS_BINARY_DIR}/clang++ CACHE STRING "clang")
 set(LINK_EXECUTABLE ${LLVM_TOOLS_BINARY_DIR}/llvm-link CACHE STRING "link")
 set(CLANG_FORMAT_EXECUTABLE ${LLVM_TOOLS_BINARY_DIR}/clang-format CACHE STRING "clang-format")
 
