@@ -20,6 +20,10 @@
 
 namespace gandiva {
 
+#ifdef GDV_HELPERS
+namespace helpers {
+#endif
+
 Status LikeHolder::Make(const FunctionNode &node, std::shared_ptr<LikeHolder> *holder) {
   if (node.children().size() != 2) {
     return Status::Invalid("'like' function requires two parameters");
@@ -48,5 +52,9 @@ Status LikeHolder::Make(const std::string &sql_pattern,
   *holder = std::shared_ptr<LikeHolder>(new LikeHolder(posix_pattern));
   return Status::OK();
 }
+
+#ifdef GDV_HELPERS
+}
+#endif
 
 }  // namespace gandiva
