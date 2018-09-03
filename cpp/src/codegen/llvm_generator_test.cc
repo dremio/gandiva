@@ -42,7 +42,7 @@ TEST_F(TestLLVMGenerator, VerifyPCFunctions) {
 
   llvm::Module *module = generator->module();
   for (auto &iter : registry_) {
-    if (iter.needs_holder()) {
+    if (iter.needs_holder() || iter.is_static()) {
       // TODO : need a way to verify these too.
       continue;
     }

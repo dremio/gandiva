@@ -90,7 +90,9 @@ install(
 # Pre-compiled .so library for function helpers.
 add_library(gandiva_helpers SHARED
   ${SHARED_HELPER_FILES}
-  function_holder_stubs.cc)
+  function_holder_stubs.cc
+  time.cc
+  timestamp_arithmetic.cc)
 
 target_compile_definitions(gandiva_helpers
   PRIVATE -DGDV_HELPERS
@@ -123,3 +125,4 @@ add_gandiva_unit_test(expression_registry_test.cc llvm_types.cc expression_regis
 add_gandiva_unit_test(selection_vector_test.cc selection_vector.cc)
 add_gandiva_unit_test(lru_cache_test.cc)
 add_gandiva_unit_test(like_holder_test.cc like_holder.cc regex_util.cc)
+add_gandiva_unit_test(time_test.cc time.cc timestamp_arithmetic.cc)
