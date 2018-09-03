@@ -345,6 +345,10 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     // Null internal (sample)
     NativeFunction("half_or_null", DataTypeVector{int32()}, int32(), true /*null_safe*/,
                    RESULT_NULL_INTERNAL, "half_or_null_int32"),
+
+    NativeFunction("my_average", DataTypeVector{int32(), int32()}, int32(),
+                   true /*null_safe*/, RESULT_NULL_IF_NULL, "my_average_int32_int32"),
+
 };  // namespace gandiva
 
 FunctionRegistry::iterator FunctionRegistry::begin() const {

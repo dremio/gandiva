@@ -519,4 +519,40 @@ TEST_F(TestProjector, TestZeroCopyNegative) {
   EXPECT_EQ(status.code(), StatusCode::Invalid);
 }
 
+TEST_F(TestProjector, TestIntMyAverage) {
+  // schema for input fields
+  auto field0 = field("f0", int32());
+  auto field1 = field("f1", int32());
+  auto schema = arrow::schema({field0, field1});
+
+  // output fields
+  auto field_avg = field("avg", int32());
+
+  // Build expression
+  auto avg_expr =
+      TreeExprBuilder::MakeExpression("my_average", {field0, field1}, field_avg);
+
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {avg_expr}, &projector);
+  EXPECT_TRUE(status.ok());
+
+  // Create a row-batch with some sample data
+  int num_records = 4;
+  auto array0 = MakeArrowArrayInt32({1, 2, 3, 4}, {true, true, true, false});
+  auto array1 = MakeArrowArrayInt32({11, 13, 15, 17}, {true, true, false, true});
+  // expected output
+  auto exp_avg = MakeArrowArrayInt32({6, 7, 0, 0}, {true, true, false, false});
+
+  // prepare input record batch
+  auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
+
+  // Evaluate expression
+  arrow::ArrayVector outputs;
+  status = projector->Evaluate(*in_batch, pool_, &outputs);
+  EXPECT_TRUE(status.ok());
+
+  // Validate results
+  EXPECT_ARROW_ARRAY_EQUALS(exp_avg, outputs.at(0));
+}
+
 }  // namespace gandiva
