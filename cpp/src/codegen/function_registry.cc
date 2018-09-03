@@ -56,6 +56,16 @@ using std::vector;
                  RESULT_NULL_IF_NULL, STRINGIFY(NAME##_##IN_TYPE1##_##IN_TYPE2))
 
 // Binary functions that :
+// - have different input types, or output type
+// - NULL handling is of type NULL_IF_NULL
+// - are static helper functions from gandiva helpers lib.
+// The pre-compiled fn name includes the base name & input type names. eg. mod_int64_int32
+#define BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(NAME, IN_TYPE1, IN_TYPE2, OUT_TYPE) \
+  NativeFunction(#NAME, DataTypeVector{IN_TYPE1(), IN_TYPE2()}, OUT_TYPE(), true,   \
+                 RESULT_NULL_IF_NULL, STRINGIFY(NAME##_##IN_TYPE1##_##IN_TYPE2),    \
+                 false /*not a holder*/, true /*static*/)
+
+// Binary functions that :
 // - have the same input type
 // - output type is boolean
 // - NULL handling is of type NULL_IF_NULL
@@ -98,6 +108,15 @@ using std::vector;
 #define EXTRACT_SAFE_NULL_IF_NULL(NAME, TYPE)                                       \
   NativeFunction(#NAME, DataTypeVector{TYPE()}, int64(), true, RESULT_NULL_IF_NULL, \
                  STRINGIFY(NAME##_##TYPE))
+
+// Extract functions (used with data/time types) that :
+// - NULL handling is of type NULL_IF_NULL
+// - Are static helper functions in gandiva helper library
+//
+// The pre-compiled fn name includes the base name & input type name. eg. extractYear_date
+#define EXTRACT_SAFE_NULL_IF_NULL_STATIC(NAME, TYPE)                                \
+  NativeFunction(#NAME, DataTypeVector{TYPE()}, int64(), true, RESULT_NULL_IF_NULL, \
+                 STRINGIFY(NAME##_##TYPE), false /*not a holder*/, true /*static*/)
 
 // Hash32 functions that :
 // - NULL handling is of type NULL_NEVER
@@ -192,128 +211,150 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     NUMERIC_BOOL_DATE_TYPES(BINARY_SAFE_NULL_NEVER_BOOL, is_not_distinct_from),
 
     // date/timestamp operations
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMillennium),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractCentury),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDecade),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractYear),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDoy),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractQuarter),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMonth),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractWeek),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDow),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractDay),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractSecond),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractEpoch),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractMillennium),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractCentury),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractDecade),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractYear),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractDoy),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractQuarter),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractMonth),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractWeek),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractDow),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractDay),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractHour),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractMinute),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractSecond),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractEpoch),
 
     // date_trunc operations on date/timestamp
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Millennium),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Century),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Decade),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Year),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Quarter),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Month),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Week),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Day),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Hour),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Minute),
-    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL, date_trunc_Second),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Millennium),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Century),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Decade),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Year),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Quarter),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Month),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Week),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Day),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Hour),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Minute),
+    DATE_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, date_trunc_Second),
 
     // time operations
-    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractHour),
-    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractMinute),
-    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL, extractSecond),
+    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractHour),
+    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractMinute),
+    TIME_TYPES(EXTRACT_SAFE_NULL_IF_NULL_STATIC, extractSecond),
 
     // timestamp diff operations
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffSecond, timestamp, timestamp, int32),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffMinute, timestamp, timestamp, int32),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffHour, timestamp, timestamp, int32),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffDay, timestamp, timestamp, int32),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffWeek, timestamp, timestamp, int32),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffMonth, timestamp, timestamp, int32),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffQuarter, timestamp, timestamp, int32),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampdiffYear, timestamp, timestamp, int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampdiffSecond, timestamp, timestamp,
+                                            int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampdiffMinute, timestamp, timestamp,
+                                            int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampdiffHour, timestamp, timestamp,
+                                            int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampdiffDay, timestamp, timestamp,
+                                            int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampdiffWeek, timestamp, timestamp,
+                                            int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampdiffMonth, timestamp, timestamp,
+                                            int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampdiffQuarter, timestamp, timestamp,
+                                            int32),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampdiffYear, timestamp, timestamp,
+                                            int32),
 
     // timestamp add int32 operations
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddSecond, timestamp, int32, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddMinute, timestamp, int32, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddHour, timestamp, int32, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddDay, timestamp, int32, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddWeek, timestamp, int32, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddMonth, timestamp, int32, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddQuarter, timestamp, int32, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddYear, timestamp, int32, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddSecond, timestamp, int32,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddMinute, timestamp, int32,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddHour, timestamp, int32,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddDay, timestamp, int32, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddWeek, timestamp, int32,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddMonth, timestamp, int32,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddQuarter, timestamp, int32,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddYear, timestamp, int32,
+                                            timestamp),
     // date add int32 operations
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddSecond, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddMinute, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddHour, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddDay, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddWeek, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddMonth, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddQuarter, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddYear, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddSecond, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddMinute, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddHour, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddDay, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddWeek, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddMonth, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddQuarter, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddYear, date64, int32, date64),
 
     // timestamp add int64 operations
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddSecond, timestamp, int64, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddMinute, timestamp, int64, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddHour, timestamp, int64, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddDay, timestamp, int64, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddWeek, timestamp, int64, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddMonth, timestamp, int64, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddQuarter, timestamp, int64, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddYear, timestamp, int64, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddSecond, timestamp, int64,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddMinute, timestamp, int64,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddHour, timestamp, int64,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddDay, timestamp, int64, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddWeek, timestamp, int64,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddMonth, timestamp, int64,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddQuarter, timestamp, int64,
+                                            timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddYear, timestamp, int64,
+                                            timestamp),
     // date add int64 operations
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddSecond, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddMinute, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddHour, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddDay, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddWeek, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddMonth, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddQuarter, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(timestampaddYear, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddSecond, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddMinute, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddHour, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddDay, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddWeek, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddMonth, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddQuarter, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(timestampaddYear, date64, int64, date64),
 
     // date_add(date64, int32), date_add(timestamp, int32)
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(add, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, timestamp, int32, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(add, timestamp, int32, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_add, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(add, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_add, timestamp, int32, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(add, timestamp, int32, timestamp),
 
     // date_add(date64, int64), date_add(timestamp, int64)
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(add, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, timestamp, int64, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(add, timestamp, int64, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_add, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(add, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_add, timestamp, int64, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(add, timestamp, int64, timestamp),
 
     // date_add(int32, date64), date_add(int32, timestamp)
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, int32, date64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(add, int32, date64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, int32, timestamp, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(add, int32, timestamp, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_add, int32, date64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(add, int32, date64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_add, int32, timestamp, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(add, int32, timestamp, timestamp),
 
     // date_add(int64, date64), date_add(int64, timestamp)
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, int64, date64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(add, int64, date64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_add, int64, timestamp, timestamp),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(add, int64, timestamp, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_add, int64, date64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(add, int64, date64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_add, int64, timestamp, timestamp),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(add, int64, timestamp, timestamp),
 
     // date_sub(date64, int32), subtract and date_diff
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_sub, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(subtract, date64, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_diff, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_sub, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(subtract, date64, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_diff, date64, int32, date64),
     // date_sub(timestamp, int32), subtract and date_diff
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_sub, timestamp, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(subtract, timestamp, int32, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_diff, timestamp, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_sub, timestamp, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(subtract, timestamp, int32, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_diff, timestamp, int32, date64),
 
     // date_sub(date64, int64), subtract and date_diff
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_sub, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(subtract, date64, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_diff, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_sub, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(subtract, date64, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_diff, date64, int64, date64),
     // date_sub(timestamp, int64), subtract and date_diff
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_sub, timestamp, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(subtract, timestamp, int64, date64),
-    BINARY_GENERIC_SAFE_NULL_IF_NULL(date_diff, timestamp, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_sub, timestamp, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(subtract, timestamp, int64, date64),
+    BINARY_GENERIC_SAFE_NULL_IF_NULL_STATIC(date_diff, timestamp, int64, date64),
 
     // hash functions
     NUMERIC_BOOL_DATE_VAR_LEN_TYPES(HASH32_SAFE_NULL_NEVER, hash),

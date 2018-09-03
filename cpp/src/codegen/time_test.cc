@@ -15,7 +15,7 @@
 #include <time.h>
 
 #include <gtest/gtest.h>
-#include "precompiled/types.h"
+#include "codegen/time_types.h"
 
 namespace gandiva {
 
@@ -138,6 +138,14 @@ TEST(TestTime, TimeStampAdd) {
   EXPECT_EQ(
       timestampaddQuarter_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -2),
       StringToTimestamp("1999-11-01 10:20:34"));
+
+  EXPECT_EQ(
+      timestampaddQuarter_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -5),
+      StringToTimestamp("1999-02-01 10:20:34"));
+
+  EXPECT_EQ(
+      timestampaddQuarter_timestamp_int32(StringToTimestamp("2000-05-01 10:20:34"), -6),
+      StringToTimestamp("1998-11-01 10:20:34"));
 
   EXPECT_EQ(timestampaddYear_timestamp_int64(StringToTimestamp("2000-05-01 10:20:34"),
                                              (int64)2),
