@@ -18,6 +18,7 @@
 #ifndef GANDIVA_STATUS_H
 #define GANDIVA_STATUS_H
 
+#include <assert.h>
 #include <sstream>
 #include <string>
 #include <utility>
