@@ -187,7 +187,7 @@ TEST_F(TestBenchmarks, TimedTestFilterLike) {
   // build expression.
   auto node_a = TreeExprBuilder::MakeField(fielda);
   auto pattern_node = TreeExprBuilder::MakeStringLiteral("%yellow%");
-  auto like_hello =
+  auto like_yellow =
       TreeExprBuilder::MakeFunction("like", {node_a, pattern_node}, arrow::boolean());
   auto condition = TreeExprBuilder::MakeCondition(like_hello);
 
