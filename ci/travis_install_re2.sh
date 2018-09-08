@@ -26,6 +26,7 @@ fi
 
 wget https://github.com/google/re2/archive/${TAG}.zip
 unzip -qq ${TAG}.zip -d re2
+rm -f ${TAG}.zip
 
 mkdir $RE2_SRC_DIR/build
 

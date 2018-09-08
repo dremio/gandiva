@@ -27,6 +27,7 @@ fi
 
 wget https://github.com/apache/arrow/archive/${TAG}.zip
 unzip -qq ${TAG}.zip -d arrow
+rm -f ${TAG}.zip
 
 mkdir $ARROW_SRC_DIR/cpp/build
 
