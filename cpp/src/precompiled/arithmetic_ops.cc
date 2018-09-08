@@ -149,4 +149,7 @@ NUMERIC_TYPES(VALIDITY_OP, isnumeric, +)
 NUMERIC_BOOL_DATE_FUNCTION(IS_DISTINCT_FROM)
 NUMERIC_BOOL_DATE_FUNCTION(IS_NOT_DISTINCT_FROM)
 
+FORCE_INLINE
+int32 my_average_int32_int32(int32 left, int32 right) { return (left + right) / 2; }
+
 }  // extern "C"
