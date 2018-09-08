@@ -18,7 +18,7 @@ set -ex
 
 #TAG=apache-arrow-0.9.0
 TAG=master
-ARROW_SRC_DIR=arrow-${TAG}
+ARROW_SRC_DIR=arrow/arrow-${TAG}
 
 # Use Ninja for faster builds when using toolchain
 if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
@@ -26,7 +26,7 @@ if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
 fi
 
 wget https://github.com/apache/arrow/archive/${TAG}.zip
-unzip -qq ${TAG}.zip
+unzip -qq ${TAG}.zip -d arrow
 
 mkdir $ARROW_SRC_DIR/cpp/build
 

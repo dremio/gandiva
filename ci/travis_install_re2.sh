@@ -17,7 +17,7 @@
 set -ex
 
 TAG=master
-RE2_SRC_DIR=re2-${TAG}
+RE2_SRC_DIR=re2/re2-${TAG}
 
 # Use Ninja for faster builds when using toolchain
 if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
@@ -25,7 +25,7 @@ if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
 fi
 
 wget https://github.com/google/re2/archive/${TAG}.zip
-unzip -qq ${TAG}.zip
+unzip -qq ${TAG}.zip -d re2
 
 mkdir $RE2_SRC_DIR/build
 
