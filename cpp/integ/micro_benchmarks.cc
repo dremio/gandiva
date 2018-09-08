@@ -189,7 +189,7 @@ TEST_F(TestBenchmarks, TimedTestFilterLike) {
   auto pattern_node = TreeExprBuilder::MakeStringLiteral("%yellow%");
   auto like_yellow =
       TreeExprBuilder::MakeFunction("like", {node_a, pattern_node}, arrow::boolean());
-  auto condition = TreeExprBuilder::MakeCondition(like_hello);
+  auto condition = TreeExprBuilder::MakeCondition(like_yellow);
 
   std::shared_ptr<Filter> filter;
   Status status = Filter::Make(schema, condition, &filter);
