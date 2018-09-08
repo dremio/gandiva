@@ -205,7 +205,7 @@ TEST_F(TestBenchmarks, TimedTestFilterLike) {
   ASSERT_TRUE(status.ok());
   std::cout << "Time taken for Filter with like " << elapsed_millis << " ms\n";
 
-  EXPECT_LE(elapsed_millis, 20000 * tolerance_ratio);
+  EXPECT_LE(elapsed_millis, 600 * tolerance_ratio);
 }
 
 }  // namespace gandiva
