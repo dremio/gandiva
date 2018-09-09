@@ -27,7 +27,7 @@ using arrow::int32;
 using arrow::int64;
 using arrow::utf8;
 
-float tolerance_ratio = 2.0;
+float tolerance_ratio = 4.0;
 
 class TestBenchmarks : public ::testing::Test {
  public:

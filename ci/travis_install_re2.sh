@@ -23,6 +23,7 @@ RE2_SRC_DIR=re2/re2-${TAG}
 if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
   CMAKE_RE2_FLAGS="$CMAKE_COMMON_FLAGS -GNinja"
 fi
+CMAKE_RE2_FLAGS="$CMAKE_RE2_FLAGS -DCMAKE_POSITION_INDEPENDENT_CODE=ON"
 
 wget https://github.com/google/re2/archive/${TAG}.zip
 unzip -qq ${TAG}.zip -d re2

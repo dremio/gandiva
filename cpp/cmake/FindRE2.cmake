@@ -20,7 +20,6 @@ message(STATUS "Found re2 static library at ${RE2_LIB_STATIC}")
 find_path(RE2_INCLUDE_DIR re2/re2.h)
 message(STATUS "found re2 includes at ${RE2_INCLUDE_DIR}")
 
-# add an imported target RE2::RE2 so that gandiva can take a dependency.
 add_library(RE2::RE2_STATIC STATIC IMPORTED)
 
 set_target_properties(RE2::RE2_STATIC PROPERTIES
