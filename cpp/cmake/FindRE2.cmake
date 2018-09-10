@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # Copyright (C) 2017-2018 Dremio Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,31 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -ex
+# Find re2 library and includes.
 
-#TAG=apache-arrow-0.9.0
-TAG=master
-ARROW_SRC_DIR=arrow/arrow-${TAG}
+find_library(RE2_LIB_STATIC libre2.a REQUIRED)
+message(STATUS "Found re2 static library at ${RE2_LIB_STATIC}")
 
-# Use Ninja for faster builds when using toolchain
-if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
-  CMAKE_ARROW_FLAGS="$CMAKE_COMMON_FLAGS -GNinja"
-fi
+find_path(RE2_INCLUDE_DIR re2/re2.h)
+message(STATUS "found re2 includes at ${RE2_INCLUDE_DIR}")
 
-wget https://github.com/apache/arrow/archive/${TAG}.zip
-unzip -qq ${TAG}.zip -d arrow
-rm -f ${TAG}.zip
+add_library(RE2::RE2_STATIC STATIC IMPORTED)
 
-mkdir $ARROW_SRC_DIR/cpp/build
-
-pushd $ARROW_SRC_DIR/cpp/build
-
-cmake $CMAKE_ARROW_FLAGS ..
-
-# Build and install libraries
-$TRAVIS_MAKE -j4
-
-$TRAVIS_MAKE install
-
-popd
-
+set_target_properties(RE2::RE2_STATIC PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES "${RE2_INCLUDE_DIR}"
+  IMPORTED_LOCATION "${RE2_LIB_STATIC}"
+)

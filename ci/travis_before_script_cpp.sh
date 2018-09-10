@@ -46,6 +46,7 @@ if [ "$GANDIVA_TRAVIS_USE_TOOLCHAIN" == "1" ]; then
   CMAKE_COMMON_FLAGS="${CMAKE_COMMON_FLAGS}"
 fi
 
+source $TRAVIS_BUILD_DIR/ci/travis_install_re2.sh
 source $TRAVIS_BUILD_DIR/ci/travis_install_arrow.sh
 
 mkdir -p $GANDIVA_CPP_BUILD_DIR

@@ -34,7 +34,8 @@ function(build_gandiva_lib TYPE)
       Boost::regex
       Boost::system
       Boost::filesystem
-      LLVM::LLVM_INTERFACE)
+      LLVM::LLVM_INTERFACE
+      RE2::RE2_STATIC)
 
   if (${TYPE} MATCHES "static" AND NOT APPLE)
     target_link_libraries(gandiva_${TYPE}
@@ -72,7 +73,7 @@ function(add_gandiva_unit_test REL_TEST_NAME)
     ${CMAKE_SOURCE_DIR}/src
   )
   target_link_libraries(${TEST_NAME}
-    PRIVATE ARROW::ARROW_SHARED gtest_main Boost::boost
+    PRIVATE ARROW::ARROW_SHARED gtest_main RE2::RE2_STATIC Boost::boost
   )
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})
@@ -84,7 +85,7 @@ function(add_precompiled_unit_test REL_TEST_NAME)
 
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
   target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  target_link_libraries(${TEST_NAME} PRIVATE gtest_main)
+  target_link_libraries(${TEST_NAME} PRIVATE RE2::RE2_STATIC gtest_main)
   target_compile_definitions(${TEST_NAME} PRIVATE GANDIVA_UNIT_TEST=1)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(TEST ${TEST_NAME} PROPERTY LABELS unittest ${TEST_NAME})

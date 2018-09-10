@@ -16,24 +16,24 @@
 
 set -ex
 
-#TAG=apache-arrow-0.9.0
 TAG=master
-ARROW_SRC_DIR=arrow/arrow-${TAG}
+RE2_SRC_DIR=re2/re2-${TAG}
 
 # Use Ninja for faster builds when using toolchain
 if [ $GANDIVA_TRAVIS_USE_TOOLCHAIN == "1" ]; then
-  CMAKE_ARROW_FLAGS="$CMAKE_COMMON_FLAGS -GNinja"
+  CMAKE_RE2_FLAGS="$CMAKE_COMMON_FLAGS -GNinja"
 fi
+CMAKE_RE2_FLAGS="$CMAKE_RE2_FLAGS -DCMAKE_POSITION_INDEPENDENT_CODE=ON"
 
-wget https://github.com/apache/arrow/archive/${TAG}.zip
-unzip -qq ${TAG}.zip -d arrow
+wget https://github.com/google/re2/archive/${TAG}.zip
+unzip -qq ${TAG}.zip -d re2
 rm -f ${TAG}.zip
 
-mkdir $ARROW_SRC_DIR/cpp/build
+mkdir $RE2_SRC_DIR/build
 
-pushd $ARROW_SRC_DIR/cpp/build
+pushd $RE2_SRC_DIR/build
 
-cmake $CMAKE_ARROW_FLAGS ..
+cmake $CMAKE_RE2_FLAGS ..
 
 # Build and install libraries
 $TRAVIS_MAKE -j4
