@@ -119,9 +119,7 @@ NUMERIC_TYPES(VALIDITY_OP, isnumeric, +)
   INNER(boolean)
 
 FORCE_INLINE
-boolean not_boolean(boolean in) {
-  return !in;
-}
+boolean not_boolean(boolean in) { return !in; }
 
 // is_distinct_from
 #define IS_DISTINCT_FROM(TYPE)                                                 \
