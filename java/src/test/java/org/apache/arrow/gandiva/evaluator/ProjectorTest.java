@@ -711,39 +711,59 @@ public class ProjectorTest extends BaseEvaluatorTest {
   }
 
   @Test
-  public void testTimeNull() throws GandivaException, Exception {
+  public void testGDV117() throws GandivaException, Exception {    /*
+   * when isnotnull(x) then x
+   * else y
+   */
+    Field x = Field.nullable("x", new ArrowType.Time(TimeUnit.MILLISECOND, 32));
+    TreeNode x_node = TreeBuilder.makeField(x);
 
-    ArrowType time64 = new ArrowType.Time(TimeUnit.MICROSECOND, 64);
+    Field y = Field.nullable("y", new ArrowType.Time(TimeUnit.MILLISECOND, 32));
+    TreeNode y_node = TreeBuilder.makeField(y);
 
-    Field x = Field.nullable("x", time64);
-    TreeNode x_node = TreeBuilder.makeNull(time64);
+    // if isnotnull(x) then x else y
+    TreeNode condition = TreeBuilder.makeFunction("isnotnull",Lists.newArrayList(x_node) ,
+            boolType);
+    TreeNode if_coalesce = TreeBuilder.makeIf(
+            condition,
+            x_node,
+            y_node,
+            new ArrowType.Time(TimeUnit.MILLISECOND, 32));
 
-    ExpressionTree expr = TreeBuilder.makeExpression(x_node, x);
-    Schema schema = new Schema(Lists.newArrayList(x));
+    ExpressionTree expr = TreeBuilder.makeExpression(if_coalesce, x);
+    Schema schema = new Schema(Lists.newArrayList(x, y));
     Projector eval = Projector.make(schema, Lists.newArrayList(expr));
 
     int numRows = 2;
-    byte[] validity = new byte[]{(byte) 255};
-    int[] values_x = new int[]{5, 32};
+    byte[] validity = new byte[]{(byte) 1};
+    byte[] validity_y = new byte[]{(byte) 3};
+    int[] values_x = new int[]{5, 1};
+    int[] values_y = new int[]{10, 2};
+    int[] expected = new int[]{5, 2};
 
     ArrowBuf validity_buf = buf(validity);
     ArrowBuf data_x = intBuf(values_x);
+
+
+    ArrowBuf validity_buf_y = buf(validity_y);
+    ArrowBuf data_y = intBuf(values_y);
 
     ArrowFieldNode fieldNode = new ArrowFieldNode(numRows, 0);
     ArrowRecordBatch batch = new ArrowRecordBatch(
             numRows,
             Lists.newArrayList(fieldNode),
-            Lists.newArrayList(validity_buf, data_x));
+            Lists.newArrayList(validity_buf, data_x, validity_buf_y, data_y));
 
-    BigIntVector bigIntVector = new BigIntVector(EMPTY_SCHEMA_PATH, allocator);
-    bigIntVector.allocateNew(numRows);
+    IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
+    intVector.allocateNew(numRows);
 
     List<ValueVector> output = new ArrayList<ValueVector>();
-    output.add(bigIntVector);
+    output.add(intVector);
     eval.evaluate(batch, output);
 
-    assertTrue(bigIntVector.isNull(0));
-    assertTrue(bigIntVector.isNull(1));
+    // first element should be 1
+    assertFalse(intVector.isNull(0));
+    assertEquals(expected[0], intVector.get(0));
 
     releaseRecordBatch(batch);
     releaseValueVectors(output);
@@ -999,7 +1019,6 @@ public class ProjectorTest extends BaseEvaluatorTest {
     releaseValueVectors(output);
   }
 
-  // This test is ignored until the cpp layer handles errors gracefully
   @Test
   public void testUnknownFunction() {
     Field c1 = Field.nullable("c1", int8);
