@@ -801,9 +801,10 @@ public class ProjectorTest extends BaseEvaluatorTest {
     output.add(intVector);
     eval.evaluate(batch, output);
 
-    // first element should be 1
+    // output should be 5 and 2
     assertFalse(intVector.isNull(0));
     assertEquals(expected[0], intVector.get(0));
+    assertEquals(expected[1], intVector.get(1));
 
     releaseRecordBatch(batch);
     releaseValueVectors(output);
