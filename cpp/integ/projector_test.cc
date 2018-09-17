@@ -554,4 +554,39 @@ TEST_F(TestProjector, TestDivideZero) {
   EXPECT_ARROW_ARRAY_EQUALS(exp_div, outputs.at(0));
 }
 
+TEST_F(TestProjector, TestModZero) {
+  // schema for input fields
+  auto field0 = field("f0", arrow::int64());
+  auto field1 = field("f2", int32());
+  auto schema = arrow::schema({field0, field1});
+
+  // output fields
+  auto field_div = field("mod", int32());
+
+  // Build expression
+  auto mod_expr = TreeExprBuilder::MakeExpression("mod", {field0, field1}, field_div);
+
+  std::shared_ptr<Projector> projector;
+  Status status = Projector::Make(schema, {mod_expr}, &projector);
+  EXPECT_TRUE(status.ok()) << status.message();
+
+  // Create a row-batch with some sample data
+  int num_records = 4;
+  auto array0 = MakeArrowArrayInt64({2, 3, 4, 5}, {true, true, true, true});
+  auto array1 = MakeArrowArrayInt32({1, 2, 2, 0}, {true, true, false, true});
+  // expected output
+  auto exp_mod = MakeArrowArrayInt32({0, 1, 0, 5}, {true, true, false, true});
+
+  // prepare input record batch
+  auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
+
+  // Evaluate expression
+  arrow::ArrayVector outputs;
+  status = projector->Evaluate(*in_batch, pool_, &outputs);
+  EXPECT_TRUE(status.ok()) << status.message();
+
+  // Validate results
+  EXPECT_ARROW_ARRAY_EQUALS(exp_mod, outputs.at(0));
+}
+
 }  // namespace gandiva
