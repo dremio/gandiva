@@ -101,15 +101,15 @@ Status ExprValidator::Visit(const IfNode &node) {
 
   if (!if_node_ret_type->Equals(*then_node_ret_type)) {
     std::stringstream ss;
-    ss << "Return type of if " << *if_node_ret_type << " and then "
-       << *then_node_ret_type << " not matching.";
+    ss << "Return type of if " << *if_node_ret_type << " and then " << *then_node_ret_type
+       << " not matching.";
     return Status::ExpressionValidationError(ss.str());
   }
 
   if (!if_node_ret_type->Equals(*else_node_ret_type)) {
     std::stringstream ss;
-    ss << "Return type of if " << *if_node_ret_type << " and else "
-       << *else_node_ret_type << " not matching.";
+    ss << "Return type of if " << *if_node_ret_type << " and else " << *else_node_ret_type
+       << " not matching.";
     return Status::ExpressionValidationError(ss.str());
   }
 
