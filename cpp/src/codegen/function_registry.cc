@@ -51,8 +51,9 @@ using std::vector;
 // - output type is same as the input type
 // - NULL handling is of type NULL_INTERNAL
 //
-// The pre-compiled fn name includes the base name & input type names. eg. add_int32_int32
-#define BINARY_SYMMETRIC_SAFE_NULL_INTERNAL(NAME, TYPE)                \
+// The pre-compiled fn name includes the base name & input type names. eg.
+// divide_int64_int64
+#define BINARY_SYMMETRIC_NULL_INTERNAL(NAME, TYPE)                    \
   NativeFunction(#NAME, DataTypeVector{TYPE(), TYPE()}, TYPE(), true, \
                  RESULT_NULL_INTERNAL, STRINGIFY(NAME##_##TYPE##_##TYPE))
 
@@ -174,7 +175,7 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, add),
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, subtract),
     NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_IF_NULL, multiply),
-    NUMERIC_TYPES(BINARY_SYMMETRIC_SAFE_NULL_INTERNAL, divide),
+    NUMERIC_TYPES(BINARY_SYMMETRIC_NULL_INTERNAL, divide),
     BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int32, int32),
     BINARY_GENERIC_SAFE_NULL_IF_NULL(mod, int64, int64, int64),
     NUMERIC_BOOL_DATE_TYPES(BINARY_RELATIONAL_SAFE_NULL_IF_NULL, equal),

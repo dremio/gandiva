@@ -152,19 +152,19 @@ NUMERIC_BOOL_DATE_FUNCTION(IS_DISTINCT_FROM)
 NUMERIC_BOOL_DATE_FUNCTION(IS_NOT_DISTINCT_FROM)
 
 // divide - handles invalid args as nulls
-#define DIVIDE_NULL_INTERNAL(TYPE)                                                 \
-  FORCE_INLINE                                                                     \
-  TYPE divide_##TYPE##_##TYPE(TYPE in1, boolean is_valid1, TYPE in2,               \
-                              boolean is_valid2, bool *out_valid) {                \
-    *out_valid = false;                                                            \
-    if (!is_valid1 || !is_valid2) {                                                \
-      return 0;                                                                    \
-    }                                                                              \
-    if (in2 == 0) {                                                                \
-      return 0;                                                                    \
-    }                                                                              \
-    *out_valid = true;                                                             \
-    return in1 / in2;                                                              \
+#define DIVIDE_NULL_INTERNAL(TYPE)                                                      \
+  FORCE_INLINE                                                                          \
+  TYPE divide_##TYPE##_##TYPE(TYPE in1, boolean is_valid1, TYPE in2, boolean is_valid2, \
+                              bool *out_valid) {                                        \
+    *out_valid = false;                                                                 \
+    if (!is_valid1 || !is_valid2) {                                                     \
+      return 0;                                                                         \
+    }                                                                                   \
+    if (in2 == 0) {                                                                     \
+      return 0;                                                                         \
+    }                                                                                   \
+    *out_valid = true;                                                                  \
+    return in1 / in2;                                                                   \
   }
 
 NUMERIC_FUNCTION(DIVIDE_NULL_INTERNAL)
