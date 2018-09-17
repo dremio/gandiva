@@ -92,9 +92,7 @@ class FieldNode : public Node {
 /// \brief Node in the expression tree, representing a function.
 class FunctionNode : public Node {
  public:
-  FunctionNode(FuncDescriptorPtr descriptor, const NodeVector &children,
-               DataTypePtr retType)
-      : Node(retType), descriptor_(descriptor), children_(children) {}
+  FunctionNode(const std::string &name, const NodeVector &children, DataTypePtr retType);
 
   Status Accept(NodeVisitor &visitor) const override { return visitor.Visit(*this); }
 
@@ -117,26 +115,20 @@ class FunctionNode : public Node {
     return ss.str();
   }
 
-  /// Make a function node with params types specified by 'children', and
-  /// having return type ret_type.
-  static NodePtr MakeFunction(const std::string &name, const NodeVector &children,
-                              DataTypePtr return_type);
-
  private:
   FuncDescriptorPtr descriptor_;
   NodeVector children_;
 };
 
-inline NodePtr FunctionNode::MakeFunction(const std::string &name,
-                                          const NodeVector &children,
-                                          DataTypePtr return_type) {
+inline FunctionNode::FunctionNode(const std::string &name, const NodeVector &children,
+                                  DataTypePtr return_type)
+    : Node(return_type), children_(children) {
   DataTypeVector param_types;
   for (auto &child : children) {
     param_types.push_back(child->return_type());
   }
 
-  auto func_desc = FuncDescriptorPtr(new FuncDescriptor(name, param_types, return_type));
-  return NodePtr(new FunctionNode(func_desc, children, return_type));
+  descriptor_ = FuncDescriptorPtr(new FuncDescriptor(name, param_types, return_type));
 }
 
 /// \brief Node in the expression tree, representing an if-else expression.

@@ -35,6 +35,9 @@ class LikeHolder : public FunctionHolder {
 
   static Status Make(const std::string &sql_pattern, std::shared_ptr<LikeHolder> *holder);
 
+  // Try and optimise a function node with a "like" pattern.
+  static const FunctionNode TryOptimize(const FunctionNode &node);
+
   /// Return true if the data matches the pattern.
   bool operator()(const std::string &data) { return RE2::FullMatch(data, regex_); }
 
