@@ -16,8 +16,7 @@
 
 set -ex
 
-#TAG=apache-arrow-0.9.0
-TAG=master
+TAG=apache-arrow-0.10.0
 ARROW_SRC_DIR=arrow/arrow-${TAG}
 
 # Use Ninja for faster builds when using toolchain
