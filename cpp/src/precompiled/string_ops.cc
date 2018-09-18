@@ -71,22 +71,29 @@ VAR_LEN_OP_TYPES(BINARY_RELATIONAL, greater_than_or_equal_to, >=)
   INNER(utf8)                \
   INNER(binary)
 
-#define STARTS_WITH(TYPE)                                                                \
-  FORCE_INLINE                                                                           \
-  bool starts_with##_##TYPE##_##TYPE(const TYPE data, int32 data_len, const TYPE prefix, \
-                                     int32 prefix_len) {                                 \
-    return ((data_len >= prefix_len) && (memcmp(data, prefix, prefix_len) == 0));        \
-  }
+FORCE_INLINE
+bool starts_with_utf8_utf8(const char *data, int32 data_len, const char *prefix,
+                           int32 prefix_len) {
+  return ((data_len >= prefix_len) && (memcmp(data, prefix, prefix_len) == 0));
+}
 
-#define ENDS_WITH(TYPE)                                                                \
-  FORCE_INLINE                                                                         \
-  bool ends_with##_##TYPE##_##TYPE(const TYPE data, int32 data_len, const TYPE suffix, \
-                                   int32 suffix_len) {                                 \
-    return ((data_len >= suffix_len) &&                                                \
-            (memcmp(data + data_len - suffix_len, suffix, suffix_len) == 0));          \
-  }
+FORCE_INLINE
+bool ends_with_utf8_utf8(const char *data, int32 data_len, const char *suffix,
+                         int32 suffix_len) {
+  return ((data_len >= suffix_len) &&
+          (memcmp(data + data_len - suffix_len, suffix, suffix_len) == 0));
+}
 
-VAR_LEN_TYPES(STARTS_WITH)
-VAR_LEN_TYPES(ENDS_WITH)
+FORCE_INLINE
+bool starts_with_plus_one_utf8_utf8(const char *data, int32 data_len, const char *prefix,
+                                    int32 prefix_len) {
+  return ((data_len == prefix_len + 1) && (memcmp(data, prefix, prefix_len) == 0));
+}
+
+FORCE_INLINE
+bool ends_with_plus_one_utf8_utf8(const char *data, int32 data_len, const char *suffix,
+                                  int32 suffix_len) {
+  return ((data_len == suffix_len + 1) && (memcmp(data + 1, suffix, suffix_len) == 0));
+}
 
 }  // extern "C"
