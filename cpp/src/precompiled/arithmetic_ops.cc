@@ -165,7 +165,7 @@ NUMERIC_BOOL_DATE_FUNCTION(IS_NOT_DISTINCT_FROM)
     if (in2 == 0) {                                                                     \
       gandiva::ErrorHolder* error_holder_ptr =                                          \
               reinterpret_cast<gandiva::ErrorHolder*>(error_holder);                    \
-      char const* err_msg = "divide by zero for numerator ";                                  \
+      char const* err_msg = "divide by zero for numerator ";                            \
       (error_holder_ptr)->set_error_msg(err_msg);                                       \
       return 0;                                                                         \
     }                                                                                   \
