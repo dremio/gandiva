@@ -108,8 +108,6 @@ public class Projector {
    */
   public void evaluate(ArrowRecordBatch recordBatch, List<ValueVector> outColumns)
           throws GandivaException {
-    //TODO: remove later, only for diagnostic.
-    logger.info("Evaluate called for module with id {}", moduleId);
     if (this.closed) {
       throw new EvaluatorClosedException();
     }
@@ -161,7 +159,6 @@ public class Projector {
    * Closes the LLVM module representing this evaluator.
    */
   public void close() throws GandivaException {
-    logger.info("Close called for module with id {}", moduleId);
     if (this.closed) {
       return;
     }

@@ -32,17 +32,9 @@ class SelectionVectorImpl : public SelectionVector {
     raw_data_ = reinterpret_cast<C_TYPE *>(buffer->mutable_data());
   }
 
-  uint GetIndex(int index) const override {
-    DCHECK_LE(index, max_slots_);
-    return raw_data_[index];
-  }
+  uint GetIndex(int index) const override { return raw_data_[index]; }
 
-  void SetIndex(int index, uint value) override {
-    DCHECK_LE(index, max_slots_);
-    DCHECK_LE(value, GetMaxSupportedValue());
-
-    raw_data_[index] = value;
-  }
+  void SetIndex(int index, uint value) override { raw_data_[index] = value; }
 
   ArrayPtr ToArray() const override;
 
