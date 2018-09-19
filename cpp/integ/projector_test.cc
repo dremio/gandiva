@@ -591,7 +591,7 @@ TEST_F(TestProjector, TestDivideZero) {
   arrow::ArrayVector outputs;
   status = projector->Evaluate(*in_batch, pool_, &outputs);
   EXPECT_EQ(status.code(), StatusCode::ExecutionError);
-  std::string expected_error = "divide by zero for numerator 5";
+  std::string expected_error = "divide by zero for numerator";
   EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
 }
 
