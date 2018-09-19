@@ -35,7 +35,7 @@ namespace gandiva {
   }
 
 LLVMGenerator::LLVMGenerator()
-    : dump_ir_(false), optimise_ir_(true), enable_ir_traces_(true) {}
+    : dump_ir_(false), optimise_ir_(true), enable_ir_traces_(false) {}
 
 Status LLVMGenerator::Make(std::shared_ptr<Configuration> config,
                            std::unique_ptr<LLVMGenerator> *llvm_generator) {
@@ -868,7 +868,6 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
 
   // if the function has holder, add the holder pointer first.
   if (holder != nullptr) {
-    std::cout<<(int64_t)(holder)<<std::endl;
     llvm::Constant *ptr_int_cast = types->i64_constant((int64_t)holder);
     auto ptr = llvm::ConstantExpr::getIntToPtr(ptr_int_cast, types->i8_ptr_type());
     params.push_back(ptr);
@@ -897,7 +896,6 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
   // add error holder if function can return error
   if (can_return_error) {
     int64_t ptr1 = (int64_t)&(generator_->error_holder_);
-    std::cout<<(int64_t)(ptr1)<<std::endl;
     llvm::Constant *ptr_int_cast = types->i64_constant(ptr1);
     auto ptr = llvm::ConstantExpr::getIntToPtr(ptr_int_cast, types->i8_ptr_type());
     params.push_back(ptr);
