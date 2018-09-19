@@ -25,6 +25,7 @@
 #include "codegen/compiled_expr.h"
 #include "codegen/dex_visitor.h"
 #include "codegen/engine.h"
+#include "codegen/error_holder.h"
 #include "codegen/function_registry.h"
 #include "codegen/llvm_types.h"
 #include "codegen/lvalue.h"
@@ -103,7 +104,8 @@ class LLVMGenerator {
     // Generate code to build the params.
     std::vector<llvm::Value *> BuildParams(FunctionHolder *holder,
                                            const ValueValidityPairVector &args,
-                                           bool with_validity);
+                                           bool with_validity,
+                                           bool can_return_error);
 
     // Switch to the entry_block and get reference of the validity/value/offsets buffer
     llvm::Value *GetBufferReference(int idx, BufferType buffer_type, FieldPtr field);
@@ -188,6 +190,7 @@ class LLVMGenerator {
   std::unique_ptr<LLVMTypes> types_;
   FunctionRegistry function_registry_;
   Annotator annotator_;
+  std::shared_ptr<ErrorHolder> error_holder_;
 
   // used for debug
   bool dump_ir_;

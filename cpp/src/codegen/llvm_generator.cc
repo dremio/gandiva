@@ -35,7 +35,7 @@ namespace gandiva {
   }
 
 LLVMGenerator::LLVMGenerator()
-    : dump_ir_(false), optimise_ir_(true), enable_ir_traces_(false) {}
+    : dump_ir_(false), optimise_ir_(true), enable_ir_traces_(true) {}
 
 Status LLVMGenerator::Make(std::shared_ptr<Configuration> config,
                            std::unique_ptr<LLVMGenerator> *llvm_generator) {
@@ -70,7 +70,7 @@ Status LLVMGenerator::Add(const ExpressionPtr expr, const FieldDescriptorPtr out
 /// Build and optimise module for projection expression.
 Status LLVMGenerator::Build(const ExpressionVector &exprs) {
   Status status;
-
+  error_holder_.reset(new ErrorHolder());
   for (auto &expr : exprs) {
     auto output = annotator_.AddOutputFieldDescriptor(expr->result());
     status = Add(expr, output);
@@ -97,13 +97,17 @@ Status LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
 
   auto eval_batch = annotator_.PrepareEvalBatch(record_batch, output_vector);
   DCHECK_GT(eval_batch->GetNumBuffers(), 0);
-
+  error_holder_.reset(new ErrorHolder());
   for (auto &compiled_expr : compiled_exprs_) {
     // generate data/offset vectors.
     EvalFunc jit_function = compiled_expr->jit_function();
     jit_function(eval_batch->GetBufferArray(), eval_batch->GetLocalBitMapArray(),
                  record_batch.num_rows());
 
+    // check for execution errors
+    if (!error_holder_->error_msg().empty()) {
+      return Status::ExecutionError(error_holder_->error_msg());
+    }
     // generate validity vectors.
     ComputeBitMapsForExpr(*compiled_expr, *eval_batch);
   }
@@ -577,10 +581,11 @@ void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
                     dex.func_descriptor()->name());
   LLVMTypes *types = generator_->types_.get();
 
-  // build the function params (ignore validity).
-  auto params = BuildParams(dex.function_holder().get(), dex.args(), false);
-
   const NativeFunction *native_function = dex.native_function();
+
+  // build the function params (ignore validity).
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), false, native_function->can_return_error());
+
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
 
   llvm::Value *value =
@@ -592,10 +597,11 @@ void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
   ADD_VISITOR_TRACE("visit NullableNever base function " + dex.func_descriptor()->name());
   LLVMTypes *types = generator_->types_.get();
 
-  // build function params along with validity.
-  auto params = BuildParams(dex.function_holder().get(), dex.args(), true);
-
   const NativeFunction *native_function = dex.native_function();
+
+  // build function params along with validity.
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), true, native_function->can_return_error());
+
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
   llvm::Value *value =
       generator_->AddFunctionCall(native_function->pc_name(), ret_type, params);
@@ -608,15 +614,16 @@ void LLVMGenerator::Visitor::Visit(const NullableInternalFuncDex &dex) {
   llvm::IRBuilder<> &builder = ir_builder();
   LLVMTypes *types = generator_->types_.get();
 
+  const NativeFunction *native_function = dex.native_function();
+
   // build function params along with validity.
-  auto params = BuildParams(dex.function_holder().get(), dex.args(), true);
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), true, native_function->can_return_error());
 
   // add an extra arg for validity (alloced on stack).
   llvm::AllocaInst *result_valid_ptr =
       new llvm::AllocaInst(types->i8_type(), 0, "result_valid", entry_block_);
   params.push_back(result_valid_ptr);
 
-  const NativeFunction *native_function = dex.native_function();
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
   llvm::Value *value =
       generator_->AddFunctionCall(native_function->pc_name(), ret_type, params);
@@ -854,12 +861,14 @@ LValuePtr LLVMGenerator::Visitor::BuildValueAndValidity(const ValueValidityPair 
 }
 
 std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
-    FunctionHolder *holder, const ValueValidityPairVector &args, bool with_validity) {
+    FunctionHolder *holder, const ValueValidityPairVector &args, bool with_validity,
+    bool can_return_error) {
   LLVMTypes *types = generator_->types_.get();
   std::vector<llvm::Value *> params;
 
   // if the function has holder, add the holder pointer first.
   if (holder != nullptr) {
+    std::cout<<(int64_t)(holder)<<std::endl;
     llvm::Constant *ptr_int_cast = types->i64_constant((int64_t)holder);
     auto ptr = llvm::ConstantExpr::getIntToPtr(ptr_int_cast, types->i8_ptr_type());
     params.push_back(ptr);
@@ -884,6 +893,16 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
       params.push_back(validity_expr);
     }
   }
+
+  // add error holder if function can return error
+  if (can_return_error) {
+    int64_t ptr1 = (int64_t)&(generator_->error_holder_);
+    std::cout<<(int64_t)(ptr1)<<std::endl;
+    llvm::Constant *ptr_int_cast = types->i64_constant(ptr1);
+    auto ptr = llvm::ConstantExpr::getIntToPtr(ptr_int_cast, types->i8_ptr_type());
+    params.push_back(ptr);
+  }
+
   return params;
 }
 
@@ -981,6 +1000,9 @@ std::string LLVMGenerator::ReplaceFormatInTrace(const std::string &in_msg,
     // float
     fmt = "%lf";
     *print_fn = "print_double";
+  } else if (type->isPointerTy()) {
+    // string
+    fmt = "%s";
   } else {
     DCHECK(0);
   }

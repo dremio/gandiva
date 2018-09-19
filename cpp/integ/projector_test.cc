@@ -580,11 +580,9 @@ TEST_F(TestProjector, TestDivideZero) {
   EXPECT_TRUE(status.ok()) << status.message();
 
   // Create a row-batch with some sample data
-  int num_records = 4;
-  auto array0 = MakeArrowArrayInt32({2, 3, 4, 5}, {true, true, true, true});
-  auto array1 = MakeArrowArrayInt32({1, 2, 2, 0}, {true, true, false, true});
-  // expected output
-  auto exp_div = MakeArrowArrayInt32({2, 1, 0, 0}, {true, true, false, false});
+  int num_records = 5;
+  auto array0 = MakeArrowArrayInt32({2, 3, 4, 5, 6}, {true, true, true, true, true});
+  auto array1 = MakeArrowArrayInt32({1, 2, 2, 0, 0}, {true, true, false, true, true});
 
   // prepare input record batch
   auto in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
@@ -592,10 +590,9 @@ TEST_F(TestProjector, TestDivideZero) {
   // Evaluate expression
   arrow::ArrayVector outputs;
   status = projector->Evaluate(*in_batch, pool_, &outputs);
-  EXPECT_TRUE(status.ok()) << status.message();
-
-  // Validate results
-  EXPECT_ARROW_ARRAY_EQUALS(exp_div, outputs.at(0));
+  EXPECT_EQ(status.code(), StatusCode::ExecutionError);
+  std::string expected_error = "divide by zero for numerator 5";
+  EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
 }
 
 TEST_F(TestProjector, TestModZero) {
