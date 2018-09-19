@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
@@ -271,7 +272,7 @@ public class ProjectorTest extends BaseEvaluatorTest {
     ArrowBuf valuesb = intBuf(values_b);
     ArrowRecordBatch batch = new ArrowRecordBatch(
             numRows,
-            Lists.newArrayList(new ArrowFieldNode(numRows, 8), new ArrowFieldNode(numRows, 8)),
+            Lists.newArrayList(new ArrowFieldNode(numRows, 0), new ArrowFieldNode(numRows, 0)),
             Lists.newArrayList(validitya, valuesa, validityb, valuesb));
 
     IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
@@ -283,6 +284,7 @@ public class ProjectorTest extends BaseEvaluatorTest {
     try {
       eval.evaluate(batch, output);
     } catch (GandivaException e) {
+      Assert.assertTrue(e.getMessage().contains("divide by zero"));
       exceptionThrown = true;
     }
     Assert.assertTrue(exceptionThrown);
@@ -291,6 +293,81 @@ public class ProjectorTest extends BaseEvaluatorTest {
     releaseRecordBatch(batch);
     releaseValueVectors(output);
     eval.close();
+  }
+
+  @Test
+  public void testDivZeroParallel() throws GandivaException, InterruptedException {
+    Field a = Field.nullable("a", int32);
+    Field b = Field.nullable("b", int32);
+    Field c = Field.nullable("c", int32);
+    List<Field> cols = Lists.newArrayList(a, b);
+    Schema s = new Schema(cols);
+
+    List<Field> args = Lists.newArrayList(a, b);
+
+
+    ExpressionTree expr = TreeBuilder.makeExpression("divide", args, c);
+    List<ExpressionTree> exprs = Lists.newArrayList(expr);
+
+    // build projectors in parallel choosing schema at random
+    // this should hit the same cache entry thus exposing
+    // any threading issues.
+    ExecutorService executors = Executors.newFixedThreadPool(16);
+
+    AtomicInteger errorCount = new AtomicInteger(0);
+    AtomicInteger errorCountExp = new AtomicInteger(0);
+    Projector.make(s, exprs);
+
+    IntStream.range(0, 1000).forEach(i -> {
+      executors.submit(() -> {
+        try {
+          Projector evaluator = Projector.make(s, exprs);
+          int numRows = 2;
+          byte[] validity = new byte[]{(byte) 255};
+          // second half is "undefined"
+          int[] values_a = new int[]{2, 2};
+          int[] values_b;
+          if (i%2 == 0) {
+            errorCountExp.incrementAndGet();
+            values_b = new int[]{1, 0};
+          } else {
+            values_b = new int[]{1, 1};
+          }
+
+          ArrowBuf validitya = buf(validity);
+          ArrowBuf valuesa = intBuf(values_a);
+          ArrowBuf validityb = buf(validity);
+          ArrowBuf valuesb = intBuf(values_b);
+          ArrowRecordBatch batch = new ArrowRecordBatch(
+                  numRows,
+                  Lists.newArrayList(new ArrowFieldNode(numRows, 0), new ArrowFieldNode(numRows,
+                          0)),
+                  Lists.newArrayList(validitya, valuesa, validityb, valuesb));
+
+          IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
+          intVector.allocateNew(numRows);
+
+          List<ValueVector> output = new ArrayList<ValueVector>();
+          output.add(intVector);
+          boolean exceptionThrown = false;
+          try {
+            evaluator.evaluate(batch, output);
+          } catch (GandivaException e) {
+            e.printStackTrace();
+            errorCount.incrementAndGet();
+          }
+          // free buffers
+          releaseRecordBatch(batch);
+          releaseValueVectors(output);
+          evaluator.close();
+        } catch (GandivaException e) {
+          e.printStackTrace();
+        }
+      });
+    });
+    executors.shutdown();
+    executors.awaitTermination(100, java.util.concurrent.TimeUnit.SECONDS);
+    Assert.assertEquals(errorCountExp, errorCount.intValue());
   }
 
   @Test

@@ -25,7 +25,7 @@
 #include "codegen/compiled_expr.h"
 #include "codegen/dex_visitor.h"
 #include "codegen/engine.h"
-#include "codegen/error_holder.h"
+#include "codegen/execution_context.h"
 #include "codegen/function_registry.h"
 #include "codegen/llvm_types.h"
 #include "codegen/lvalue.h"
@@ -190,7 +190,7 @@ class LLVMGenerator {
   std::unique_ptr<LLVMTypes> types_;
   FunctionRegistry function_registry_;
   Annotator annotator_;
-  std::shared_ptr<ErrorHolder> error_holder_;
+  thread_local static std::shared_ptr<ExecutionContext> execution_context_;
 
   // used for debug
   bool dump_ir_;

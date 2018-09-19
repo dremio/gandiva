@@ -591,8 +591,25 @@ TEST_F(TestProjector, TestDivideZero) {
   arrow::ArrayVector outputs;
   status = projector->Evaluate(*in_batch, pool_, &outputs);
   EXPECT_EQ(status.code(), StatusCode::ExecutionError);
-  std::string expected_error = "divide by zero for numerator";
+  std::string expected_error = "divide by zero error";
   EXPECT_TRUE(status.message().find(expected_error) != std::string::npos);
+
+  // Testing for second batch that has no error should succeed.
+  num_records = 5;
+  array0 = MakeArrowArrayInt32({2, 3, 4, 5, 6}, {true, true, true, true, true});
+  array1 = MakeArrowArrayInt32({1, 2, 2, 1, 1}, {true, true, false, true, true});
+
+  // prepare input record batch
+  in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
+  // expected output
+  auto exp = MakeArrowArrayInt32({2, 1, 2, 5,6}, {true, true, false, true, true});
+
+  // Evaluate expression
+  status = projector->Evaluate(*in_batch, pool_, &outputs);
+  EXPECT_TRUE(status.ok());
+
+  // Validate results
+  EXPECT_ARROW_ARRAY_EQUALS(exp, outputs.at(0));
 }
 
 TEST_F(TestProjector, TestModZero) {
