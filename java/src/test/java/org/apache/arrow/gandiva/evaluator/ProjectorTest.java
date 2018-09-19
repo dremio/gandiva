@@ -246,6 +246,54 @@ public class ProjectorTest extends BaseEvaluatorTest {
   }
 
   @Test
+  public void testEvaluateDivZero() throws GandivaException, Exception {
+    Field a = Field.nullable("a", int32);
+    Field b = Field.nullable("b", int32);
+    List<Field> args = Lists.newArrayList(a, b);
+
+    Field retType = Field.nullable("c", int32);
+    ExpressionTree root = TreeBuilder.makeExpression("divide", args, retType);
+
+    List<ExpressionTree> exprs = Lists.newArrayList(root);
+
+    Schema schema = new Schema(args);
+    Projector eval = Projector.make(schema, exprs);
+
+    int numRows = 2;
+    byte[] validity = new byte[]{(byte) 255};
+    // second half is "undefined"
+    int[] values_a = new int[]{2, 2};
+    int[] values_b = new int[]{1, 0};
+
+    ArrowBuf validitya = buf(validity);
+    ArrowBuf valuesa = intBuf(values_a);
+    ArrowBuf validityb = buf(validity);
+    ArrowBuf valuesb = intBuf(values_b);
+    ArrowRecordBatch batch = new ArrowRecordBatch(
+            numRows,
+            Lists.newArrayList(new ArrowFieldNode(numRows, 8), new ArrowFieldNode(numRows, 8)),
+            Lists.newArrayList(validitya, valuesa, validityb, valuesb));
+
+    IntVector intVector = new IntVector(EMPTY_SCHEMA_PATH, allocator);
+    intVector.allocateNew(numRows);
+
+    List<ValueVector> output = new ArrayList<ValueVector>();
+    output.add(intVector);
+    boolean exceptionThrown = false;
+    try {
+      eval.evaluate(batch, output);
+    } catch (GandivaException e) {
+      exceptionThrown = true;
+    }
+    Assert.assertTrue(exceptionThrown);
+
+    // free buffers
+    releaseRecordBatch(batch);
+    releaseValueVectors(output);
+    eval.close();
+  }
+
+  @Test
   public void testAdd3() throws GandivaException, Exception {
     Field x = Field.nullable("x", int32);
     Field N2x = Field.nullable("N2x", int32);

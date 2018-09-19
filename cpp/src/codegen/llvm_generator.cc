@@ -35,7 +35,7 @@ namespace gandiva {
   }
 
 LLVMGenerator::LLVMGenerator()
-    : dump_ir_(true), optimise_ir_(true), enable_ir_traces_(false) {}
+    : dump_ir_(false), optimise_ir_(true), enable_ir_traces_(false) {}
 
 Status LLVMGenerator::Make(std::shared_ptr<Configuration> config,
                            std::unique_ptr<LLVMGenerator> *llvm_generator) {
