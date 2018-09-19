@@ -97,7 +97,7 @@ Status LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
 
   auto eval_batch = annotator_.PrepareEvalBatch(record_batch, output_vector);
   DCHECK_GT(eval_batch->GetNumBuffers(), 0);
-  error_holder_.reset(new ErrorHolder());
+  error_holder_->reset_error_msg();
   for (auto &compiled_expr : compiled_exprs_) {
     // generate data/offset vectors.
     EvalFunc jit_function = compiled_expr->jit_function();
@@ -895,7 +895,7 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
 
   // add error holder if function can return error
   if (can_return_error) {
-    int64_t ptr1 = (int64_t)&(generator_->error_holder_);
+    int64_t ptr1 = (int64_t)(generator_->error_holder_.get());
     llvm::Constant *ptr_int_cast = types->i64_constant(ptr1);
     auto ptr = llvm::ConstantExpr::getIntToPtr(ptr_int_cast, types->i8_ptr_type());
     params.push_back(ptr);

@@ -165,12 +165,12 @@ NUMERIC_BOOL_DATE_FUNCTION(IS_NOT_DISTINCT_FROM)
       return 0;                                                                         \
     }                                                                                   \
     if (in2 == 0) {                                                                     \
-      std::shared_ptr<gandiva::ErrorHolder> *error_holder_ptr =                                          \
-              reinterpret_cast<std::shared_ptr<gandiva::ErrorHolder> *>(error_holder);                   \
+      gandiva::ErrorHolder* error_holder_ptr =                                          \
+              reinterpret_cast<gandiva::ErrorHolder*>(error_holder);  \
       std::string err_msg = "divide by zero for numerator ";                            \
-      std::string arg = std::to_string(in1); \
-      (*error_holder_ptr)->set_error_msg(err_msg + arg);                                         \
-      return 0; \
+      std::string arg = std::to_string(in1);                                            \
+      (error_holder_ptr)->set_error_msg(err_msg + arg);                                \
+      return 0;                                                                         \
     }                                                                                   \
     *out_valid = true;                                                                  \
     return in1 / in2;                                                                   \

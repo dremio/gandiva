@@ -28,6 +28,8 @@ class ErrorHolder{
       error_msg_ = error_msg;
     }
   }
+
+  void reset_error_msg() { error_msg_.clear();}
  private:
   std::string error_msg_;
 };
