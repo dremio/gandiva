@@ -12,21 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iostream>
+#include <thread>
 #include "codegen/execution_context.h"
 
 namespace gandiva {
 #ifdef GDV_HELPERS
 namespace helpers {
 #endif
+
 void ExecutionContext::set_error_msg(const char *error_msg){
   if (error_msg_.empty()) {
     error_msg_ = std::string(error_msg);
   }
 }
 
-std::string ExecutionContext::error_msg() const { return error_msg_;}
-
-void ExecutionContext::reset_error_msg() { error_msg_.clear();}
+std::string ExecutionContext::error_msg() const {
+  return error_msg_;
+}
 
 #ifdef GDV_HELPERS
 }

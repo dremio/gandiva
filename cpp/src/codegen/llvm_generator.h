@@ -70,7 +70,8 @@ class LLVMGenerator {
    public:
     Visitor(LLVMGenerator *generator, llvm::Function *function,
             llvm::BasicBlock *entry_block, llvm::Value *arg_addrs,
-            llvm::Value *arg_local_bitmaps, llvm::Value *loop_var);
+            llvm::Value *arg_local_bitmaps, llvm::Value *arg_context_ptr,
+            llvm::Value *loop_var);
 
     void Visit(const VectorReadValidityDex &dex) override;
     void Visit(const VectorReadFixedLenValueDex &dex) override;
@@ -122,6 +123,7 @@ class LLVMGenerator {
     llvm::BasicBlock *entry_block_;
     llvm::Value *arg_addrs_;
     llvm::Value *arg_local_bitmaps_;
+    llvm::Value *arg_context_ptr_;
     llvm::Value *loop_var_;
   };
 
@@ -190,7 +192,6 @@ class LLVMGenerator {
   std::unique_ptr<LLVMTypes> types_;
   FunctionRegistry function_registry_;
   Annotator annotator_;
-  thread_local static std::shared_ptr<ExecutionContext> execution_context_;
 
   // used for debug
   bool dump_ir_;

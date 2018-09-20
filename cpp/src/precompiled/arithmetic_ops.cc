@@ -163,8 +163,8 @@ NUMERIC_BOOL_DATE_FUNCTION(IS_NOT_DISTINCT_FROM)
       return 0;                                                                         \
     }                                                                                   \
     if (in2 == 0) {                                                                     \
-      gandiva::ExecutionContext* execution_context_ptr =                                \
-              reinterpret_cast<gandiva::ExecutionContext*>(execution_context);          \
+      gandiva::helpers::ExecutionContext* execution_context_ptr =                                \
+              reinterpret_cast<gandiva::helpers::ExecutionContext*>(execution_context);          \
       char const* err_msg = "divide by zero error";                                     \
       (execution_context_ptr)->set_error_msg(err_msg);                                  \
       return 0;                                                                         \

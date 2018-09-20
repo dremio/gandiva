@@ -32,6 +32,7 @@ class TestProjector : public ::testing::Test {
   arrow::MemoryPool* pool_;
 };
 
+
 TEST_F(TestProjector, TestProjectCache) {
   // schema for input fields
   auto field0 = field("f0", int32());

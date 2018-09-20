@@ -38,7 +38,7 @@ TEST(TestArithmeticOps, TestMod) { EXPECT_EQ(mod_int64_int32(10, 0), 10); }
 
 TEST(TestArithmeticOps, TestDivide) {
   boolean is_valid;
-  ExecutionContext error_holder;
+  gandiva::helpers::ExecutionContext error_holder;
   int64 out = divide_int64_int64(10, true, 0, true, (int64) &error_holder, &is_valid);
   EXPECT_EQ(out, 0);
   EXPECT_EQ(is_valid, false);
@@ -47,7 +47,7 @@ TEST(TestArithmeticOps, TestDivide) {
   out = divide_int64_int64(9, true, 0, true,(int64) &error_holder, &is_valid);
   EXPECT_EQ(error_holder.error_msg(), "divide by zero error");
 
-  ExecutionContext error_holder1;
+  gandiva::helpers::ExecutionContext error_holder1;
   out = divide_int64_int64(10, true, 2, false, (int64) &error_holder1, &is_valid);
   EXPECT_EQ(out, 0);
   EXPECT_EQ(is_valid, false);

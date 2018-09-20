@@ -353,7 +353,6 @@ public class ProjectorTest extends BaseEvaluatorTest {
           try {
             evaluator.evaluate(batch, output);
           } catch (GandivaException e) {
-            e.printStackTrace();
             errorCount.incrementAndGet();
           }
           // free buffers
@@ -361,13 +360,12 @@ public class ProjectorTest extends BaseEvaluatorTest {
           releaseValueVectors(output);
           evaluator.close();
         } catch (GandivaException e) {
-          e.printStackTrace();
         }
       });
     });
     executors.shutdown();
     executors.awaitTermination(100, java.util.concurrent.TimeUnit.SECONDS);
-    Assert.assertEquals(errorCountExp, errorCount.intValue());
+    Assert.assertEquals(errorCountExp.intValue(), errorCount.intValue());
   }
 
   @Test

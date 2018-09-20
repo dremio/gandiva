@@ -37,7 +37,6 @@ namespace gandiva {
 LLVMGenerator::LLVMGenerator()
     : dump_ir_(false), optimise_ir_(true), enable_ir_traces_(false) {}
 
-thread_local std::shared_ptr<ExecutionContext> LLVMGenerator::execution_context_(new ExecutionContext());
 Status LLVMGenerator::Make(std::shared_ptr<Configuration> config,
                            std::unique_ptr<LLVMGenerator> *llvm_generator) {
   std::unique_ptr<LLVMGenerator> llvmgen_obj(new LLVMGenerator());
@@ -97,16 +96,14 @@ Status LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
 
   auto eval_batch = annotator_.PrepareEvalBatch(record_batch, output_vector);
   DCHECK_GT(eval_batch->GetNumBuffers(), 0);
-  execution_context_->reset_error_msg();
   for (auto &compiled_expr : compiled_exprs_) {
     // generate data/offset vectors.
     EvalFunc jit_function = compiled_expr->jit_function();
     jit_function(eval_batch->GetBufferArray(), eval_batch->GetLocalBitMapArray(),
-                 record_batch.num_rows());
-
+                 (int64_t)eval_batch->GetExecutionContext(), record_batch.num_rows());
     // check for execution errors
-    if (!execution_context_->error_msg().empty()) {
-      return Status::ExecutionError(execution_context_->error_msg());
+    if (!(eval_batch->GetExecutionContext()->error_msg().empty())) {
+      return Status::ExecutionError(eval_batch->GetExecutionContext()->error_msg());
     }
     // generate validity vectors.
     ComputeBitMapsForExpr(*compiled_expr, *eval_batch);
@@ -215,10 +212,11 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr, FieldDescriptorPtr out
   llvm::IRBuilder<> &builder = ir_builder();
 
   // Create fn prototype :
-  //   int expr_1 (long **addrs, long **bitmaps, int nrec)
+  //   int expr_1 (long **addrs, long **bitmaps, int nrec, long *context_ptr)
   std::vector<llvm::Type *> arguments;
   arguments.push_back(types_->i64_ptr_type());
   arguments.push_back(types_->i64_ptr_type());
+  arguments.push_back(types_->i64_type());
   arguments.push_back(types_->i32_type());
   llvm::FunctionType *prototype =
       llvm::FunctionType::get(types_->i32_type(), arguments, false /*isVarArg*/);
@@ -238,9 +236,11 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr, FieldDescriptorPtr out
   llvm::Value *arg_local_bitmaps = &*args;
   arg_local_bitmaps->setName("local_bitmaps");
   ++args;
+  llvm::Value *arg_context_ptr = &*args;
+  arg_context_ptr->setName("context_ptr");
+  ++args;
   llvm::Value *arg_nrecords = &*args;
   arg_nrecords->setName("nrecords");
-  ++args;
 
   llvm::BasicBlock *loop_entry = llvm::BasicBlock::Create(context(), "entry", *fn);
   llvm::BasicBlock *loop_body = llvm::BasicBlock::Create(context(), "loop", *fn);
@@ -258,7 +258,7 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr, FieldDescriptorPtr out
   llvm::PHINode *loop_var = builder.CreatePHI(types_->i32_type(), 2, "loop_var");
 
   // The visitor can add code to both the entry/loop blocks.
-  Visitor visitor(this, *fn, loop_entry, arg_addrs, arg_local_bitmaps, loop_var);
+  Visitor visitor(this, *fn, loop_entry, arg_addrs, arg_local_bitmaps, arg_context_ptr, loop_var);
   value_expr->Accept(visitor);
   LValuePtr output_value = visitor.result();
 
@@ -407,12 +407,14 @@ llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
 // Visitor for generating the code for a decomposed expression.
 LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator, llvm::Function *function,
                                 llvm::BasicBlock *entry_block, llvm::Value *arg_addrs,
-                                llvm::Value *arg_local_bitmaps, llvm::Value *loop_var)
+                                llvm::Value *arg_local_bitmaps, llvm::Value *arg_context_ptr,
+                                llvm::Value *loop_var)
     : generator_(generator),
       function_(function),
       entry_block_(entry_block),
       arg_addrs_(arg_addrs),
       arg_local_bitmaps_(arg_local_bitmaps),
+      arg_context_ptr_(arg_context_ptr),
       loop_var_(loop_var) {
   ADD_VISITOR_TRACE("Iteration %T", loop_var);
 }
@@ -895,10 +897,8 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
 
   // add error holder if function can return error
   if (with_context) {
-    int64_t ptr1 = (int64_t)(generator_->execution_context_.get());
-    llvm::Constant *ptr_int_cast = types->i64_constant(ptr1);
-    auto ptr = llvm::ConstantExpr::getIntToPtr(ptr_int_cast, types->i8_ptr_type());
-    params.push_back(ptr);
+    ADD_VISITOR_TRACE("ptr %T", arg_context_ptr_);
+    params.push_back(arg_context_ptr_);
   }
 
   return params;
