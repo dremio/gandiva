@@ -258,7 +258,8 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr, FieldDescriptorPtr out
   llvm::PHINode *loop_var = builder.CreatePHI(types_->i32_type(), 2, "loop_var");
 
   // The visitor can add code to both the entry/loop blocks.
-  Visitor visitor(this, *fn, loop_entry, arg_addrs, arg_local_bitmaps, arg_context_ptr, loop_var);
+  Visitor visitor(this, *fn, loop_entry, arg_addrs, arg_local_bitmaps, arg_context_ptr,
+                  loop_var);
   value_expr->Accept(visitor);
   LValuePtr output_value = visitor.result();
 
@@ -407,8 +408,8 @@ llvm::Value *LLVMGenerator::AddFunctionCall(const std::string &full_name,
 // Visitor for generating the code for a decomposed expression.
 LLVMGenerator::Visitor::Visitor(LLVMGenerator *generator, llvm::Function *function,
                                 llvm::BasicBlock *entry_block, llvm::Value *arg_addrs,
-                                llvm::Value *arg_local_bitmaps, llvm::Value *arg_context_ptr,
-                                llvm::Value *loop_var)
+                                llvm::Value *arg_local_bitmaps,
+                                llvm::Value *arg_context_ptr, llvm::Value *loop_var)
     : generator_(generator),
       function_(function),
       entry_block_(entry_block),
@@ -586,7 +587,8 @@ void LLVMGenerator::Visitor::Visit(const NonNullableFuncDex &dex) {
   const NativeFunction *native_function = dex.native_function();
 
   // build the function params (ignore validity).
-  auto params = BuildParams(dex.function_holder().get(), dex.args(), false, native_function->needs_context());
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), false,
+                            native_function->needs_context());
 
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
 
@@ -602,7 +604,8 @@ void LLVMGenerator::Visitor::Visit(const NullableNeverFuncDex &dex) {
   const NativeFunction *native_function = dex.native_function();
 
   // build function params along with validity.
-  auto params = BuildParams(dex.function_holder().get(), dex.args(), true, native_function->needs_context());
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), true,
+                            native_function->needs_context());
 
   llvm::Type *ret_type = types->IRType(native_function->signature().ret_type()->id());
   llvm::Value *value =
@@ -619,7 +622,8 @@ void LLVMGenerator::Visitor::Visit(const NullableInternalFuncDex &dex) {
   const NativeFunction *native_function = dex.native_function();
 
   // build function params along with validity.
-  auto params = BuildParams(dex.function_holder().get(), dex.args(), true, native_function->needs_context());
+  auto params = BuildParams(dex.function_holder().get(), dex.args(), true,
+                            native_function->needs_context());
 
   // add an extra arg for validity (alloced on stack).
   llvm::AllocaInst *result_valid_ptr =

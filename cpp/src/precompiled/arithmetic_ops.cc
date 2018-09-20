@@ -157,14 +157,14 @@ NUMERIC_BOOL_DATE_FUNCTION(IS_NOT_DISTINCT_FROM)
 #define DIVIDE_NULL_INTERNAL(TYPE)                                                      \
   FORCE_INLINE                                                                          \
   TYPE divide_##TYPE##_##TYPE(TYPE in1, boolean is_valid1, TYPE in2, boolean is_valid2, \
-                              int64 execution_context, bool *out_valid) {               \
+                              int64 execution_context, bool* out_valid) {               \
     *out_valid = false;                                                                 \
     if (!is_valid1 || !is_valid2) {                                                     \
       return 0;                                                                         \
     }                                                                                   \
     if (in2 == 0) {                                                                     \
-      gandiva::helpers::ExecutionContext* execution_context_ptr =                                \
-              reinterpret_cast<gandiva::helpers::ExecutionContext*>(execution_context);          \
+      gandiva::helpers::ExecutionContext* execution_context_ptr =                       \
+          reinterpret_cast<gandiva::helpers::ExecutionContext*>(execution_context);     \
       char const* err_msg = "divide by zero error";                                     \
       (execution_context_ptr)->set_error_msg(err_msg);                                  \
       return 0;                                                                         \

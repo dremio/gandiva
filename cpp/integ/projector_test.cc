@@ -32,7 +32,6 @@ class TestProjector : public ::testing::Test {
   arrow::MemoryPool* pool_;
 };
 
-
 TEST_F(TestProjector, TestProjectCache) {
   // schema for input fields
   auto field0 = field("f0", int32());
@@ -603,7 +602,7 @@ TEST_F(TestProjector, TestDivideZero) {
   // prepare input record batch
   in_batch = arrow::RecordBatch::Make(schema, num_records, {array0, array1});
   // expected output
-  auto exp = MakeArrowArrayInt32({2, 1, 2, 5,6}, {true, true, false, true, true});
+  auto exp = MakeArrowArrayInt32({2, 1, 2, 5, 6}, {true, true, false, true, true});
 
   // Evaluate expression
   status = projector->Evaluate(*in_batch, pool_, &outputs);

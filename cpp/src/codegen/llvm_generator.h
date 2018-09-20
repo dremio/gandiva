@@ -105,8 +105,7 @@ class LLVMGenerator {
     // Generate code to build the params.
     std::vector<llvm::Value *> BuildParams(FunctionHolder *holder,
                                            const ValueValidityPairVector &args,
-                                           bool with_validity,
-                                           bool can_return_error);
+                                           bool with_validity, bool with_context);
 
     // Switch to the entry_block and get reference of the validity/value/offsets buffer
     llvm::Value *GetBufferReference(int idx, BufferType buffer_type, FieldPtr field);

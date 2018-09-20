@@ -123,9 +123,7 @@ class Status {
     return code() == StatusCode::ExpressionValidationError;
   }
 
-  bool IsExecutionError() const {
-    return code() == StatusCode::ExecutionError;
-  }
+  bool IsExecutionError() const { return code() == StatusCode::ExecutionError; }
 
   // Return a string representation of this status suitable for printing.
   // Returns the string "OK" for success.

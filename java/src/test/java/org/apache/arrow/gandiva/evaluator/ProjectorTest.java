@@ -309,13 +309,11 @@ public class ProjectorTest extends BaseEvaluatorTest {
     ExpressionTree expr = TreeBuilder.makeExpression("divide", args, c);
     List<ExpressionTree> exprs = Lists.newArrayList(expr);
 
-    // build projectors in parallel choosing schema at random
-    // this should hit the same cache entry thus exposing
-    // any threading issues.
     ExecutorService executors = Executors.newFixedThreadPool(16);
 
     AtomicInteger errorCount = new AtomicInteger(0);
     AtomicInteger errorCountExp = new AtomicInteger(0);
+    // pre-build the projector so that same projector is used for all executions.
     Projector.make(s, exprs);
 
     IntStream.range(0, 1000).forEach(i -> {
@@ -324,7 +322,6 @@ public class ProjectorTest extends BaseEvaluatorTest {
           Projector evaluator = Projector.make(s, exprs);
           int numRows = 2;
           byte[] validity = new byte[]{(byte) 255};
-          // second half is "undefined"
           int[] values_a = new int[]{2, 2};
           int[] values_b;
           if (i%2 == 0) {
@@ -349,7 +346,6 @@ public class ProjectorTest extends BaseEvaluatorTest {
 
           List<ValueVector> output = new ArrayList<ValueVector>();
           output.add(intVector);
-          boolean exceptionThrown = false;
           try {
             evaluator.evaluate(batch, output);
           } catch (GandivaException e) {

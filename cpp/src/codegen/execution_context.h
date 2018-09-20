@@ -22,13 +22,14 @@ namespace gandiva {
 namespace helpers {
 #endif
 /// Error holder for errors during llvm module execution
-class ExecutionContext{
+class ExecutionContext {
  public:
   std::string error_msg() const;
 
-  void set_error_msg(const char * error_msg);
+  void set_error_msg(const char* error_msg);
 
   void reset_error_msg();
+
  private:
   std::string error_msg_;
 };
@@ -36,4 +37,4 @@ class ExecutionContext{
 }
 #endif
 }  // namespace gandiva
-#endif // ERROR_HOLDER_H
+#endif  // ERROR_HOLDER_H
