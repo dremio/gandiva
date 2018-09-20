@@ -164,7 +164,8 @@ llvm::Value *LLVMGenerator::GetLocalBitMapReference(llvm::Value *arg_bitmaps, in
 //
 // The C-code equivalent is :
 // ------------------------------
-// int expr_0(int64_t *addrs, int64_t *local_bitmaps, int nrecords) {
+// int expr_0(int64_t *addrs, int64_t *local_bitmaps, int 64_t execution_context_ptr, int
+// nrecords) {
 //   int *outVec = (int *) addrs[5];
 //   int *c0Vec = (int *) addrs[1];
 //   int *c1Vec = (int *) addrs[3];
@@ -179,8 +180,8 @@ llvm::Value *LLVMGenerator::GetLocalBitMapReference(llvm::Value *arg_bitmaps, in
 // IR Code
 // --------
 //
-// define i32 @expr_0(i64* %args, i64* %local_bitmaps, i32 %nrecords) {
-// entry:
+// define i32 @expr_0(i64* %args, i64* %local_bitmaps, i64 %execution_context_ptr, , i32
+// %nrecords) { entry:
 //   %outmemAddr = getelementptr i64, i64* %args, i32 5
 //   %outmem = load i64, i64* %outmemAddr
 //   %outVec = inttoptr i64 %outmem to i32*
@@ -212,7 +213,7 @@ Status LLVMGenerator::CodeGenExprValue(DexPtr value_expr, FieldDescriptorPtr out
   llvm::IRBuilder<> &builder = ir_builder();
 
   // Create fn prototype :
-  //   int expr_1 (long **addrs, long **bitmaps, int nrec, long *context_ptr)
+  //   int expr_1 (long **addrs, long **bitmaps, long *context_ptr, int nrec)
   std::vector<llvm::Type *> arguments;
   arguments.push_back(types_->i64_ptr_type());
   arguments.push_back(types_->i64_ptr_type());
@@ -901,7 +902,6 @@ std::vector<llvm::Value *> LLVMGenerator::Visitor::BuildParams(
 
   // add error holder if function can return error
   if (with_context) {
-    ADD_VISITOR_TRACE("ptr %T", arg_context_ptr_);
     params.push_back(arg_context_ptr_);
   }
 
