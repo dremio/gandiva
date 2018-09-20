@@ -65,13 +65,20 @@ class LiteralNode : public Node {
       ss << std::string("null");
       return ss.str();
     }
-    if (return_type()->id() == arrow::Type::DOUBLE ||
-        return_type()->id() == arrow::Type::FLOAT) {
-      // The default printf in decimal can cause a loss in precision. so,
-      // print in hex.
-      ss << std::hexfloat << holder();
-    } else {
-      ss << holder();
+
+    ss << holder();
+    // The default formatter prints in decimal can cause a loss in precision. so,
+    // print in hex. Can't use hexfloat since gcc 4.9 doesn't support it.
+    if (return_type()->id() == arrow::Type::DOUBLE) {
+      double dvalue = boost::get<double>(holder_);
+      uint64_t bits;
+      memcpy(&bits, &dvalue, sizeof(bits));
+      ss << " raw(" << std::hex << bits << ")";
+    } else if (return_type()->id() == arrow::Type::FLOAT) {
+      float fvalue = boost::get<float>(holder_);
+      uint32_t bits;
+      memcpy(&bits, &fvalue, sizeof(bits));
+      ss << " raw(" << std::hex << bits << ")";
     }
     return ss.str();
   }
