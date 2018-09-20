@@ -65,7 +65,14 @@ class LiteralNode : public Node {
       ss << std::string("null");
       return ss.str();
     }
-    ss << holder();
+    if (return_type()->id() == arrow::Type::DOUBLE ||
+        return_type()->id() == arrow::Type::FLOAT) {
+      // The default printf in decimal can cause a loss in precision. so,
+      // print in hex.
+      ss << std::hexfloat << holder();
+    } else {
+      ss << holder();
+    }
     return ss.str();
   }
 
