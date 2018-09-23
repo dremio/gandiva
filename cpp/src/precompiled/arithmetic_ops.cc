@@ -164,8 +164,8 @@ NUMERIC_BOOL_DATE_FUNCTION(IS_NOT_DISTINCT_FROM)
       return 0;                                                                         \
     }                                                                                   \
     if (in2 == 0) {                                                                     \
-      char const* err_msg = "divide by zero error";                                         \
-      set_error_msg(execution_context, err_msg);           \
+      char const* err_msg = "divide by zero error";                                     \
+      set_error_msg(execution_context, err_msg);                                        \
       return 0;                                                                         \
     }                                                                                   \
     *out_valid = true;                                                                  \

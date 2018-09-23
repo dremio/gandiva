@@ -50,7 +50,6 @@ TEST(TestArithmeticOps, TestDivide) {
   EXPECT_EQ(out, 5);
   EXPECT_EQ(is_valid, true);
   EXPECT_EQ(error_holder1.has_error(), false);
-
 }
 
 }  // namespace gandiva
