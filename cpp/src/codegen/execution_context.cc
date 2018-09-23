@@ -25,7 +25,9 @@ void ExecutionContext::set_error_msg(const char *error_msg) {
   }
 }
 
-std::string ExecutionContext::error_msg() const { return error_msg_; }
+std::string ExecutionContext::get_error() const { return error_msg_; }
+
+bool ExecutionContext::has_error() const {return !error_msg_.empty();}
 
 #ifdef GDV_HELPERS
 }

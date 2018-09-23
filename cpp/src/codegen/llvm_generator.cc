@@ -102,8 +102,8 @@ Status LLVMGenerator::Execute(const arrow::RecordBatch &record_batch,
     jit_function(eval_batch->GetBufferArray(), eval_batch->GetLocalBitMapArray(),
                  (int64_t)eval_batch->GetExecutionContext(), record_batch.num_rows());
     // check for execution errors
-    if (!(eval_batch->GetExecutionContext()->error_msg().empty())) {
-      return Status::ExecutionError(eval_batch->GetExecutionContext()->error_msg());
+    if (eval_batch->GetExecutionContext()->has_error()) {
+      return Status::ExecutionError(eval_batch->GetExecutionContext()->get_error());
     }
     // generate validity vectors.
     ComputeBitMapsForExpr(*compiled_expr, *eval_batch);

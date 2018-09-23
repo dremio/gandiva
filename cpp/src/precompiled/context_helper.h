@@ -12,29 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ERROR_HOLDER_H
-#define ERROR_HOLDER_H
+#ifndef GANDIVA_CONTEXT_HELPER_H
+#define GANDIVA_CONTEXT_HELPER_H
 
-#include <string>
+#include "../codegen/execution_context.h"
 
-namespace gandiva {
-#ifdef GDV_HELPERS
-namespace helpers {
-#endif
-/// Error holder for errors during llvm module execution
-class ExecutionContext {
- public:
-  std::string get_error() const;
-
-  void set_error_msg(const char* error_msg);
-
-  bool has_error() const;
-
- private:
-  std::string error_msg_;
-};
-#ifdef GDV_HELPERS
+void set_error_msg(int64_t context_ptr, char const *err_msg) {
+  gandiva::helpers::ExecutionContext* execution_context_ptr =
+      reinterpret_cast<gandiva::helpers::ExecutionContext*>(context_ptr);
+  (execution_context_ptr)->set_error_msg(err_msg);
 }
 #endif
-}  // namespace gandiva
-#endif  // ERROR_HOLDER_H

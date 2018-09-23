@@ -42,20 +42,15 @@ TEST(TestArithmeticOps, TestDivide) {
   int64 out = divide_int64_int64(10, true, 0, true, (int64)&error_holder, &is_valid);
   EXPECT_EQ(out, 0);
   EXPECT_EQ(is_valid, false);
-  EXPECT_EQ(error_holder.error_msg().empty(), false);
-
-  out = divide_int64_int64(9, true, 0, true, (int64)&error_holder, &is_valid);
-  EXPECT_EQ(error_holder.error_msg(), "divide by zero error");
+  EXPECT_EQ(error_holder.has_error(), true);
+  EXPECT_EQ(error_holder.get_error(), "divide by zero error");
 
   gandiva::helpers::ExecutionContext error_holder1;
-  out = divide_int64_int64(10, true, 2, false, (int64)&error_holder1, &is_valid);
-  EXPECT_EQ(out, 0);
-  EXPECT_EQ(is_valid, false);
-  EXPECT_EQ(error_holder1.error_msg().empty(), true);
-
   out = divide_int64_int64(10, true, 2, true, (int64)&error_holder, &is_valid);
   EXPECT_EQ(out, 5);
   EXPECT_EQ(is_valid, true);
+  EXPECT_EQ(error_holder1.has_error(), false);
+
 }
 
 }  // namespace gandiva
