@@ -25,6 +25,7 @@
 #include "codegen/compiled_expr.h"
 #include "codegen/dex_visitor.h"
 #include "codegen/engine.h"
+#include "codegen/execution_context.h"
 #include "codegen/function_registry.h"
 #include "codegen/llvm_types.h"
 #include "codegen/lvalue.h"
@@ -69,7 +70,8 @@ class LLVMGenerator {
    public:
     Visitor(LLVMGenerator *generator, llvm::Function *function,
             llvm::BasicBlock *entry_block, llvm::Value *arg_addrs,
-            llvm::Value *arg_local_bitmaps, llvm::Value *loop_var);
+            llvm::Value *arg_local_bitmaps, llvm::Value *arg_context_ptr,
+            llvm::Value *loop_var);
 
     void Visit(const VectorReadValidityDex &dex) override;
     void Visit(const VectorReadFixedLenValueDex &dex) override;
@@ -103,7 +105,7 @@ class LLVMGenerator {
     // Generate code to build the params.
     std::vector<llvm::Value *> BuildParams(FunctionHolder *holder,
                                            const ValueValidityPairVector &args,
-                                           bool with_validity);
+                                           bool with_validity, bool with_context);
 
     // Switch to the entry_block and get reference of the validity/value/offsets buffer
     llvm::Value *GetBufferReference(int idx, BufferType buffer_type, FieldPtr field);
@@ -120,6 +122,7 @@ class LLVMGenerator {
     llvm::BasicBlock *entry_block_;
     llvm::Value *arg_addrs_;
     llvm::Value *arg_local_bitmaps_;
+    llvm::Value *arg_context_ptr_;
     llvm::Value *loop_var_;
   };
 

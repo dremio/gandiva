@@ -61,6 +61,7 @@ enum class StatusCode : char {
   CodeGenError = 2,
   ArrowError = 3,
   ExpressionValidationError = 4,
+  ExecutionError = 5,
 };
 
 class Status {
@@ -105,6 +106,10 @@ class Status {
     return Status(StatusCode::ExpressionValidationError, msg);
   }
 
+  static Status ExecutionError(const std::string& msg) {
+    return Status(StatusCode::ExecutionError, msg);
+  }
+
   // Returns true if the status indicates success.
   bool ok() const { return (state_ == NULL); }
 
@@ -117,6 +122,8 @@ class Status {
   bool IsExpressionValidationError() const {
     return code() == StatusCode::ExpressionValidationError;
   }
+
+  bool IsExecutionError() const { return code() == StatusCode::ExecutionError; }
 
   // Return a string representation of this status suitable for printing.
   // Returns the string "OK" for success.
@@ -231,6 +238,9 @@ inline std::string Status::CodeAsString() const {
       break;
     case StatusCode::ExpressionValidationError:
       type = "ExpressionValidationError";
+      break;
+    case StatusCode::ExecutionError:
+      type = "ExecutionError";
       break;
     default:
       type = "Unknown";
