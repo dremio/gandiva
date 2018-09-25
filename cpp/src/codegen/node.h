@@ -40,7 +40,7 @@ class Node {
   /// Derived classes should simply invoke the Visit api of the visitor.
   virtual Status Accept(NodeVisitor &visitor) const = 0;
 
-  virtual std::string ToString() = 0;
+  virtual std::string ToString() const = 0;
 
  protected:
   DataTypePtr return_type_;
@@ -58,9 +58,9 @@ class LiteralNode : public Node {
 
   bool is_null() const { return is_null_; }
 
-  std::string ToString() override {
+  std::string ToString() const override {
     std::stringstream ss;
-    ss << "(" << return_type()->ToString() << ") ";
+    ss << "(const " << return_type()->ToString() << ") ";
     if (is_null()) {
       ss << std::string("null");
       return ss.str();
@@ -97,7 +97,9 @@ class FieldNode : public Node {
 
   const FieldPtr &field() const { return field_; }
 
-  std::string ToString() override { return field()->type()->name(); }
+  std::string ToString() const override {
+    return "(" + field()->type()->name() + ") " + field()->name();
+  }
 
  private:
   FieldPtr field_;
@@ -113,7 +115,7 @@ class FunctionNode : public Node {
   const FuncDescriptorPtr &descriptor() const { return descriptor_; }
   const NodeVector &children() const { return children_; }
 
-  std::string ToString() override {
+  std::string ToString() const override {
     std::stringstream ss;
     ss << descriptor()->return_type()->name() << " " << descriptor()->name() << "(";
     bool skip_comma = true;
@@ -160,7 +162,7 @@ class IfNode : public Node {
   const NodePtr &then_node() const { return then_node_; }
   const NodePtr &else_node() const { return else_node_; }
 
-  std::string ToString() override {
+  std::string ToString() const override {
     std::stringstream ss;
     ss << "if (" << condition()->ToString() << ") { ";
     ss << then_node()->ToString() << " } else { ";
@@ -188,7 +190,7 @@ class BooleanNode : public Node {
 
   const NodeVector &children() const { return children_; }
 
-  std::string ToString() override {
+  std::string ToString() const override {
     std::stringstream ss;
     bool first = true;
     for (auto &child : children_) {
