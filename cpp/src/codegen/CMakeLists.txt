@@ -105,7 +105,11 @@ target_include_directories(gandiva_helpers
 )
 
 target_link_libraries(gandiva_helpers PRIVATE Boost::boost RE2::RE2_STATIC)
+
+# hide all symbols that are not needed.
 if (NOT APPLE)
+  # apple linker does not support version scripts, not needed since we package from travis.
+  set_target_properties(gandiva_helpers PROPERTIES LINK_FLAGS "-Wl,--version-script=${CMAKE_SOURCE_DIR}/src/codegen/symbols-helpers.map")
   target_link_libraries(gandiva_helpers LINK_PRIVATE -static-libstdc++ -static-libgcc)
 endif()
 
