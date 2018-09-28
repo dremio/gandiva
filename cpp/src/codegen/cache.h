@@ -41,7 +41,7 @@ class Cache {
 
  private:
   LruCache<KeyType, ValueType> cache_;
-  static const int CACHE_SIZE = 100;
+  static const int CACHE_SIZE = 250;
   std::mutex mtx_;
 };
 }  // namespace gandiva
