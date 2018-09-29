@@ -16,6 +16,7 @@ project(gandiva)
 
 foreach(lib_type "shared" "static")
   add_gandiva_integ_test(filter_test.cc gandiva_${lib_type})
+  add_gandiva_integ_test(filter_project_test.cc gandiva_${lib_type})
   add_gandiva_integ_test(projector_test.cc gandiva_${lib_type})
   add_gandiva_integ_test(if_expr_test.cc gandiva_${lib_type})
   add_gandiva_integ_test(literal_test.cc gandiva_${lib_type})

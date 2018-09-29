@@ -110,7 +110,7 @@ public class Projector {
   public void evaluate(ArrowRecordBatch recordBatch, List<ValueVector> outColumns)
           throws GandivaException {
     evaluate(recordBatch.getLength(), recordBatch.getBuffers(), recordBatch.getBuffersLayout(),
-        outColumns);
+        -1, 0, 0, outColumns);
   }
 
   /**
@@ -130,10 +130,57 @@ public class Projector {
       buffersLayout.add(new ArrowBuffer(offset, size));
       offset += size;
     }
-    evaluate(numRows, buffers, buffersLayout, outColumns);
+    evaluate(numRows, buffers, buffersLayout, -1, 0, 0, outColumns);
+  }
+
+  /**
+   * Invoke this function to evaluate a set of expressions against a recordBatch
+   * on the selected position.
+   *
+   * @param recordBatch Record batch including the data
+   * @param selectionVector Selection vector which stores the selected rows.
+   * @param outColumns Result of applying the project on the data
+   */
+  public void evaluate(ArrowRecordBatch recordBatch,
+                       SelectionVector selectionVector, List<ValueVector> outColumns)
+          throws GandivaException {
+    evaluate(selectionVector.getRecordCount(), recordBatch.getBuffers(),
+         recordBatch.getBuffersLayout(),
+         selectionVector.getType().getNumber(),
+         selectionVector.getBuffer().memoryAddress(),
+         selectionVector.getBuffer().capacity(),
+         outColumns);
+  }
+
+  /**
+   * Invoke this function to evaluate a set of expressions against a set of arrow buffers
+   * on the selected positions.
+   * (this is an optimised version that skips taking references).
+   *
+   * @param numRows number of rows.
+   * @param buffers List of input arrow buffers
+   * @param selectionVector Selection vector which stores the selected rows.
+   * @param outColumns Result of applying the project on the data
+   */
+  public void evaluate(int numRows, List<ArrowBuf> buffers,
+                       SelectionVector selectionVector,
+                       List<ValueVector> outColumns) throws GandivaException {
+    List<ArrowBuffer> buffersLayout = new ArrayList<>();
+    long offset = 0;
+    for (ArrowBuf arrowBuf : buffers) {
+      long size = arrowBuf.readableBytes();
+      buffersLayout.add(new ArrowBuffer(offset, size));
+      offset += size;
+    }
+    evaluate(numRows, buffers, buffersLayout,
+        selectionVector.getType().getNumber(),
+        selectionVector.getBuffer().memoryAddress(),
+        selectionVector.getBuffer().capacity(),
+        outColumns);
   }
 
   private void evaluate(int numRows, List<ArrowBuf> buffers, List<ArrowBuffer> buffersLayout,
+                       int selectionVectorType, long selectionVectorAddr, long selectionVectorSize,
                        List<ValueVector> outColumns) throws GandivaException {
     if (this.closed) {
       throw new EvaluatorClosedException();
@@ -175,6 +222,7 @@ public class Projector {
 
     JniWrapper.getInstance().evaluateProjector(this.moduleId, numRows,
             bufAddrs, bufSizes,
+            selectionVectorType, selectionVectorAddr, selectionVectorSize,
             outAddrs, outSizes);
   }
 

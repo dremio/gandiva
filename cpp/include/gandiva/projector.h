@@ -74,6 +74,30 @@ class Projector {
   ///                 populated by Evaluate.
   Status Evaluate(const arrow::RecordBatch &batch, const ArrayDataVector &output);
 
+  /// Evaluate the specified record batch, and return the allocated and populated output
+  /// arrays. The output arrays will be allocated from the memory pool 'pool', and added
+  /// to the vector 'output'.
+  ///
+  /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
+  /// \param[in] : type of selection vector if it is -1 is there then we select all rows
+  /// \param[in] :  selection vector which maintains the filtered row posisitons
+  /// \param[in] : pool memory pool used to allocate output arrays (if required).
+  /// \param[out]: output the vector of allocated/populated arrays.
+  Status Evaluate(const arrow::RecordBatch &batch, const int &mode,
+                  const arrow::Buffer &selection_vector, arrow::MemoryPool *pool,
+                  arrow::ArrayVector *ouput);
+
+  /// Evaluate the specified record batch, and populate the output arrays at the filtered
+  /// positions. The output arrays of sufficient capacity must be allocated by the caller.
+  ///
+  /// \param[in] : batch the record batch. schema should be the same as the one in 'Make'
+  /// \param[in] : type of selection vector if it is -1 is there then we select all rows
+  /// \param[in] :  selection vector which maintains the filtered row posisitons
+  /// \param[in/out]: vector of arrays, the arrays are allocated by the caller and
+  ///                 populated by Evaluate.
+  Status Evaluate(const arrow::RecordBatch &batch, const int &mode,
+                  const arrow::Buffer &selection_vector, const ArrayDataVector &output);
+
  private:
   Projector(std::unique_ptr<LLVMGenerator> llvm_generator, SchemaPtr schema,
             const FieldVector &output_fields, std::shared_ptr<Configuration>);
