@@ -75,7 +75,7 @@ Status Projector::Make(SchemaPtr schema, const ExpressionVector &exprs,
     GANDIVA_RETURN_NOT_OK(status);
   }
 
-  status = llvm_gen->Build(exprs);
+  status = llvm_gen->BuildForAllMode(exprs);
   GANDIVA_RETURN_NOT_OK(status);
 
   // save the output field types. Used for validation at Evaluate() time.
@@ -95,6 +95,15 @@ Status Projector::Make(SchemaPtr schema, const ExpressionVector &exprs,
 }
 
 Status Projector::Evaluate(const arrow::RecordBatch &batch,
+                           const ArrayDataVector &output_data_vecs) {
+  int mode = -1;
+  arrow::Buffer *null_buffer = NULL;
+
+  return Evaluate(batch, mode, *null_buffer, output_data_vecs);
+}
+
+Status Projector::Evaluate(const arrow::RecordBatch &batch, const int &mode,
+                           const arrow::Buffer &selection_vector,
                            const ArrayDataVector &output_data_vecs) {
   Status status = ValidateEvaluateArgsCommon(batch);
   GANDIVA_RETURN_NOT_OK(status);
@@ -119,10 +128,18 @@ Status Projector::Evaluate(const arrow::RecordBatch &batch,
     GANDIVA_RETURN_NOT_OK(status);
     ++idx;
   }
-  return llvm_generator_->Execute(batch, output_data_vecs);
+  return llvm_generator_->Execute(batch, mode, selection_vector, output_data_vecs);
 }
 
 Status Projector::Evaluate(const arrow::RecordBatch &batch, arrow::MemoryPool *pool,
+                           arrow::ArrayVector *output) {
+  int mode = -1;
+  arrow::Buffer *null_buffer = NULL;
+  return Evaluate(batch, mode, *null_buffer, pool, output);
+}
+
+Status Projector::Evaluate(const arrow::RecordBatch &batch, const int &mode,
+                           const arrow::Buffer &selection_vector, arrow::MemoryPool *pool,
                            arrow::ArrayVector *output) {
   Status status = ValidateEvaluateArgsCommon(batch);
   GANDIVA_RETURN_NOT_OK(status);
@@ -147,7 +164,7 @@ Status Projector::Evaluate(const arrow::RecordBatch &batch, arrow::MemoryPool *p
   }
 
   // Execute the expression(s).
-  status = llvm_generator_->Execute(batch, output_data_vecs);
+  status = llvm_generator_->Execute(batch, mode, selection_vector, output_data_vecs);
   GANDIVA_RETURN_NOT_OK(status);
 
   // Create and return array arrays.

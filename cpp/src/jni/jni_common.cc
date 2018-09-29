@@ -585,7 +585,8 @@ err_out:
 JNIEXPORT void JNICALL
 Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evaluateProjector(
     JNIEnv *env, jobject cls, jlong module_id, jint num_rows, jlongArray buf_addrs,
-    jlongArray buf_sizes, jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
+    jlongArray buf_sizes, jint sel_vec_type, jlong sel_vec_addr, jlong sel_vec_size,
+    jlongArray out_buf_addrs, jlongArray out_buf_sizes) {
   Status status;
   std::shared_ptr<ProjectorHolder> holder = projector_modules_.Lookup(module_id);
   if (holder == nullptr) {
@@ -646,8 +647,10 @@ Java_org_apache_arrow_gandiva_evaluator_JniWrapper_evaluateProjector(
     if (!status.ok()) {
       break;
     }
-
-    status = holder->projector()->Evaluate(*in_batch, output);
+    auto selection_vector = std::shared_ptr<arrow::Buffer>(
+        new arrow::Buffer(reinterpret_cast<uint8_t *>(sel_vec_addr), sel_vec_size));
+    status =
+        holder->projector()->Evaluate(*in_batch, sel_vec_type, *selection_vector, output);
   } while (0);
 
   env->ReleaseLongArrayElements(buf_addrs, in_buf_addrs, JNI_ABORT);
