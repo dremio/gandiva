@@ -20,6 +20,7 @@ message(STATUS "Found arrow static library at ${ARROW_LIB_STATIC}")
 message(STATUS "Found arrow shared library at ${ARROW_LIB_SHARED}")
 
 find_path(ARROW_INCLUDE_DIR arrow/type.h)
+include_directories("${ARROW_INCLUDE_DIR}")
 message(STATUS "found arrow includes at ${ARROW_INCLUDE_DIR}")
 
 # add an imported target ARROW::ARROW so that gandiva can take a dependency.
