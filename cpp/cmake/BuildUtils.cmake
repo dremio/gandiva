@@ -31,9 +31,6 @@ function(build_gandiva_lib TYPE)
       ARROW::ARROW_${TYPE_UPPER_CASE}
     PRIVATE
       Boost::boost
-      Boost::regex
-      Boost::system
-      Boost::filesystem
       LLVM::LLVM_INTERFACE
       RE2::RE2_STATIC)
 
