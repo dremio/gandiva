@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <memory>
+#include <vector>
+
 #include "codegen/date_helper.h"
 
 namespace gandiva {
@@ -55,7 +59,7 @@ Status DateUtils::ToInternalFormat(const std::string& format,
   std::stringstream buffer;
   bool is_in_quoted_text = false;
 
-  for (int i = 0; i < format.length(); i++) {
+  for (uint i = 0; i < format.length(); i++) {
     char currentChar = format[i];
 
     // logic before we append to the buffer
@@ -225,10 +229,12 @@ DateUtils::date_format_converter DateUtils::InitMap() {
   map["f"] = "S";
   map["ff"] = "SS";
   map["fff"] = "SSS";
-  // Timezone
+  /*
+  // Timezone not tested/supported yet fully.
   map["tzd"] = "%Z";
   map["tzo"] = "%z";
   map["tzh:tzm"] = "%z";
+  */
 
   return map;
 }

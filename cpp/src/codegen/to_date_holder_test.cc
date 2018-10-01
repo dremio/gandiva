@@ -80,19 +80,6 @@ TEST_F(TestToDateHolder, TestSimpleDate) {
   millis_since_epoch =
       to_date("2012-12-1", true, (int64_t)&execution_context, &out_valid);
   EXPECT_EQ(millis_since_epoch, 1354320000000);
-}
-
-TEST_F(TestToDateHolder, TestSimpleDateTimeZone) {
-  std::shared_ptr<ToDateHolder> to_date_holder;
-
-  auto status = ToDateHolder::Make("YYYY-MM-DD HH:MI:SS tzo", 1, &to_date_holder);
-  EXPECT_EQ(status.ok(), true) << status.message();
-  ExecutionContext execution_context;
-  auto &to_date = *to_date_holder;
-  bool out_valid;
-  int64_t millis_since_epoch =
-      to_date("1986-12-01 01:01:01 +0800", true, (int64_t)&execution_context, &out_valid);
-  EXPECT_EQ(millis_since_epoch, 533692800000);
 
   // wrong month. should return 0 since we are suppresing errors.
   millis_since_epoch =
@@ -103,16 +90,13 @@ TEST_F(TestToDateHolder, TestSimpleDateTimeZone) {
 TEST_F(TestToDateHolder, TestSimpleDateTimeError) {
   std::shared_ptr<ToDateHolder> to_date_holder;
 
-  auto status = ToDateHolder::Make("YYYY-MM-DD HH:MI:SS tzo", 0, &to_date_holder);
+  auto status = ToDateHolder::Make("YYYY-MM-DD HH:MI:SS", 0, &to_date_holder);
   EXPECT_EQ(status.ok(), true) << status.message();
   ExecutionContext execution_context;
   auto &to_date = *to_date_holder;
   bool out_valid;
-  int64_t millis_since_epoch =
-      to_date("1986-12-01 01:01:01 +0800", true, (int64_t)&execution_context, &out_valid);
-  EXPECT_EQ(millis_since_epoch, 533692800000);
 
-  millis_since_epoch =
+  int64_t millis_since_epoch =
       to_date("1986-21-01 01:01:01 +0800", true, (int64_t)&execution_context, &out_valid);
   std::string expected_error =
       "Error parsing value 1986-21-01 01:01:01 +0800 for given format";
