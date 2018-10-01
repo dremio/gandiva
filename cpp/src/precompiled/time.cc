@@ -508,7 +508,7 @@ void set_error_for_date(int32 length, const char *input, const char *msg,
   char *error = (char *)malloc(size);
   strcpy(error, msg);
   strcat(error, input);
-  set_error_msg(execution_context, error);
+  context_set_error_msg(execution_context, error);
   free(error);
 }
 
