@@ -45,6 +45,8 @@ TEST(TestExtendedMathOps, TestLog) {
   EXPECT_EQ(log_int64(64), val);
   EXPECT_EQ(log_float32(64), val);
   EXPECT_EQ(log_float64(64), val);
+
+  EXPECT_EQ(log_int32(0), -std::numeric_limits<double>::infinity());
 }
 
 TEST(TestExtendedMathOps, TestLog10) {
@@ -66,7 +68,8 @@ TEST(TestArithmeticOps, TestLogWithBase) {
   EXPECT_EQ(out, 0);
   EXPECT_EQ(is_valid, false);
   EXPECT_EQ(error_holder.has_error(), true);
-  EXPECT_EQ(error_holder.get_error(), "divide by zero error");
+  EXPECT_TRUE(error_holder.get_error().find("divide by zero error") != std::string::npos)
+      << error_holder.get_error();
 
   gandiva::helpers::ExecutionContext error_holder1;
   out = log_int32_int32(2, true, 64, true, (int64)&error_holder, &is_valid);

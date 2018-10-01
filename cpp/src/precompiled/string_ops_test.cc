@@ -69,6 +69,10 @@ TEST(TestStringOps, TestCharLength) {
   gandiva::helpers::ExecutionContext ctx;
   std::string c("\xf8\x28");
   EXPECT_EQ(utf8_length(c.data(), c.length(), true, (int64)&ctx, &valid), 0);
+  EXPECT_TRUE(ctx.get_error().find(
+                  "unexpected byte \\f8 encountered while decoding utf8 string") !=
+              std::string::npos)
+      << ctx.get_error();
   EXPECT_FALSE(valid);
 }
 

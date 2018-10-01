@@ -16,6 +16,8 @@
 
 extern "C" {
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "./types.h"
 
@@ -99,6 +101,16 @@ int32 utf8_char_length(char c) {
   return 0;
 }
 
+FORCE_INLINE
+void set_error_for_invalid_utf(int64_t execution_context, char val) {
+  char const *fmt = "unexpected byte \\%02hhx encountered while decoding utf8 string";
+  int size = strlen(fmt) + 64;
+  char *error = (char *)malloc(size);
+  snprintf(error, size, fmt, (unsigned char)val);
+  context_set_error_msg(execution_context, error);
+  free(error);
+}
+
 // Count the number of utf8 characters
 FORCE_INLINE
 int32 utf8_length(const char *data, int32 data_len, boolean is_valid, int64 context,
@@ -113,8 +125,7 @@ int32 utf8_length(const char *data, int32 data_len, boolean is_valid, int64 cont
   for (int i = 0; i < data_len; i += char_len) {
     char_len = utf8_char_length(data[i]);
     if (char_len == 0) {
-      const char *err_msg = "Unexpected byte encountered while decoding utf8 string";
-      context_set_error_msg(context, err_msg);
+      set_error_for_invalid_utf(context, data[i]);
       return 0;
     }
     ++count;

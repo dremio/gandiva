@@ -15,9 +15,12 @@
 extern "C" {
 
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "./types.h"
 
-// Expamd the inner fn for types that support extended math.
+// Expand the inner fn for types that support extended math.
 #define ENUMERIC_TYPES_UNARY(INNER, OUT_TYPE) \
   INNER(int32, OUT_TYPE)                      \
   INNER(uint32, OUT_TYPE)                     \
@@ -54,20 +57,29 @@ ENUMERIC_TYPES_UNARY(LOG, float64)
 
 ENUMERIC_TYPES_UNARY(LOG10, float64)
 
+FORCE_INLINE
+void set_error_for_logbase(int64_t execution_context, double base) {
+  char const *prefix = "divide by zero error with log of base";
+  int size = strlen(prefix) + 64;
+  char *error = (char *)malloc(size);
+  snprintf(error, size, "%s %f", prefix, base);
+  context_set_error_msg(execution_context, error);
+  free(error);
+}
+
 // log with base
 #define LOG_WITH_BASE(IN_TYPE1, IN_TYPE2, OUT_TYPE)                            \
   FORCE_INLINE                                                                 \
   OUT_TYPE log_##IN_TYPE1##_##IN_TYPE2(IN_TYPE1 base, boolean is_base_valid,   \
                                        IN_TYPE2 value, boolean is_value_valid, \
-                                       int64 context, boolean* out_valid) {    \
+                                       int64 context, boolean *out_valid) {    \
     *out_valid = false;                                                        \
     if (!is_base_valid || !is_value_valid) {                                   \
       return 0;                                                                \
     }                                                                          \
     OUT_TYPE log_of_base = logl(base);                                         \
     if (log_of_base == 0) {                                                    \
-      char const* err_msg = "divide by zero error";                            \
-      context_set_error_msg(context, err_msg);                                 \
+      set_error_for_logbase(context, base);                                    \
       return 0;                                                                \
     }                                                                          \
     *out_valid = true;                                                         \
