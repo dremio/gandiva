@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
-#include "../src/precompiled/date.h"
 #include "arrow/memory_pool.h"
 #include "gandiva/projector.h"
 #include "gandiva/status.h"

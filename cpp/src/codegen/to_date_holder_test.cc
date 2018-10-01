@@ -94,9 +94,11 @@ TEST_F(TestToDateHolder, TestSimpleDateTimeZone) {
       to_date("1986-12-01 01:01:01 +0800", true, (int64_t)&execution_context, &out_valid);
   EXPECT_EQ(millis_since_epoch, 533692800000);
 
+  // wrong month. should return 0 since we are suppresing errors.
   millis_since_epoch =
       to_date("1986-21-01 01:01:01 +0800", true, (int64_t)&execution_context, &out_valid);
   EXPECT_EQ(millis_since_epoch, 0);
+
 }
 
 TEST_F(TestToDateHolder, TestSimpleDateTimeError) {
@@ -117,6 +119,13 @@ TEST_F(TestToDateHolder, TestSimpleDateTimeError) {
       "Error parsing value 1986-21-01 01:01:01 +0800 for given format";
   EXPECT_TRUE(execution_context.get_error().find(expected_error) != std::string::npos)
       << status.message();
+
+  ExecutionContext execution_context1;
+  // not valid should not return error
+  millis_since_epoch =
+      to_date("nullptr", false, (int64_t)&execution_context1, &out_valid);
+  EXPECT_EQ(millis_since_epoch, 0);
+  EXPECT_TRUE(execution_context1.has_error() == false);
 }
 
 int main(int argc, char **argv) {
