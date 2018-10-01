@@ -16,8 +16,9 @@
 #define GANDIVA_CONTEXT_HELPER_H
 
 #include "../codegen/execution_context.h"
+#include "types.h"
 
-void set_error_msg(int64_t context_ptr, char const* err_msg) {
+void context_set_error_msg(int64_t context_ptr, char const* err_msg) {
   gandiva::helpers::ExecutionContext* execution_context_ptr =
       reinterpret_cast<gandiva::helpers::ExecutionContext*>(context_ptr);
   (execution_context_ptr)->set_error_msg(err_msg);
