@@ -111,6 +111,13 @@ TEST_F(TestToDateHolder, TestSimpleDateTimeError) {
   EXPECT_TRUE(execution_context1.has_error() == false);
 }
 
+TEST_F(TestToDateHolder, TestSimpleDateTimeMakeError) {
+  std::shared_ptr<ToDateHolder> to_date_holder;
+  // reject time stamps for now.
+  auto status = ToDateHolder::Make("YYYY-MM-DD HH:MI:SS tzo", 0, &to_date_holder);
+  EXPECT_EQ(status.IsInvalid(), true) << status.message();
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
