@@ -518,6 +518,7 @@ date64 castDATE_utf8(const char *input, int32 length, boolean is_valid1,
   if (!is_valid1) {
     return 0;
   }
+  // format : 0 is year, 1 is month and 2 is day.
   int dateFields[3];
   int dateIndex = 0, index = 0, value = 0;
   while (dateIndex < 3 && index < length) {

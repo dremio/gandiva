@@ -16,7 +16,7 @@
 #include <memory>
 #include <vector>
 
-#include "codegen/date_helper.h"
+#include "codegen/date_utils.h"
 
 namespace gandiva {
 
@@ -48,10 +48,10 @@ std::vector<std::string> DateUtils::GetExactMatches(std::string pattern) {
 }
 
 /**
- * Validates and converts {@param format} to the Joda equivalent
+ * Validates and converts {@param format} to the strptime equivalent
  *
  * @param format date format
- * @return date format converted to joda format
+ * @return date format converted to strptime format
  */
 Status DateUtils::ToInternalFormat(const std::string& format,
                                    std::shared_ptr<std::string>* internal_format) {
@@ -68,7 +68,7 @@ Status DateUtils::ToInternalFormat(const std::string& format,
         // we are done with a quoted block
         is_in_quoted_text = false;
 
-        // joda uses ' for quoting
+        // use ' for quoting
         builder << '\'';
         builder << buffer.str();
         builder << '\'';

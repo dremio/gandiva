@@ -41,11 +41,11 @@ class ToDateHolder : public FunctionHolder {
   int64_t operator()(const std::string &data, bool in_valid, int64_t execution_context,
                      bool *out_valid);
 
-  void return_error(int64_t execution_context, const std::string &data);
-
  private:
   ToDateHolder(const std::string &pattern, int32_t suppress_errors)
       : pattern_(pattern), suppress_errors_(suppress_errors) {}
+
+  void return_error(int64_t execution_context, const std::string &data);
 
   std::string pattern_;  // date format string
 

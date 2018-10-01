@@ -16,7 +16,7 @@
 #include <string>
 
 #include "../precompiled/date.h"
-#include "codegen/date_helper.h"
+#include "codegen/date_utils.h"
 #include "codegen/execution_context.h"
 #include "codegen/node.h"
 #include "codegen/to_date_holder.h"
@@ -105,13 +105,8 @@ void ToDateHolder::return_error(int64_t execution_context, const std::string &da
   if (suppress_errors_ == 1) {
     return;
   }
-#ifdef GDV_HELPERS
-  gandiva::helpers::ExecutionContext *execution_context_ptr =
-      reinterpret_cast<gandiva::helpers::ExecutionContext *>(execution_context);
-#else
-  gandiva::ExecutionContext *execution_context_ptr =
-      reinterpret_cast<gandiva::ExecutionContext *>(execution_context);
-#endif
+  ExecutionContext *execution_context_ptr =
+      reinterpret_cast<ExecutionContext *>(execution_context);
   std::string err_msg = "Error parsing value " + data + " for given format.";
   (execution_context_ptr)->set_error_msg(err_msg.c_str());
 }
