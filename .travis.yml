@@ -15,10 +15,9 @@ addons:
     - llvm-6.0-dev
 cache:
   ccache: true
-
 matrix:
   fast_finish: true
-  allow_failures:
+  allow_failures: 
   include:
   - os: linux
     language: cpp
@@ -26,27 +25,24 @@ matrix:
     - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
     - GANDIVA_TRAVIS_USE_TOOLCHAIN=1
     - GANDIVA_BUILD_WARNING_LEVEL=CHECKIN
-
 before_install:
-  - eval "${MATRIX_EVAL}"
-  - ulimit -c unlimited
-
+- eval "${MATRIX_EVAL}"
+- ulimit -c unlimited
 before_script:
-  - ulimit -c unlimited -S
-  - "$TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh"
-  - "$TRAVIS_BUILD_DIR/ci/travis_before_script_java.sh"
-
+- ulimit -c unlimited -S
+- "$TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh"
+- "$TRAVIS_BUILD_DIR/ci/travis_before_script_java.sh"
 script:
-  - "$TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh && $TRAVIS_BUILD_DIR/ci/travis_script_java.sh"
-
+- "$TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh && $TRAVIS_BUILD_DIR/ci/travis_script_java.sh"
 after_failure:
-  - COREFILE=$(find . -maxdepth 2 -name "core*" | head -n 1)
-  - if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt" -ex "set pagination 0" -batch; fi
-
+- COREFILE=$(find . -maxdepth 2 -name "core*" | head -n 1)
+- if [[ -f "$COREFILE" ]]; then gdb -c "$COREFILE" example -ex "thread apply all bt"
+  -ex "set pagination 0" -batch; fi
 env:
   global:
-    - secure: oQEGhaZndw7gkCzSUZHl5/tUXbWLn2QvWF92JXl4jiQSyZ/CwCn0AtfsSumWHWFfTa7Xka3FO9G8iaPSUjk3asjLq8TWmg6lJVubCxX7ESSn9TKqrxgk0aju84ALmiUX1y16v1N8VKLIClOOsD3sw+eImN1Z7U5b3Ejt+jSqTaY/5LCuQk35SVPtjI6UtY7AFe7wS/iphUiQstTP8uHUJQCNtexxczCmYlwwL/M7FmkkFE9cLhJU4PTaN4Ph0Vez+NMUXqgk+oDibZBym/X1lFaAw6kdNELSbwkiwYy3wdK2n8u8cAVyJQp58qNEian5IwsLsbmGdm/9XogmMGeaS0jihjOySGXbrYOHATSnXDPInu3T2ENxxuecwVbrT+lLm/b8OE8QBfTRdA03G6CRcMHmfdHSIwQZfV/CwGEzmBPvKi5wPu2qaCi5+/GNoKXyYi2i4qJUbAa2cgLB0ijiePBp+mz8I96+qU6Frdic/q9Hlvy786jioDv5A8djFftR/sPjRFQ7RX2ByOtPkYQ9dGrXg8oQuwbvshFqB8yeV1wDu6/JzJlNsqi+0Lq6PelpCI4pWvqcCkcGWSK6QcAvRvMglV58jp3aGtCoPQv6ZJ8qEZBv/i6dqq3SN6T5dkzL6hdzW/zv+0VOJBawkdzuYJEzj2XPSXv9RFWJBNdtLuQ=
-
+  - secure: oQEGhaZndw7gkCzSUZHl5/tUXbWLn2QvWF92JXl4jiQSyZ/CwCn0AtfsSumWHWFfTa7Xka3FO9G8iaPSUjk3asjLq8TWmg6lJVubCxX7ESSn9TKqrxgk0aju84ALmiUX1y16v1N8VKLIClOOsD3sw+eImN1Z7U5b3Ejt+jSqTaY/5LCuQk35SVPtjI6UtY7AFe7wS/iphUiQstTP8uHUJQCNtexxczCmYlwwL/M7FmkkFE9cLhJU4PTaN4Ph0Vez+NMUXqgk+oDibZBym/X1lFaAw6kdNELSbwkiwYy3wdK2n8u8cAVyJQp58qNEian5IwsLsbmGdm/9XogmMGeaS0jihjOySGXbrYOHATSnXDPInu3T2ENxxuecwVbrT+lLm/b8OE8QBfTRdA03G6CRcMHmfdHSIwQZfV/CwGEzmBPvKi5wPu2qaCi5+/GNoKXyYi2i4qJUbAa2cgLB0ijiePBp+mz8I96+qU6Frdic/q9Hlvy786jioDv5A8djFftR/sPjRFQ7RX2ByOtPkYQ9dGrXg8oQuwbvshFqB8yeV1wDu6/JzJlNsqi+0Lq6PelpCI4pWvqcCkcGWSK6QcAvRvMglV58jp3aGtCoPQv6ZJ8qEZBv/i6dqq3SN6T5dkzL6hdzW/zv+0VOJBawkdzuYJEzj2XPSXv9RFWJBNdtLuQ=
+  - secure: BO/YNB9516KvAOm4ghjkXquQWH0bUyVoOdZUvWEUFzMk4DR/3vBk2FJvpP5790evOLQFtnFssm08VJ5CpDTw91zTAloTjQLTxIOs7DtSQn7pqu654C/uul2M+xdQZNYbpOuMA9wQ85pPanpc5l8YCBJFXL02/JKRliaQbZQOFpcW7WT3DNdyROAsIHMXOkgPkAdNllFXTIA7/Dy4wNessT1YadKJREfQQPxHVkuOCYWRlFB/P+aUsTegKLy5GCxaJrSWU38q5D/n3qosC+yV3XZThAPb2CkBgg5Ng78UYa1wwRAY6R/FYsu37tI2TUB3ePOxGnHM1fiFDEJF3HqAUix7A86Uompjnk0K78jLVCISC6wE0IAQRiBIl0EmPUYzADJtZ++lTgVvE1LCNERGe9htLJz4dCUaGtMaR7XDMvBbXsJZua1ZroMRgguTb7kwVh33QvQG4FWlkJBcitAbiOSiY0chewAgVr02ZyyQ6H6NAY5jRUykajrT54+3m2YCJzRMk63/WNHtGWwDgdqeiTceGiPt2hPL6zGtH26SKL/fM+cHq9QLFnU03VuTboPrsVCTDNWTLXP6jfeYQhm0j9bysBfP7DXrF9YBY4mdfKQmyLL01jeo2uiNuSMI24rmy1mwL0RprOjhXyUdQ4OKUDyymlvHzbNXvSp6TZcQQbE=
+  - secure: L7gDQd+p72AjejMOJxWr6Mu2w/hFxVuZ5O7YK8R7Zt6QKzzCKDb6RfE/Mc+yxPce6+CRWusbAuSHziEFCsXrcRrcGghqP02e7t0Ii/Y2XOIBQgeti/vTJl4gwyGJRLgvQQeTfy2N6REvH+ncxwEdb3YeTuArNwntVv95ug5GKxQY9oDfk5aAhATtP6yziGePMVEtus01lp0snx64g61zZEGNdtKfSYOTBfyyMH5F8PJdw4BHWEyNMEGUSEgI8qW5dZRW6YbFr587dWFSPp29QCL0Imp8+9Zv+UXBRgaoavDDTChEkAxLdePsYt/qRJZpmiSqsxpLroTmpnH21beoy7hMTaFnARW028iW25gUOfHGJ6gM+6eJhGBeoxv/IYdMUzdrZPQfwleH5gpzoRVxszOluVCk7wHOw0NdURNNVMz39rcF9A05HuNGZ49lGsqxvZatvtr9HQorzmP1YwokoE2vKcE6c+GG3+7BVqogBRX/g7jtY/9BanHHU4wnM5TF8AqVxyja06pFhl3EzBXtkcuSJpxRfaYG7GklxepPIFblnY4LlPZ8f/V7QY/1JowS1JrX3X6mJy4F7PvfmqgYq1Pf+4cdVuc3qYxCJ/5kly/rR9dAtwTtuxKo+Yx/ZAYuhgjwx1Al5htcnMo2e6lVkoHLnYQ+f4BKGFCq4qibI7s=
 deploy:
   provider: script
   script: bash $TRAVIS_BUILD_DIR/ci/travis_deploy_jar.sh
