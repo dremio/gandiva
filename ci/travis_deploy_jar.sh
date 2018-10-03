@@ -17,4 +17,8 @@ set -e
 
 source $TRAVIS_BUILD_DIR/ci/travis_env_common.sh
 
-mvn deploy -f $GANDIVA_JAVA_DIR/pom.xml --settings $TRAVIS_BUILD_DIR/ci/ossrh_settings.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
+openssl aes-256-cbc -K $encrypted_f7773fd99b03_key -iv $encrypted_f7773fd99b03_iv -in $TRAVIS_BUILD_DIR/ci/codesigning.asc.enc -out $TRAVIS_BUILD_DIR/ci/codesigning.asc -d
+
+gpg --fast-import $TRAVIS_BUILD_DIR/ci/codesigning.asc
+
+mvn deploy -P release -f $GANDIVA_JAVA_DIR/pom.xml --settings $TRAVIS_BUILD_DIR/ci/ossrh_settings.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
