@@ -21,7 +21,7 @@
 
     <groupId>com.dremio.arrow.gandiva</groupId>
     <artifactId>gandiva-java</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
     <packaging>jar</packaging>
     <name>Gandiva Java Project</name>
     <properties>
