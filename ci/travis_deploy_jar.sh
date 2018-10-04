@@ -21,4 +21,6 @@ openssl aes-256-cbc -K $encrypted_f7773fd99b03_key -iv $encrypted_f7773fd99b03_i
 
 gpg --fast-import $TRAVIS_BUILD_DIR/ci/codesigning.asc
 
+mvn versions:set -B -DnewVersion=0.1-$TRAVIS_COMMIT -f $GANDIVA_JAVA_DIR/pom.xml
+
 mvn deploy -P release -f $GANDIVA_JAVA_DIR/pom.xml --settings $TRAVIS_BUILD_DIR/ci/ossrh_settings.xml -Dgandiva.cpp.build.dir=$CPP_BUILD_DIR
