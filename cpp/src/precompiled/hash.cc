@@ -14,8 +14,9 @@
 
 extern "C" {
 
-#include <string.h>
+#include <cstring>
 #include "./types.h"
+#include "openssl/evp.h"
 
 static inline uint64 rotate_left(uint64 val, int distance) {
   return (val << distance) | (val >> (64 - distance));
@@ -276,5 +277,25 @@ VAR_LEN_TYPES(HASH64_BUF_OP, hash64)
 VAR_LEN_TYPES(HASH64_BUF_OP, hash64AsDouble)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64WithSeed)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64AsDoubleWithSeed)
+
+static inline utf8 hashSHA256(char* message) {
+  EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
+
+  EVP_DigestInit_ex(md_ctx, EVP_sha256(), NULL);
+
+  EVP_DigestUpdate(md_ctx, message, strlen(message));
+
+  int sha256_hash_size = EVP_MD_size(EVP_sha256());
+
+  auto* result = (unsigned char*) OPENSSL_malloc(sha256_hash_size);
+
+  unsigned int result_length;
+
+  EVP_DigestFinal_ex(md_ctx, result, &result_length);
+
+  EVP_MD_CTX_free(md_ctx);
+
+  return (char*) result;
+}
 
 }  // extern "C"
