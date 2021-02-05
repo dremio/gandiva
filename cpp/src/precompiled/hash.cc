@@ -278,12 +278,12 @@ VAR_LEN_TYPES(HASH64_BUF_OP, hash64AsDouble)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64WithSeed)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64AsDoubleWithSeed)
 
-static inline utf8 hashSHA256(char* message) {
+static inline utf8 hashSHA256(void* message) {
   EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
 
-  EVP_DigestInit_ex(md_ctx, EVP_sha256(), NULL);
+  EVP_DigestInit_ex(md_ctx, EVP_sha256(), nullptr);
 
-  EVP_DigestUpdate(md_ctx, message, strlen(message));
+  EVP_DigestUpdate(md_ctx, message, sizeof(message));
 
   int sha256_hash_size = EVP_MD_size(EVP_sha256());
 
