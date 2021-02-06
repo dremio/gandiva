@@ -278,7 +278,7 @@ VAR_LEN_TYPES(HASH64_BUF_OP, hash64AsDouble)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64WithSeed)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64AsDoubleWithSeed)
 
-static inline utf8 hashSHA256(void* message) {
+static inline utf8 hash_using_SHA256(void* message) {
   EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
 
   EVP_DigestInit_ex(md_ctx, EVP_sha256(), nullptr);
@@ -297,5 +297,22 @@ static inline utf8 hashSHA256(void* message) {
 
   return (char*) result;
 }
+
+#define HASH_SHA256_OP(NAME, TYPE)                                     \
+  FORCE_INLINE                                                         \
+  utf8 NAME##_##TYPE(TYPE value, boolean is_valid) {                   \
+    long value_as_long = double_to_long_bits((double) value);          \
+    return is_valid ? hash_using_SHA256(&value_as_long) : (char *) ""; \
+  }
+
+NUMERIC_BOOL_DATE_TYPES(HASH_SHA256_OP, hashSHA256)
+
+#define HASH_SHA256_BUF_OP(NAME, TYPE)                        \
+  FORCE_INLINE                                                \
+  utf8 NAME##_##TYPE(TYPE value, boolean is_valid) {          \
+    return is_valid ? hash_using_SHA256(value) : (char *) ""; \
+  }
+
+VAR_LEN_TYPES(HASH_SHA256_BUF_OP, hashSHA256)
 
 }  // extern "C"
