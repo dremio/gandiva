@@ -278,7 +278,7 @@ VAR_LEN_TYPES(HASH64_BUF_OP, hash64AsDouble)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64WithSeed)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64AsDoubleWithSeed)
 
-FORCE_INLINE static inline utf8 hash_using_SHA256(const void* message, const size_t message_length) {
+static inline utf8 hash_using_SHA256(const void* message, const size_t message_length) {
   EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
 
   EVP_DigestInit_ex(md_ctx, EVP_sha256(), NULL);
@@ -311,6 +311,11 @@ FORCE_INLINE static inline utf8 hash_using_SHA256(const void* message, const siz
   free(result);
 
   return result_buffer;
+}
+
+FORCE_INLINE utf8 hash_sha256(double value, boolean is_valid){
+  long value_as_long = double_to_long_bits(value);
+  return is_valid ? hash_using_SHA256(&value_as_long, sizeof(value_as_long)) : (char *) "";
 }
 
 #define HASH_SHA256_OP(NAME, TYPE)                                                            \
