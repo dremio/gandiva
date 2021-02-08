@@ -313,28 +313,27 @@ static inline utf8 hash_using_SHA256(const void* message, const size_t message_l
   return result_buffer;
 }
 
-FORCE_INLINE utf8 hash_sha256(double value, boolean is_valid){
+FORCE_INLINE utf8 hash_sha256(double value){
   long value_as_long = double_to_long_bits(value);
-  return is_valid ? hash_using_SHA256(&value_as_long, sizeof(value_as_long)) : (char *) "";
+  return hash_using_SHA256(&value_as_long, sizeof(value_as_long));
 }
 
-FORCE_INLINE utf8 hash_sha256_buf_op(char* value, boolean is_valid){
-  return is_valid ? hash_using_SHA256(value, strlen(value)) : (char *) "";
+FORCE_INLINE utf8 hash_sha256_buf_op(char* value){
+  return hash_using_SHA256(value, strlen(value));
 }
 
-#define HASH_SHA256_OP(NAME, TYPE)                                                            \
-  FORCE_INLINE                                                                                \
-  utf8 NAME##_##TYPE(TYPE value, boolean is_valid) {                                          \
-    long value_as_long = double_to_long_bits((double) value);                                 \
-    return is_valid ? hash_using_SHA256(&value_as_long, sizeof(value_as_long)) : (char *) ""; \
+#define HASH_SHA256_OP(NAME, TYPE)                              \
+  FORCE_INLINE                                                  \
+  utf8 NAME##_##TYPE(TYPE value, boolean is_valid) {            \
+    return is_valid ? hash_sha256(value) : (char *) ""; \
   }
 
 NUMERIC_BOOL_DATE_TYPES(HASH_SHA256_OP, hashSHA256)
 
-#define HASH_SHA256_BUF_OP(NAME, TYPE)                                       \
-  FORCE_INLINE                                                               \
-  utf8 NAME##_##TYPE(TYPE value, boolean is_valid) {                         \
-    return is_valid ? hash_using_SHA256(value, strlen(value)) : (char *) ""; \
+#define HASH_SHA256_BUF_OP(NAME, TYPE)                         \
+  FORCE_INLINE                                                 \
+  utf8 NAME##_##TYPE(TYPE value, boolean is_valid) {           \
+    return is_valid ? hash_sha256_buf_op(value) : (char *) ""; \
   }
 
 VAR_LEN_TYPES(HASH_SHA256_BUF_OP, hashSHA256)
