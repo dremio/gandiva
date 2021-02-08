@@ -154,6 +154,10 @@ using std::vector;
   NativeFunction(#NAME, DataTypeVector{TYPE(), int64()}, int64(), RESULT_NULL_NEVER, \
                  STRINGIFY(NAME##WithSeed_##TYPE))
 
+#define HASH_SHA_256_SAFE_NULL_NEVER(NAME, TYPE)                                      \
+  NativeFunction(#NAME, DataTypeVector{TYPE()}, utf8(), RESULT_NULL_NEVER, \
+                 STRINGIFY(NAME##WithSeed_##TYPE))
+
 // Iterate the inner macro over all numeric types
 #define NUMERIC_TYPES(INNER, NAME)                                                       \
   INNER(NAME, int8), INNER(NAME, int16), INNER(NAME, int32), INNER(NAME, int64),         \
@@ -392,6 +396,8 @@ NativeFunction FunctionRegistry::pc_registry_[] = {
     NUMERIC_BOOL_DATE_VAR_LEN_TYPES(HASH64_SAFE_NULL_NEVER, hash64AsDouble),
     NUMERIC_BOOL_DATE_VAR_LEN_TYPES(HASH64_SEED_SAFE_NULL_NEVER, hash64),
     NUMERIC_BOOL_DATE_VAR_LEN_TYPES(HASH64_SEED_SAFE_NULL_NEVER, hash64AsDouble),
+
+    NUMERIC_BOOL_DATE_VAR_LEN_TYPES(HASH_SHA_256_SAFE_NULL_NEVER, hashSha256),
 
     // utf8/binary operations
     UNARY_SAFE_NULL_IF_NULL(octet_length, utf8, int32),
