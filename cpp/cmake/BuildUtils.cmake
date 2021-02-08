@@ -82,7 +82,7 @@ function(add_precompiled_unit_test REL_TEST_NAME)
 
   add_executable(${TEST_NAME} ${REL_TEST_NAME} ${ARGN})
   target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-  target_link_libraries(${TEST_NAME} PRIVATE RE2::RE2_STATIC gtest_main)
+  target_link_libraries(${TEST_NAME} PRIVATE RE2::RE2_STATIC gtest_main ssl crypto)
   target_compile_definitions(${TEST_NAME} PRIVATE GANDIVA_UNIT_TEST=1)
   target_compile_definitions(${TEST_NAME} PRIVATE -DGDV_HELPERS)
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
