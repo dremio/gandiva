@@ -278,12 +278,12 @@ VAR_LEN_TYPES(HASH64_BUF_OP, hash64AsDouble)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64WithSeed)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64AsDoubleWithSeed)
 
-static inline utf8 hash_using_SHA256(void* message) {
+static inline utf8 hash_using_SHA256(const void* message, const size_t message_length) {
   EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
 
-  EVP_DigestInit_ex(md_ctx, EVP_sha256(), nullptr);
+  EVP_DigestInit_ex(md_ctx, EVP_sha256(), NULL);
 
-  EVP_DigestUpdate(md_ctx, message, sizeof(message));
+  EVP_DigestUpdate(md_ctx, message, message_length);
 
   int sha256_hash_size = EVP_MD_size(EVP_sha256());
 
@@ -295,7 +295,22 @@ static inline utf8 hash_using_SHA256(void* message) {
 
   EVP_MD_CTX_free(md_ctx);
 
-  return (char*) result;
+  char* hex_buffer = new char[4];
+  char* result_buffer = new char[65];
+
+  for (int j = 0; j < result_length; j++) {
+    unsigned char hex_number = result[j];
+    sprintf(hex_buffer, "%02x", hex_number);
+
+    strcat(result_buffer, hex_buffer);
+  }
+
+  result_buffer[64] = '\0';
+
+  free(hex_buffer);
+  free(result);
+
+  return result_buffer;
 }
 
 #define HASH_SHA256_OP(NAME, TYPE)                                     \
