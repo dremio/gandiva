@@ -278,7 +278,7 @@ VAR_LEN_TYPES(HASH64_BUF_OP, hash64AsDouble)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64WithSeed)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64AsDoubleWithSeed)
 
-static inline utf8 hash_using_SHA256(const void* message, const size_t message_length) {
+FORCE_INLINE static inline utf8 hash_using_SHA256(const void* message, const size_t message_length) {
   EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
 
   EVP_DigestInit_ex(md_ctx, EVP_sha256(), NULL);

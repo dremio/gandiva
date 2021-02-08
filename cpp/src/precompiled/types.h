@@ -16,6 +16,7 @@
 #define PRECOMPILED_TYPES_H
 
 #include <stdint.h>
+#include <cstdlib>
 
 // Use the same names as in arrow data types. Makes it easy to write pre-processor macros.
 using boolean = bool;
@@ -72,6 +73,7 @@ int32 hash32(double val, int32 seed);
 int32 hash32_buf(const uint8 *buf, int len, int32 seed);
 int64 hash64(double val, int64 seed);
 int64 hash64_buf(const uint8 *buf, int len, int64 seed);
+utf8 hash_using_SHA256(const void* message, const size_t message_length);
 
 int64 timestampaddSecond_timestamp_int32(timestamp, int32);
 int64 timestampaddMinute_timestamp_int32(timestamp, int32);
