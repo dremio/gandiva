@@ -313,12 +313,12 @@ static inline utf8 hash_using_SHA256(const void* message, const size_t message_l
   return result_buffer;
 }
 
-FORCE_INLINE utf8 hash_sha256(double value){
+FORCE_INLINE utf8 hash_sha256(double value) {
   long value_as_long = double_to_long_bits(value);
   return hash_using_SHA256(&value_as_long, sizeof(value_as_long));
 }
 
-FORCE_INLINE utf8 hash_sha256_buf_op(char* value){
+FORCE_INLINE utf8 hash_sha256_buf_op(char* value) {
   return hash_using_SHA256(value, strlen(value));
 }
 
