@@ -18,6 +18,9 @@ find_package(OpenSSL REQUIRED)
 
 if (OPENSSL_FOUND)
   message(STATUS "Found OpenSSL library with ${OPENSSL_VERSION} version.")
+  message(STATUS "Found the OpenSSL ssl library in ${OPENSSL_SSL_LIBRARY}.")
+  message(STATUS "Found the OpenSSL crypto library in ${OPENSSL_CRYPTO_LIBRARY}.")
+  message(STATUS "Found the OpenSSL include directory  in ${OPENSSL_INCLUDE_DIR}.")
 else(OPENSSL_FOUND)
   message(FATAL_ERROR "Could not find the OpenSSL library.")
 endif(OPENSSL_FOUND)
@@ -27,12 +30,14 @@ set(PRECOMPILED_SRCS
     bitmap.cc
     context_helper.cc
     extended_math_ops.cc
-    hash.cc
     print.cc
     sample.cc
     string_ops.cc
     time.cc
     timestamp_arithmetic.cc)
+
+set(PRECOMPILED_SRCS_OPENSSL_DEPENDENCIES
+    hash.cc)
 
 # Create bitcode for each of the source files.
 foreach(SRC_FILE ${PRECOMPILED_SRCS})
@@ -43,6 +48,19 @@ foreach(SRC_FILE ${PRECOMPILED_SRCS})
     OUTPUT ${BC_FILE}
     COMMAND ${CLANG_EXECUTABLE}
             -D GDV_HELPERS -std=c++11 -emit-llvm -O2 -c ${ABSOLUTE_SRC} -o ${BC_FILE}
+    DEPENDS ${SRC_FILE})
+  list(APPEND BC_FILES ${BC_FILE})
+endforeach()
+
+# Create bitcode for each of the source files with OpenSSL dependencies.
+foreach(SRC_FILE ${PRECOMPILED_SRCS_OPENSSL_DEPENDENCIES})
+  get_filename_component(SRC_BASE ${SRC_FILE} NAME_WE)
+  get_filename_component(ABSOLUTE_SRC ${SRC_FILE} ABSOLUTE)
+  set(BC_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SRC_BASE}.bc)
+  add_custom_command(
+    OUTPUT ${BC_FILE}
+    COMMAND ${CLANG_EXECUTABLE}
+            -D GDV_HELPERS -std=c++11 -emit-llvm -O2 -L${OPENSSL_INCLUDE_DIR} -lssl -lcrypto -c ${ABSOLUTE_SRC} -o ${BC_FILE}
     DEPENDS ${SRC_FILE})
   list(APPEND BC_FILES ${BC_FILE})
 endforeach()
