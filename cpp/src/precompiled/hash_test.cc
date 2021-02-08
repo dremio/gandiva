@@ -116,4 +116,32 @@ TEST(TestHash, TestHashBuf) {
             hash64_buf((const uint8 *)buf, buf_len, 1));
 }
 
+TEST(TestHash, TestHashSha256) {
+  int8 s8 = 0;
+  uint8 u8 = 0;
+  int16 s16 = 0;
+  uint16 u16 = 0;
+  int32 s32 = 0;
+  uint32 u32 = 0;
+  int64 s64 = 0;
+  uint64 u64 = 0;
+  float32 f32 = 0;
+  float64 f64 = 0;
+
+  // hash of 0 should be non-zero (zero is the hash value for nulls).
+  utf8 zero_hash = hash_sha256(s8);
+  EXPECT_NE(zero_hash, "");
+
+  // for a given value, all numeric types must have the same hash.
+  EXPECT_STREQ(hash_sha256(u8), zero_hash);
+  EXPECT_STREQ(hash_sha256(s16), zero_hash);
+  EXPECT_STREQ(hash_sha256(u16), zero_hash);
+  EXPECT_STREQ(hash_sha256(s32), zero_hash);
+  EXPECT_STREQ(hash_sha256(u32), zero_hash);
+  EXPECT_STREQ(hash_sha256(s64), zero_hash);
+  EXPECT_STREQ(hash_sha256(u64), zero_hash);
+  EXPECT_STREQ(hash_sha256(f32), zero_hash);
+  EXPECT_STREQ(hash_sha256(f64), zero_hash);
+}
+
 }  // namespace gandiva

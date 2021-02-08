@@ -298,7 +298,7 @@ static inline utf8 hash_using_SHA256(const void* message, const size_t message_l
   char* hex_buffer = new char[4];
   char* result_buffer = new char[65];
 
-  for (int j = 0; j < result_length; j++) {
+  for (unsigned int j = 0; j < result_length; j++) {
     unsigned char hex_number = result[j];
     sprintf(hex_buffer, "%02x", hex_number);
 
