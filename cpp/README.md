@@ -14,11 +14,12 @@ Build Gandiva requires:
 * Boost
 * Protobuf
 * re2
+* OpenSSL
 
 On macOS, you can use [Homebrew][1]:
 
 ```shell
-brew install cmake llvm boost protobuf re2
+brew install cmake llvm boost protobuf re2 openssl
 ```
 
 To install arrow, follow the steps in the [arrow Readme][2].
