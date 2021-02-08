@@ -17,7 +17,7 @@ project(gandiva)
 find_package(OpenSSL REQUIRED)
 
 if (OPENSSL_FOUND)
-  message(STATUS "Found OpenSSL library in ${OPENSSL_VERSION} version.")
+  message(STATUS "Found OpenSSL library with ${OPENSSL_VERSION} version.")
 else(OPENSSL_FOUND)
   message(FATAL_ERROR "Could not find the OpenSSL library.")
 endif(OPENSSL_FOUND)
