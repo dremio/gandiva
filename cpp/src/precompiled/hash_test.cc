@@ -144,4 +144,14 @@ TEST(TestHash, TestHashSha256) {
   EXPECT_STREQ(hash_sha256(f64), zero_hash);
 }
 
+TEST(TestHash, TestHashSha256Buf) {
+  const char *buf = "hello";
+
+  EXPECT_STRNE(hash_sha256_buf_op(buf), "");
+
+  const char *modified_buf = "hEllo";
+
+  EXPECT_STRNE(hash_sha256_buf_op(buf), hash_sha256_buf_op(modified_buf));
+}
+
 }  // namespace gandiva

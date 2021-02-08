@@ -325,7 +325,7 @@ FORCE_INLINE utf8 hash_sha256(double value) {
   return hash_using_SHA256(&value_as_long, sizeof(value_as_long));
 }
 
-FORCE_INLINE utf8 hash_sha256_buf_op(char* value) {
+FORCE_INLINE utf8 hash_sha256_buf_op(const char* value) {
   return hash_using_SHA256(value, strlen(value));
 }
 

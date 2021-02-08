@@ -73,7 +73,7 @@ int32 hash32_buf(const uint8 *buf, int len, int32 seed);
 int64 hash64(double val, int64 seed);
 int64 hash64_buf(const uint8 *buf, int len, int64 seed);
 utf8 hash_sha256(double value);
-utf8 hash_sha256_buf_op(char* value);
+utf8 hash_sha256_buf_op(const char* value);
 
 int64 timestampaddSecond_timestamp_int32(timestamp, int32);
 int64 timestampaddMinute_timestamp_int32(timestamp, int32);
