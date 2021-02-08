@@ -318,6 +318,10 @@ FORCE_INLINE utf8 hash_sha256(double value, boolean is_valid){
   return is_valid ? hash_using_SHA256(&value_as_long, sizeof(value_as_long)) : (char *) "";
 }
 
+FORCE_INLINE utf8 hash_sha256_buf_op(char* value, boolean is_valid){
+  return is_valid ? hash_using_SHA256(value, strlen(value)) : (char *) "";
+}
+
 #define HASH_SHA256_OP(NAME, TYPE)                                                            \
   FORCE_INLINE                                                                                \
   utf8 NAME##_##TYPE(TYPE value, boolean is_valid) {                                          \
