@@ -286,6 +286,17 @@ static inline void clean_char_array(char *buffer) {
   buffer[0] = '\0';
 }
 
+/*
+ * Hashes a generic message and return a SHA256 string using the OpenSSL EVP module. For more information
+ * see the main docs in https://www.openssl.org/docs/manmaster/man3/EVP_DigestInit.html.
+ *
+ * For example:
+ * - inputs:
+ *    - message: "hello world!"
+ *    - message_length: 12
+ * - output:
+ *    - "7509e5bda0c762d2bac7f90d758b5b2263fa01ccbc542ab5e3df163be08e6ca9"
+ * */
 static inline utf8 hash_using_SHA256(const void* message, const size_t message_length) {
   EVP_MD_CTX *md_ctx = EVP_MD_CTX_new();
 
@@ -300,8 +311,6 @@ static inline utf8 hash_using_SHA256(const void* message, const size_t message_l
   unsigned int result_length;
 
   EVP_DigestFinal_ex(md_ctx, result, &result_length);
-
-  EVP_MD_CTX_free(md_ctx);
 
   char* hex_buffer = new char[4];
   char* result_buffer = new char[65];
@@ -318,6 +327,8 @@ static inline utf8 hash_using_SHA256(const void* message, const size_t message_l
 
   result_buffer[64] = '\0';
 
+  // free the resources to avoid memory leaks
+  EVP_MD_CTX_free(md_ctx);
   free(hex_buffer);
   free(result);
 
