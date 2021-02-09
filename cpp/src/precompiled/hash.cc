@@ -278,6 +278,10 @@ VAR_LEN_TYPES(HASH64_BUF_OP, hash64AsDouble)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64WithSeed)
 VAR_LEN_TYPES(HASH64_BUF_WITH_SEED_OP, hash64AsDoubleWithSeed)
 
+/*
+ * Sets a char pointer as an empty string. It is used because when a char array is created
+ * it can contains some garbage values.
+ * */
 static inline void clean_char_array(char *buffer) {
   buffer[0] = '\0';
 }
