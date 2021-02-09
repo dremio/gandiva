@@ -8,13 +8,19 @@ out-of-source builds only.
 Build Gandiva requires:
 
 * A C++11-enabled compiler. On Linux, gcc 4.8 and higher should be sufficient.
-* CMake
+* CMake(3.11+)
 * LLVM
-* Arrow
+* Arrow(0.10.0)
 * Boost
-* Protobuf
+* Protobuf(3.6.0+)
 * re2
 * OpenSSL
+
+Possible dependencies problems:  
+- **fPIC**: The already compiled binaries for the `re2` and `protobuf` libraries inside the
+  linux distributions packages can lead to errors during compile time, with a message warning
+  about the `fPIC` flag. To solve these problems, download the projects sources and compile
+  them using the defined flag.
 
 On macOS, you can use [Homebrew][1]:
 
