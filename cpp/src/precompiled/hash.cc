@@ -14,7 +14,7 @@
 
 extern "C" {
 
-#include <cstring>
+#include <string.h>
 #include "./types.h"
 #include "openssl/evp.h"
 
