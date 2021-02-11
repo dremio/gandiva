@@ -16,6 +16,8 @@ under the License.
 
 ## Gandiva
 
+### Note: This repo is obsolete. The gandiva project has been made subproject of [apache arrow](https://github.com/apache/arrow/tree/master/cpp/src/gandiva) where it is actively maintained.
+
 <table>
   <tr>
     <td>Build Status</td>
